@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知微 · TeachCraft — 教师工具箱</title>
+<style>
+/* ============================================================
+   知微 · TeachCraft
+   设计语言承自「分晓 · GradeStrip」：纸色、墨色、陶土色、衬线标题
+   ============================================================ */
+
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url("assets/fonts/AnthropicSerif-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Serif";
+  src: url("assets/fonts/AnthropicSerif-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url("assets/fonts/AnthropicSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Sans";
+  src: url("assets/fonts/AnthropicSans-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anthropic Mono";
+  src: url("assets/fonts/AnthropicMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ink: #141413;
+  --ink-soft: #3D3B36;
+  --muted: #85806F;
+  --paper: #FAF9F5;
+  --paper-deep: #F4F2EC;
+  --card: #FFFFFF;
+  --line: #E7E3D8;
+  --line-strong: #CFC8B6;
+  --accent: #D97757;
+  --accent-deep: #C6613F;
+  --moss: #5A7A4B;
+  --tier-1: #70AD47;
+  --tier-2: #C6E0B4;
+  --tier-3: #DDEBF7;
+  --tier-4: #FFF2CC;
+  --tier-5: #F8CBAD;
+
+  --serif: "Anthropic Serif", "SimSun", "Songti SC", "Source Han Serif SC", serif;
+  --sans: "Anthropic Sans", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  --mono: "Anthropic Mono", "Consolas", "SFMono-Regular", monospace;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink-soft);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+}
+::selection { background: #F3D9CC; color: var(--ink); }
+
+/* 纸面颗粒：极轻，只提供触感 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: .045;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #DED8C9;
+  border: 3px solid var(--paper);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: #C9C1AE; }
+
+/* ============================ 骨架 ============================ */
+
+.app {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  height: 100vh;
+  min-width: 980px;
+}
+
+/* ---------------------------- 侧栏 ---------------------------- */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px 18px;
+  border-right: 1px solid var(--line);
+  background: #F8F6F0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 4px;
+}
+.seal {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(198, 97, 63, .55);
+  border-radius: 3px;
+  color: var(--accent-deep);
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1;
+  background: rgba(217, 119, 87, .05);
+  letter-spacing: 0;
+}
+.brand-text { display: flex; flex-direction: column; gap: 4px; }
+.brand-name {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink);
+  letter-spacing: 3px;
+  line-height: 1;
+}
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 2.4px;
+  color: var(--muted);
+}
+
+.nav-label {
+  margin: 26px 6px 8px;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px 9px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .14s var(--ease), color .14s var(--ease);
+}
+.nav-item:hover { background: #F1EEE5; color: var(--ink); }
+.nav-item.active { background: #F1EEE5; color: var(--ink); font-weight: 600; }
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.nav-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  opacity: .8;
+}
+.nav-tag {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .8px;
+  color: var(--accent-deep);
+  border: 1px solid rgba(198, 97, 63, .28);
+  border-radius: 3px;
+  padding: 1px 4px;
+  background: rgba(217, 119, 87, .06);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 16px 6px 2px;
+  border-top: 1px solid var(--line);
+}
+.local-line {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  color: var(--moss);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.local-note {
+  margin-top: 7px;
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.version {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: #A29C8C;
+}
+
+/* ---------------------------- 主区 ---------------------------- */
+
+.main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  background: var(--paper);
+}
+.scroll { overflow-y: auto; overflow-x: hidden; }
+.wrap {
+  max-width: 1104px;
+  margin: 0 auto;
+  padding: 34px 44px 44px;
+}
+
+/* 右侧竖排边注 */
+.marginalia {
+  position: fixed;
+  top: 132px;
+  right: 18px;
+  writing-mode: vertical-rl;
+  font-family: var(--serif);
+  font-size: 10.5px;
+  letter-spacing: 5px;
+  color: #B4AD9C;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 4;
+  pointer-events: none;
+}
+.marginalia::before {
+  content: "";
+  width: 1px;
+  height: 54px;
+  background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+  opacity: .55;
+}
+
+/* ---------------------------- 页首 ---------------------------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: 32px;
+  align-items: end;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2.6px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+}
+.eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--accent);
+  opacity: .8;
+  flex: none;
+}
+.hero h1 {
+  margin: 14px 0 12px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 56px;
+  line-height: 1.02;
+  letter-spacing: 6px;
+  color: var(--ink);
+}
+.hero h1 .tail {
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  margin-left: 10px;
+  vertical-align: 16px;
+}
+.tagline {
+  margin: 0;
+  max-width: 560px;
+  font-size: 13px;
+  line-height: 1.95;
+  color: var(--ink-soft);
+}
+.hero-meta {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1.3px;
+  color: var(--muted);
+}
+.hero-meta .sep { color: #C9C1AE; }
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 0 10px 0 12px;
+  transition: border-color .16s var(--ease), background .16s var(--ease);
+}
+.search:focus-within { border-color: #C9BFA9; background: #FFFEFB; }
+.search svg { flex: none; color: var(--muted); }
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0 8px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.search input::placeholder { color: #A9A292; }
+.kbd {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .8px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 4px;
+  background: var(--paper);
+}
+.search-note {
+  margin-top: 10px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: #A29C8C;
+}
+
+/* ---------------------------- 区块标题 ---------------------------- */
+
+.section { padding-top: 30px; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.section-no {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--accent-deep);
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: 2px;
+  margin: 0;
+}
+.section-en {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.rule-line { flex: 1; height: 1px; background: var(--line); }
+.section-count {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+/* ---------------------------- 常备卡 ---------------------------- */
+
+.pinned {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: 38px;
+  align-items: center;
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #F7F4EB;
+  position: relative;
+  overflow: hidden;
+}
+.pinned::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 26px;
+  width: 2px;
+  height: 44px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.pinned-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.gs-mark {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+.pinned-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2.2px;
+  color: var(--muted);
+}
+.pinned h3 {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+.pinned h3 em {
+  font-style: normal;
+  font-size: 18px;
+  color: #8E8776;
+  letter-spacing: .3px;
+}
+.pinned-desc {
+  margin: 0 0 16px;
+  max-width: 430px;
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--ink-soft);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.chip {
+  font-size: 10.5px;
+  letter-spacing: .4px;
+  color: #6B6557;
+  border: 1px solid #E2DCCC;
+  border-radius: 4px;
+  padding: 3px 7px;
+  background: rgba(255, 255, 255, .55);
+}
+.pinned-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ready {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .8px;
+  color: var(--moss);
+}
+.ready .dot { width: 6px; height: 6px; }
+.pinned-actions { margin-left: auto; display: flex; gap: 8px; }
+
+.btn {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease), transform .08s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--ink); color: #FAF9F5; }
+.btn-primary:hover { background: #2E2C28; }
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: #D6D1C4;
+}
+.btn-ghost:hover { background: #F1EEE5; border-color: #BDB6A4; }
+
+/* 叠纸上的成绩条 */
+.paper-stack { position: relative; }
+.paper-stack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate(7px, 7px) rotate(.7deg);
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.strip-sheet {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #DDD7C6;
+  border-radius: 6px;
+  padding: 10px 12px 12px;
+}
+.ss-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #EFEBE0;
+  margin-bottom: 6px;
+}
+.ss-title { font-size: 9.5px; color: var(--ink); letter-spacing: .3px; }
+.ss-sub { font-family: var(--mono); font-size: 7.5px; letter-spacing: 1.2px; color: var(--muted); }
+.ss-legend {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding-bottom: 7px;
+  font-family: var(--mono);
+  font-size: 7px;
+  color: #8E8878;
+}
+.ss-legend span { display: inline-flex; align-items: center; gap: 3px; }
+.ss-legend i { width: 6px; height: 6px; border-radius: 1px; background: var(--c); display: inline-block; }
+
+.ss-table { display: grid; gap: 2px; }
+.ss-row {
+  display: grid;
+  grid-template-columns: 1.2fr .72fr .72fr .92fr .56fr;
+  gap: 2px;
+  align-items: stretch;
+}
+.ss-row > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 19px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .2px;
+  border-radius: 2px;
+}
+.ss-headrow > span {
+  background: #F7F9FC;
+  color: #595959;
+  font-family: var(--sans);
+  font-size: 8px;
+  min-height: 17px;
+}
+.ss-name {
+  justify-content: flex-start !important;
+  padding-left: 5px;
+  background: #EAF2FF;
+  color: #1F3864;
+  font-family: var(--sans) !important;
+  font-size: 8.5px !important;
+}
+.ss-score { color: #262626; }
+.ss-total { background: #FFE699; color: #9C5700; font-weight: 600; }
+.ss-rank { background: #F2F2F2; color: #262626; }
+.t1 { background: var(--tier-1); color: #FFFFFF; }
+.t2 { background: var(--tier-2); }
+.t3 { background: var(--tier-3); }
+.t4 { background: var(--tier-4); }
+.t5 { background: var(--tier-5); }
+
+/* ---------------------------- 工具卡 ---------------------------- */
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.tool-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  gap: 14px;
+  align-items: center;
+  padding: 17px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .16s var(--ease), background .16s var(--ease), transform .1s ease;
+  overflow: hidden;
+}
+.tool-card:hover { border-color: var(--line-strong); background: #FEFCF7; }
+.tool-card:hover .tool-arrow { opacity: 1; transform: translate(1px, -1px); }
+.tool-card:hover .tool-glyph { color: var(--accent-deep); border-color: rgba(198, 97, 63, .42); background: rgba(217, 119, 87, .07); }
+.tool-card:active { transform: scale(.994); }
+
+.tool-glyph {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #E3DDCE;
+  border-radius: 7px;
+  color: #6E6859;
+  font-family: var(--serif);
+  font-size: 17px;
+  background: #FCFAF4;
+  transition: color .16s var(--ease), border-color .16s var(--ease), background .16s var(--ease);
+}
+.tool-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tool-meta { display: flex; align-items: center; gap: 8px; }
+.tool-no {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--accent-deep);
+}
+.tool-id {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .6px;
+  color: #ACA595;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tool-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.tool-desc {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tool-arrow {
+  color: #9C9585;
+  opacity: 0;
+  transform: translate(0, 0);
+  transition: opacity .16s var(--ease), transform .16s var(--ease);
+  display: flex;
+}
+
+.empty {
+  display: none;
+  padding: 46px 0;
+  text-align: center;
+  color: var(--muted);
+}
+.empty.show { display: block; }
+.empty-glyph {
+  font-family: var(--serif);
+  font-size: 30px;
+  color: #C6BFAE;
+  margin-bottom: 10px;
+}
+.empty-text { font-size: 12.5px; }
+.empty-text b { color: var(--ink); font-weight: 600; }
+
+/* ---------------------------- 页脚 / 状态栏 ---------------------------- */
+
+.page-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: #A8A192;
+}
+.page-foot .right { margin-left: auto; }
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 44px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 11px;
+  color: var(--muted);
+}
+.statusbar .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--moss); }
+.statusbar .right {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: #A8A192;
+}
+#status-text { transition: color .2s ease; }
+
+/* ---------------------------- 抽屉 ---------------------------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(20, 20, 19, .16);
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .26s var(--ease);
+}
+.backdrop.open { opacity: 1; pointer-events: auto; }
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 41;
+  width: 464px;
+  max-width: 92vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-left: 1px solid var(--line);
+  box-shadow: -26px 0 70px rgba(20, 20, 19, .10);
+  transform: translateX(102%);
+  transition: transform .34s var(--ease);
+}
+.panel.open { transform: translateX(0); }
+.panel-scroll { overflow-y: auto; padding: 28px 30px 36px; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.panel-close {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .14s var(--ease), color .14s var(--ease), border-color .14s var(--ease);
+}
+.panel-close:hover { background: #F1EEE5; color: var(--ink); border-color: var(--line-strong); }
+.panel-title {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 33px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+.panel-title em { font-style: normal; color: #8E8776; font-size: 20px; letter-spacing: 0; }
+.panel-id {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1.3px;
+  color: var(--accent-deep);
+  margin-bottom: 16px;
+}
+.panel-desc {
+  font-size: 12.5px;
+  line-height: 1.95;
+  color: var(--ink-soft);
+  margin: 0 0 22px;
+}
+
+.drop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 30px 20px 26px;
+  border: 1.5px dashed #D6D1C4;
+  border-radius: 10px;
+  background: #FCFAF4;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .16s var(--ease), border-color .16s var(--ease);
+}
+.drop:hover { background: #F7F5EE; border-color: #BDB6A4; }
+.drop-icon { color: var(--accent); }
+.drop-title { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.drop-sub { font-size: 10.5px; color: var(--muted); letter-spacing: .2px; }
+
+.spec {
+  margin: 22px 0 0;
+  border-top: 1px solid var(--line);
+}
+.spec-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+}
+.spec-row dt {
+  width: 44px;
+  flex: none;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: .6px;
+}
+.spec-row dd { margin: 0; color: var(--ink-soft); line-height: 1.6; }
+.spec-row dd.mono { font-family: var(--mono); font-size: 10.5px; letter-spacing: .4px; }
+
+.planned {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--paper-deep);
+  font-size: 10.5px;
+  line-height: 1.75;
+  color: #7E7868;
+}
+.planned .dot { margin-top: 5px; color: var(--accent); }
+
+.shots { display: grid; gap: 10px; margin-bottom: 22px; }
+.shot {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+.shot-cap {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 1.1px;
+  color: var(--muted);
+  margin-top: -3px;
+}
+
+.feature-list { border-top: 1px solid var(--line); margin-top: 4px; }
+.feature-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+}
+.feature-row .idx {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent-deep);
+  width: 18px;
+  flex: none;
+}
+.feature-row .txt { color: var(--ink-soft); }
+.panel-cta { display: flex; gap: 8px; margin-top: 22px; }
+.panel-cta .btn { flex: 1; padding: 10px 14px; }
+
+/* 吐司 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 56px;
+  z-index: 60;
+  transform: translate(-50%, 10px);
+  background: var(--ink);
+  color: #F7F5EE;
+  font-size: 11.5px;
+  letter-spacing: .3px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s var(--ease), transform .22s var(--ease);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------------------- 进场 ---------------------------- */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: rise .5s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 42ms + 80ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------------------------- 自适应 ---------------------------- */
+
+@media (max-width: 1360px) {
+  .marginalia { display: none; }
+}
+@media (max-width: 1120px) {
+  .pinned { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .paper-stack { max-width: 400px; }
+  .hero { grid-template-columns: minmax(0, 1fr) 250px; }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; min-width: 0; }
+  .sidebar { display: none; }
+  .hero { grid-template-columns: 1fr; align-items: start; }
+  .tool-grid { grid-template-columns: 1fr; }
+  .wrap { padding: 26px 22px 36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ==================== 侧栏 ==================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="seal">微</div>
+      <div class="brand-text">
+        <span class="brand-name">知微</span>
+        <span class="brand-sub">TEACHCRAFT</span>
+      </div>
+    </div>
+
+    <div class="nav-label">工作台</div>
+    <nav class="nav">
+      <button class="nav-item active" data-nav="all">
+        全部工具<span class="nav-count">10</span>
+      </button>
+      <button class="nav-item" data-nav="project">
+        分晓 · 成绩条<span class="nav-tag">常备</span>
+      </button>
+    </nav>
+
+    <div class="nav-label">分类</div>
+    <nav class="nav">
+      <button class="nav-item" data-nav="image">
+        图片处理<span class="nav-count">04</span>
+      </button>
+      <button class="nav-item" data-nav="file">
+        格式工厂<span class="nav-count">06</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="local-line"><span class="dot"></span>LOCAL ONLY</div>
+      <div class="local-note">文件只在这台电脑上处理，不上传、不留存。</div>
+      <div class="version">PREVIEW 0.1</div>
+    </div>
+  </aside>
+
+  <!-- ==================== 主区 ==================== -->
+  <main class="main">
+    <div class="scroll" id="scroll">
+      <div class="marginalia">见微知著 · 案头十器</div>
+      <div class="wrap">
+
+        <header class="hero">
+          <div>
+            <div class="eyebrow">TOOLBOX / 教师工具箱</div>
+            <h1>知微<span class="tail">TeachCraft</span></h1>
+            <p class="tagline">见微知著。把成绩、图片与文档里的琐碎，收进一只放在案头的盒子。</p>
+            <div class="hero-meta">
+              <span>10 件工具</span><span class="sep">/</span>
+              <span>本机处理</span><span class="sep">/</span>
+              <span>无需联网</span>
+            </div>
+          </div>
+          <div>
+            <div class="search">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M10.6 10.6L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              <input id="search" type="search" placeholder="搜索工具或格式" autocomplete="off" aria-label="搜索工具" />
+              <span class="kbd">CTRL K</span>
+            </div>
+            <div class="search-note">ALL TOOLS · 10</div>
+          </div>
+        </header>
+
+        <!-- 常备 -->
+        <section class="section" id="sec-project" data-section="project">
+          <div class="section-head">
+            <span class="section-no">01</span>
+            <h2 class="section-title">案头常备</h2>
+            <span class="section-en">Pinned</span>
+            <span class="rule-line"></span>
+            <span class="section-count">01</span>
+          </div>
+
+          <div class="pinned reveal" style="--i:0">
+            <div>
+              <div class="pinned-head">
+                <svg class="gs-mark" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+                  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+                  <rect x="26" y="32" width="68" height="12" rx="3" fill="#141413"/>
+                  <rect x="26" y="52" width="68" height="16" rx="3" fill="#E7E3D8"/>
+                  <rect x="28" y="54" width="38" height="12" rx="2" fill="#3D3B36"/>
+                  <rect x="26" y="76" width="68" height="12" rx="3" fill="#85806F"/>
+                  <line x1="72" y1="24" x2="72" y2="96" stroke="#D97757" stroke-width="3.5" stroke-linecap="round"/>
+                  <circle cx="72" cy="24" r="3.5" fill="#D97757"/>
+                </svg>
+                <span class="pinned-eyebrow">GRADESTRIP / 分晓</span>
+              </div>
+              <h3>分晓 <em>· GradeStrip</em></h3>
+              <p class="pinned-desc">把智学网导出的成绩总表，变成一叠可以裁开的成绩条。多考进退、学科诊断、学生画像，都在同一张纸上。</p>
+              <div class="chips">
+                <span class="chip">成绩条导出</span>
+                <span class="chip">多考对比</span>
+                <span class="chip">学科诊断</span>
+                <span class="chip">学生画像</span>
+              </div>
+              <div class="pinned-foot">
+                <span class="ready"><span class="dot"></span>已就绪</span>
+                <span class="pinned-actions">
+                  <button class="btn btn-ghost" data-open="gradestrip">项目详情</button>
+                  <button class="btn btn-primary" data-launch>打开应用</button>
+                </span>
+              </div>
+            </div>
+
+            <div class="paper-stack" aria-hidden="true">
+              <div class="strip-sheet">
+                <div class="ss-head">
+                  <span class="ss-title">九6班 · 第一次段考</span>
+                  <span class="ss-sub">个人成绩条</span>
+                </div>
+                <div class="ss-legend">
+                  <span><i style="--c:var(--tier-1)"></i>1-3</span>
+                  <span><i style="--c:var(--tier-2)"></i>4-10</span>
+                  <span><i style="--c:var(--tier-3)"></i>11-20</span>
+                  <span><i style="--c:var(--tier-4)"></i>21-35</span>
+                  <span><i style="--c:var(--tier-5)"></i>36+</span>
+                </div>
+                <div class="ss-table">
+                  <div class="ss-row ss-headrow">
+                    <span>姓名</span><span>语文</span><span>数学</span><span>总分</span><span>班次</span>
+                  </div>
+                  <div class="ss-row">
+                    <span class="ss-name">黄骏峰</span>
+                    <span class="ss-score t1">102</span>
+                    <span class="ss-score t1">85</span>
+                    <span class="ss-total">754.9</span>
+                    <span class="ss-rank">1</span>
+                  </div>
+                  <div class="ss-row">
+                    <span class="ss-name">肖悦家</span>
+                    <span class="ss-score t1">99</span>
+                    <span class="ss-score t1">88</span>
+                    <span class="ss-total">749.1</span>
+                    <span class="ss-rank">2</span>
+                  </div>
+                  <div class="ss-row">
+                    <span class="ss-name">黄北辰</span>
+                    <span class="ss-score t1">98</span>
+                    <span class="ss-score t1">77</span>
+                    <span class="ss-total">699.9</span>
+                    <span class="ss-rank">3</span>
+                  </div>
+                  <div class="ss-row">
+                    <span class="ss-name">谢声烨</span>
+                    <span class="ss-score t2">96</span>
+                    <span class="ss-score t2">84</span>
+                    <span class="ss-total">651.2</span>
+                    <span class="ss-rank">8</span>
+                  </div>
+                  <div class="ss-row">
+                    <span class="ss-name">李瑞鹏</span>
+                    <span class="ss-score t4">71</span>
+                    <span class="ss-score t4">63</span>
+                    <span class="ss-total">547.3</span>
+                    <span class="ss-rank">24</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 图片处理 -->
+        <section class="section" id="sec-image" data-section="image">
+          <div class="section-head">
+            <span class="section-no">02</span>
+            <h2 class="section-title">图片处理</h2>
+            <span class="section-en">Image</span>
+            <span class="rule-line"></span>
+            <span class="section-count" data-count="image">04</span>
+          </div>
+          <div class="tool-grid" id="grid-image"></div>
+        </section>
+
+        <!-- 格式工厂 -->
+        <section class="section" id="sec-file" data-section="file">
+          <div class="section-head">
+            <span class="section-no">03</span>
+            <h2 class="section-title">格式工厂</h2>
+            <span class="section-en">File / PDF</span>
+            <span class="rule-line"></span>
+            <span class="section-count" data-count="file">06</span>
+          </div>
+          <div class="tool-grid" id="grid-file"></div>
+        </section>
+
+        <div class="empty" id="empty">
+          <div class="empty-glyph">微</div>
+          <div class="empty-text">没有找到叫「<b id="empty-q"></b>」的工具，换个格式名试试。</div>
+        </div>
+
+        <footer class="page-foot">
+          <span>知微 · TEACHCRAFT</span>
+          <span>见微知著</span>
+          <span class="right">DESIGNED AFTER 分晓 · GRADESTRIP</span>
+        </footer>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span class="status-dot"></span>
+      <span id="status-text">本机运行 · 文件不上传</span>
+      <span class="right">PREVIEW 0.1 · 10 TOOLS</span>
+    </div>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" aria-hidden="true">
+  <div class="panel-scroll" id="panel-body"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================ 数据 ============================ */
+
+const TOOLS = [
+  {
+    no: '01', id: 'image-convert', cat: 'image', glyph: '图',
+    name: '图片格式转换',
+    desc: 'PNG、JPG、WebP 格式之间自由互转。',
+    input: 'PNG / JPG / WebP', output: '指定目标格式',
+  },
+  {
+    no: '02', id: 'image-resize', cat: 'image', glyph: '图',
+    name: '图片尺寸调整',
+    desc: '自定义像素、分辨率或等比例缩放。',
+    input: '任意图片', output: '指定宽高或缩放比例',
+  },
+  {
+    no: '03', id: 'image-compress', cat: 'image', glyph: '图',
+    name: '图片压缩',
+    desc: '调节画质与体积，减小图片占用空间。',
+    input: 'PNG / JPG / WebP', output: '压缩后的同格式图片',
+  },
+  {
+    no: '04', id: 'image-watermark', cat: 'image', glyph: '图',
+    name: '图片加水印',
+    desc: '添加自定义文字水印，保护版式版权。',
+    input: '任意图片', output: '带文字水印的图片',
+  },
+  {
+    no: '05', id: 'pdf-word', cat: 'file', glyph: '档',
+    name: 'PDF 转 Word',
+    desc: '提取可编辑文字，或保留页面版式转换为 DOCX。',
+    input: 'PDF 文档', output: 'DOCX 文档',
+  },
+  {
+    no: '06', id: 'word-pdf', cat: 'file', glyph: '档',
+    name: 'Word 转 PDF',
+    desc: '将 DOCX 文档转换为 PDF 文件，版式不跑偏。',
+    input: 'DOCX 文档', output: 'PDF 文件',
+  },
+  {
+    no: '07', id: 'images-pdf', cat: 'file', glyph: '档',
+    name: '图片合成 PDF',
+    desc: '多张图片或照片按顺序合并生成一份 PDF。',
+    input: '多张图片', output: '单份 PDF 文档',
+  },
+  {
+    no: '08', id: 'pdf-images', cat: 'file', glyph: '档',
+    name: 'PDF 转图片',
+    desc: '逐页导出高清 PNG 图片并打包下载。',
+    input: 'PDF 文档', output: 'PNG 图片压缩包',
+  },
+  {
+    no: '09', id: 'pdf-merge', cat: 'file', glyph: '档',
+    name: 'PDF 合并',
+    desc: '多份 PDF 文档按顺序拼接合为一份。',
+    input: '多份 PDF', output: '合并后的 PDF',
+  },
+  {
+    no: '10', id: 'pdf-split', cat: 'file', glyph: '档',
+    name: 'PDF 拆分提取',
+    desc: '选取指定页码范围，生成新的 PDF 文件。',
+    input: 'PDF 文档', output: '指定页范围的新 PDF',
+  },
+];
+
+const CAT_LABEL = { image: '图片处理', file: '格式工厂' };
+const CAT_EN = { image: 'IMAGE', file: 'FILE / PDF' };
+
+/* ============================ 渲染 ============================ */
+
+const svgArrow = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.5 10.5L10.5 3.5M5 3.5h5.5V9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function cardHTML(t, i) {
+  return `<button class="tool-card reveal" data-open="${t.id}" style="--i:${i + 2}">
+    <span class="tool-glyph">${t.glyph}</span>
+    <span class="tool-body">
+      <span class="tool-meta"><span class="tool-no">${t.no}</span><span class="tool-id">${t.id}</span></span>
+      <span class="tool-name">${t.name}</span>
+      <span class="tool-desc">${t.desc}</span>
+    </span>
+    <span class="tool-arrow">${svgArrow}</span>
+  </button>`;
+}
+
+document.getElementById('grid-image').innerHTML =
+  TOOLS.filter(t => t.cat === 'image').map(cardHTML).join('');
+document.getElementById('grid-file').innerHTML =
+  TOOLS.filter(t => t.cat === 'file').map((t, i) => cardHTML(t, i + 4)).join('');
+
+/* ============================ 抽屉 ============================ */
+
+const panel = document.getElementById('panel');
+const panelBody = document.getElementById('panel-body');
+const backdrop = document.getElementById('backdrop');
+let lastFocus = null;
+
+const closeIcon = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+const dropIcon = '<svg width="34" height="34" viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M18 7v16m0 0l-6-6m6 6l6-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 25v2.5A2.5 2.5 0 0010.5 30h15A2.5 2.5 0 0028 27.5V25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+
+function headHTML(eyebrow) {
+  return `<div class="panel-head">
+    <span class="eyebrow">${eyebrow}</span>
+    <button class="panel-close" data-close aria-label="关闭">${closeIcon}</button>
+  </div>`;
+}
+
+function toolPanel(t) {
+  return `${headHTML(CAT_EN[t.cat] + ' / ' + CAT_LABEL[t.cat])}
+    <h2 class="panel-title" id="panel-title">${t.name}</h2>
+    <div class="panel-id">${t.id}</div>
+    <p class="panel-desc">${t.desc}</p>
+    <button class="drop" data-drop>
+      <span class="drop-icon">${dropIcon}</span>
+      <span class="drop-title">把文件拖到这里</span>
+      <span class="drop-sub">或点击选择文件 · 支持 ${t.input}</span>
+    </button>
+    <dl class="spec">
+      <div class="spec-row"><dt>输入</dt><dd class="mono">${t.input}</dd></div>
+      <div class="spec-row"><dt>输出</dt><dd class="mono">${t.output}</dd></div>
+      <div class="spec-row"><dt>位置</dt><dd>本机处理，文件不离开这台电脑</dd></div>
+    </dl>
+    <div class="planned"><span class="dot"></span><span>预览稿：这一页的版式先定下来，处理引擎会在正式版接入。</span></div>`;
+}
+
+function projectPanel() {
+  return `${headHTML('PINNED / 案头常备')}
+    <h2 class="panel-title" id="panel-title">分晓 <em>· GradeStrip</em></h2>
+    <div class="panel-id">GRADESTRIP · 2026.10</div>
+    <p class="panel-desc">一位老师从智学网导出总表，到手里攥着一叠裁好的成绩条，中间只隔着一次拖放。多场考试按顺序排好，进退步、学科诊断、学生画像一起算。</p>
+    <div class="shots">
+      <img class="shot" src="assets/shots/overview.png" alt="分晓 · 数据概览界面" loading="lazy" />
+      <div class="shot-cap">01 · 数据概览 / 科目表现与班次分布</div>
+      <img class="shot" src="assets/shots/strips.png" alt="分晓 · 成绩条预览界面" loading="lazy" />
+      <div class="shot-cap">02 · 成绩条 / A4 横向 · 一页宽</div>
+    </div>
+    <dl class="spec">
+      <div class="spec-row"><dt>平台</dt><dd class="mono">WINDOWS / MACOS</dd></div>
+      <div class="spec-row"><dt>输入</dt><dd class="mono">.xlsx / .xlsm</dd></div>
+      <div class="spec-row"><dt>输出</dt><dd class="mono">A4 横向成绩条 .xlsx</dd></div>
+      <div class="spec-row"><dt>数据</dt><dd>全程本机，文件不上传</dd></div>
+    </dl>
+    <div class="feature-list">
+      <div class="feature-row"><span class="idx">A</span><span class="txt">多场考试按时间排序，任选基准算进退步</span></div>
+      <div class="feature-row"><span class="idx">B</span><span class="txt">学科诊断：得分率、分段分布与教学建议</span></div>
+      <div class="feature-row"><span class="idx">C</span><span class="txt">学生画像：单科对照、班级位置、历次走势</span></div>
+    </div>
+    <div class="panel-cta">
+      <button class="btn btn-ghost" data-close>关闭</button>
+      <button class="btn btn-primary" data-launch>打开分晓</button>
+    </div>`;
+}
+
+function openPanel(id) {
+  const t = TOOLS.find(x => x.id === id);
+  if (id === 'gradestrip') {
+    panelBody.innerHTML = projectPanel();
+    setStatus('正在查看 分晓 · GradeStrip');
+  } else if (t) {
+    panelBody.innerHTML = toolPanel(t);
+    setStatus('正在查看 ' + t.name + ' · 计划中');
+  } else {
+    return;
+  }
+  lastFocus = document.activeElement;
+  panel.classList.add('open');
+  backdrop.classList.add('open');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  panel.querySelector('[data-close]').focus();
+}
+
+function closePanel() {
+  if (!panel.classList.contains('open')) return;
+  panel.classList.remove('open');
+  backdrop.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  setStatus('本机运行 · 文件不上传');
+  if (lastFocus) lastFocus.focus({ preventScroll: true });
+}
+
+/* ============================ 状态 / 吐司 ============================ */
+
+const statusText = document.getElementById('status-text');
+const statusDot = document.querySelector('.status-dot');
+
+function setStatus(text, tone) {
+  statusText.textContent = text;
+  statusDot.style.background = tone === 'accent' ? 'var(--accent)' : 'var(--moss)';
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ============================ 事件 ============================ */
+
+document.addEventListener('click', e => {
+  const openBtn = e.target.closest('[data-open]');
+  if (openBtn) { openPanel(openBtn.dataset.open); return; }
+
+  if (e.target.closest('[data-close]') || e.target === backdrop) { closePanel(); return; }
+
+  if (e.target.closest('[data-launch]')) {
+    toast('预览稿 · 正式版将在这里直接唤起 分晓 · GradeStrip');
+    return;
+  }
+
+  if (e.target.closest('[data-drop]')) {
+    toast('预览稿 · 拖放与转换将在正式版启用');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    document.getElementById('search').focus();
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (panel.classList.contains('open')) closePanel();
+    else if (document.activeElement === document.getElementById('search')) {
+      document.getElementById('search').blur();
+    }
+    return;
+  }
+  if (e.key === '/' && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) {
+    e.preventDefault();
+    document.getElementById('search').focus();
+  }
+  if (e.key === 'Tab' && panel.classList.contains('open')) {
+    const focusables = panel.querySelectorAll('button, [href], input, img[tabindex]');
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+/* ============================ 搜索 ============================ */
+
+const searchInput = document.getElementById('search');
+const emptyEl = document.getElementById('empty');
+const emptyQ = document.getElementById('empty-q');
+
+function applyFilter(q) {
+  const query = q.trim().toLowerCase();
+  let total = 0;
+  const visible = { image: 0, file: 0 };
+
+  document.querySelectorAll('.tool-card').forEach(card => {
+    const t = TOOLS.find(x => x.id === card.dataset.open);
+    const hay = (t.name + ' ' + t.id + ' ' + t.desc + ' ' + t.input + ' ' + t.output).toLowerCase();
+    const hit = !query || hay.includes(query);
+    card.style.display = hit ? '' : 'none';
+    if (hit) { total++; visible[t.cat]++; }
+  });
+
+  ['image', 'file'].forEach(cat => {
+    document.getElementById('sec-' + cat).style.display = visible[cat] ? '' : 'none';
+    document.querySelector(`[data-count="${cat}"]`).textContent = String(visible[cat]).padStart(2, '0');
+  });
+
+  emptyEl.classList.toggle('show', total === 0);
+  emptyQ.textContent = q.trim();
+  document.querySelector('.search-note').textContent = query ? `MATCH · ${total}` : 'ALL TOOLS · 10';
+  document.querySelector('[data-count="all"]');
+}
+
+searchInput.addEventListener('input', () => applyFilter(searchInput.value));
+
+/* ============================ 导航滚动 ============================ */
+
+const scrollEl = document.getElementById('scroll');
+const navItems = document.querySelectorAll('.nav-item');
+
+navItems.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.nav;
+    if (key === 'project') {
+      // 分晓：既滚到常备卡，也展开它的详情
+      document.getElementById('sec-project').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setNav('project');
+      return;
+    }
+    const target = key === 'all' ? 0 : document.getElementById('sec-' + key).offsetTop - 18;
+    scrollEl.scrollTo({ top: target, behavior: 'smooth' });
+    setNav(key);
+  });
+});
+
+function setNav(key) {
+  navItems.forEach(b => b.classList.toggle('active', b.dataset.nav === key));
+}
+
+// 简易滚动监听：以 140px 为判定线
+let ticking = false;
+scrollEl.addEventListener('scroll', () => {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const line = 150;
+    let current = 'all';
+    ['project', 'image', 'file'].forEach(key => {
+      const el = document.getElementById('sec-' + key);
+      if (el && el.getBoundingClientRect().top <= line) current = key;
+    });
+    if (scrollEl.scrollTop < 60) current = 'all';
+    setNav(current);
+    ticking = false;
+  });
+});
+
+// 分晓常备卡：整卡可点开详情
+document.querySelector('.pinned').addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  openPanel('gradestrip');
+});
+</script>
+</body>
+</html>

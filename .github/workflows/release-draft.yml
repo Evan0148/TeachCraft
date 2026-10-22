@@ -1,0 +1,219 @@
+name: Cross-Platform Matrix Build & Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - '.memory/**'
+      - 'docs/**'
+      - 'design-preview/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Tests
+        run: dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj --configuration Release --verbosity normal
+
+  build-matrix:
+    name: Build (${{ matrix.rid }} · ${{ matrix.deployment }})
+    needs: test
+    runs-on: ${{ startsWith(matrix.rid, 'osx-') && 'macos-latest' || 'windows-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # linux-arm (32 位) 不参与：QuestPDF 没有该架构的原生库
+        rid:
+          - win-x86
+          - win-x64
+          - win-arm64
+          - osx-x64
+          - osx-arm64
+          - linux-x64
+          - linux-arm64
+        deployment:
+          - self-contained
+          - framework-dependent
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Prepare Version & Deployment
+        shell: pwsh
+        run: |
+          ./scripts/version.ps1
+          if ("${{ matrix.deployment }}" -eq "self-contained") {
+            $sc = "true"
+            $modeLabel = "sc"
+          } else {
+            $sc = "false"
+            $modeLabel = "fdd"
+          }
+          echo "SELF_CONTAINED=$sc" >> $env:GITHUB_ENV
+          echo "MODE_LABEL=$modeLabel" >> $env:GITHUB_ENV
+
+      - name: Publish Windows & Linux Artifact
+        if: ${{ !startsWith(matrix.rid, 'osx-') }}
+        shell: pwsh
+        run: |
+          $publishDir = "dist/TeachCraft-${{ matrix.rid }}-${{ env.MODE_LABEL }}"
+          dotnet publish src/TeachCraft.App/TeachCraft.App.csproj `
+            --configuration Release `
+            --runtime ${{ matrix.rid }} `
+            --self-contained ${{ env.SELF_CONTAINED }} `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -o $publishDir
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          Get-ChildItem -Path $publishDir -Filter *.pdb -Recurse | Remove-Item -Force
+
+          New-Item -ItemType Directory -Path "artifacts" -Force | Out-Null
+          $zipName = "TeachCraft-${{ env.VERSION_TAG }}-${{ matrix.rid }}-${{ env.MODE_LABEL }}.zip"
+          Compress-Archive -Path "$publishDir/*" -DestinationPath "artifacts/$zipName" -Force
+
+      - name: Build Windows Setup Installer
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        run: |
+          ./build-installer.ps1 `
+            -Rid "${{ matrix.rid }}" `
+            -Version "${{ env.VERSION_TAG }}" `
+            -Deployment "${{ matrix.deployment }}" `
+            -SkipPublish
+
+      - name: Build macOS Bundle & DMG
+        if: startsWith(matrix.rid, 'osx-')
+        run: |
+          chmod +x bundle/macos/build-dmg.sh
+          ./bundle/macos/build-dmg.sh "${{ matrix.rid }}" "${{ env.VERSION_TAG }}" "${{ matrix.deployment }}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.rid }}-${{ matrix.deployment }}
+          path: artifacts/*
+          if-no-files-found: error
+
+  publish-release:
+    name: Aggregate & Publish Release
+    needs: build-matrix
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Prepare Version
+        shell: pwsh
+        run: ./scripts/version.ps1
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Inspect Assets
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path release-assets -Recurse | Select-Object Name, Length
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: 知微 · TeachCraft ${{ env.VERSION_TAG }}
+          draft: false
+          prerelease: ${{ env.IS_RELEASE != 'true' }}
+          files: |
+            release-assets/*.zip
+            release-assets/*.exe
+            release-assets/*.dmg
+          body: |
+            ## 知微 · TeachCraft 全矩阵跨平台构建（${{ env.VERSION_TAG }}）
+
+            以「分晓 · GradeStrip」的纸墨设计语言做出的教师工具箱：10 件图片 / PDF 小工具，加上分晓本体，一个窗口里全部搞定。
+
+            ### 工具清单
+            - **分晓 · GradeStrip**：成绩总表 → 个人成绩条，多考对比、学科诊断、学生画像。
+            - **图片处理**：格式转换、尺寸调整、压缩、文字水印。
+            - **格式工厂**：PDF ↔ Word、图片合成 PDF、PDF 转图片、PDF 合并、PDF 拆分提取。
+
+            ### 资产包说明
+            - **Windows Setup 安装包（`*-Setup.exe`）**：⭐ Windows 用户首选，单文件向导，自动创建桌面与开始菜单快捷方式，默认免提权安装（机房电脑无管理员权限也可安装）。
+            - **macOS 原生安装镜像（`*.dmg`）**：⭐ Mac 用户首选，打开后把「知微」拖进 Applications 即可；本地 ad-hoc 签名，开箱即用。
+            - **绿色便携包（`*.zip`）**：解压即用，适合 U 盘或机房移动使用；macOS 的 zip 解压后得到 `TeachCraft.app`。
+            - **独立部署（`sc`）**：内嵌 .NET 运行时，**无需安装 .NET**（推荐）。
+            - **依赖框架部署（`fdd`）**：体积更小，需要 [.NET 10.0 Runtime](https://dotnet.microsoft.com/download)。
+
+            | 平台 / 架构 | 独立版（开箱即用） | 依赖框架版（需 .NET 10） |
+            | :--- | :--- | :--- |
+            | **Windows x64** | `TeachCraft-*-win-x64-sc-Setup.exe` / `.zip` | `...-win-x64-fdd-Setup.exe` / `.zip` |
+            | **Windows x86 (32 位)** | `TeachCraft-*-win-x86-sc-Setup.exe` / `.zip` | `...-win-x86-fdd-Setup.exe` / `.zip` |
+            | **Windows ARM64** | `TeachCraft-*-win-arm64-sc-Setup.exe` / `.zip` | `...-win-arm64-fdd-Setup.exe` / `.zip` |
+            | **macOS ARM64（M1~M4）** | `TeachCraft-*-osx-arm64-sc.dmg` | `...-osx-arm64-fdd.dmg` |
+            | **macOS x64（Intel）** | `TeachCraft-*-osx-x64-sc.dmg` | `...-osx-x64-fdd.dmg` |
+            | **Linux x64** | `TeachCraft-*-linux-x64-sc.zip` | `...-linux-x64-fdd.zip` |
+            | **Linux ARM64** | `TeachCraft-*-linux-arm64-sc.zip` | `...-linux-arm64-fdd.zip` |
+
+            > Linux 32 位 ARM 暂不提供：PDF 排版引擎 QuestPDF 没有该架构的原生库。
+
+            ### 隐私与安全
+            - **Local Only**：全部处理在本机完成，文件不上传、不留存。
+            - 本仓库的预览版由 `main` 分支自动构建；带 `-preview.` 的版本为预发布版，旧预览版会自动转为草稿。
+
+            ---
+            *Commit*: `${{ github.sha }}`
+            *Triggered by*: `${{ github.actor }}`
+
+      - name: Demote Previous Preview Releases to Draft
+        if: ${{ env.IS_RELEASE != 'true' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_TAG: ${{ env.VERSION_TAG }}
+        run: |
+          $headers = @{
+            "Authorization" = "Bearer $env:GH_TOKEN"
+            "Accept" = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $repo = "${{ github.repository }}"
+          Write-Host "Fetching releases for $repo..."
+          try {
+            $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100" -Headers $headers -Method Get
+            foreach ($rel in $releases) {
+              if ($rel.draft -eq $false -and $rel.tag_name -ne $env:CURRENT_TAG -and $rel.tag_name -like '*-preview.*') {
+                Write-Host "Demoting older preview $($rel.tag_name) (ID: $($rel.id)) to draft..."
+                $body = @{ draft = $true } | ConvertTo-Json
+                Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/$($rel.id)" -Headers $headers -Method Patch -Body $body -ContentType "application/json"
+              }
+            }
+          } catch {
+            Write-Warning "Non-blocking warning: Failed to demote some releases to draft: $_"
+          }

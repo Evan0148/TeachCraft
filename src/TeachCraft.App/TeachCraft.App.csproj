@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\teachcraft.ico</ApplicationIcon>
+    <AssemblyName>TeachCraft</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TeachCraft.Core\TeachCraft.Core.csproj" />
+    <ProjectReference Include="..\..\vendor\gradestrip\src\GradeStrip.App\GradeStrip.App.csproj" />
+  </ItemGroup>
+
+  <!-- 分晓以程序集形式在主窗口中打开，发布目录里不需要它自己的 exe。 -->
+  <Target Name="RemoveGradeStripAppHost" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)GradeStrip.App.exe" />
+  </Target>
+
+</Project>
+

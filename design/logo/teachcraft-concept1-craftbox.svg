@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="c1-bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCFAF6" />
+      <stop offset="100%" stop-color="#F3EFE6" />
+    </linearGradient>
+    <linearGradient id="c1-card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#FAF8F2" />
+    </linearGradient>
+    <linearGradient id="c1-seal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E27B5A" />
+      <stop offset="100%" stop-color="#BE5333" />
+    </linearGradient>
+    <linearGradient id="c1-ink-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#141413" />
+      <stop offset="100%" stop-color="#3D3B36" />
+    </linearGradient>
+    <filter id="c1-shadow-outer" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#2D2820" flood-opacity="0.10" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#2D2820" flood-opacity="0.04" />
+    </filter>
+    <filter id="c1-shadow-card" x="-10%" y="-10%" width="120%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#3D372E" flood-opacity="0.08" />
+    </filter>
+    <filter id="c1-shadow-seal" x="-12%" y="-12%" width="124%" height="128%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#9C3A1E" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <!-- 1. 案头外框 Squircle -->
+  <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#c1-bg-grad)" stroke="#E5DFCFA0" stroke-width="3" filter="url(#c1-shadow-outer)"/>
+  
+  <!-- 内缘雅致界线 -->
+  <rect x="46" y="46" width="420" height="420" rx="90" fill="none" stroke="#ECE6D7" stroke-width="1.8"/>
+
+  <!-- 2. 底层纸张（微倾 -2.6°，营造桌面手作案头感） -->
+  <g transform="rotate(-2.6 248 252)">
+    <rect x="94" y="112" width="310" height="272" rx="14" fill="#EFEBE0" stroke="#DDD6C5" stroke-width="2"/>
+    <line x1="114" y1="134" x2="384" y2="134" stroke="#D3CCA8" stroke-width="1.5" stroke-dasharray="3 6"/>
+  </g>
+
+  <!-- 3. 主层白宣纸卡片（平正放置，带柔和投影） -->
+  <g filter="url(#c1-shadow-card)">
+    <rect x="94" y="116" width="324" height="276" rx="14" fill="url(#c1-card-grad)" stroke="#E7E2D4" stroke-width="2.5"/>
+    
+    <!-- 纸面精微浅格网线 -->
+    <line x1="126" y1="196" x2="276" y2="196" stroke="#F0EBE0" stroke-width="1.5"/>
+    <line x1="126" y1="228" x2="276" y2="228" stroke="#F0EBE0" stroke-width="1.5"/>
+    <line x1="126" y1="260" x2="350" y2="260" stroke="#F0EBE0" stroke-width="1.5"/>
+    <line x1="126" y1="292" x2="350" y2="292" stroke="#F0EBE0" stroke-width="1.5"/>
+
+    <!-- 数据条目 / 标题条 (墨色) -->
+    <rect x="126" y="152" width="138" height="18" rx="4" fill="url(#c1-ink-grad)"/>
+    <circle cx="140" cy="161" r="3" fill="#D97757"/>
+
+    <!-- 分档诊断色块条 (苔绿、浅绿、陶土浅金，呼应分晓五档色) -->
+    <g transform="translate(126, 184)">
+      <rect x="0" y="0" width="46" height="13" rx="3" fill="#5A7A4B"/>
+      <rect x="52" y="0" width="36" height="13" rx="3" fill="#88B868"/>
+      <rect x="94" y="0" width="42" height="13" rx="3" fill="#F4A261"/>
+      <rect x="142" y="0" width="28" height="13" rx="3" fill="#E6DFCE"/>
+    </g>
+
+    <!-- 文本占位浅色条 -->
+    <rect x="126" y="214" width="138" height="10" rx="3" fill="#EAE5D8"/>
+    <rect x="126" y="234" width="94" height="10" rx="3" fill="#EAE5D8"/>
+
+    <!-- 教师批注与裁切垂直准星（陶土红切线，上带指示圆点） -->
+    <line x1="284" y1="140" x2="284" y2="304" stroke="#D97757" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="284" cy="140" r="6" fill="#C6613F"/>
+    <circle cx="284" cy="140" r="2.5" fill="#FFFFFF"/>
+
+    <!-- 底部微型标尺刻度 -->
+    <g stroke="#C8C0AE" stroke-width="1.5" stroke-linecap="round">
+      <line x1="126" y1="352" x2="386" y2="352"/>
+      <line x1="126" y1="346" x2="126" y2="352"/>
+      <line x1="152" y1="348" x2="152" y2="352"/>
+      <line x1="178" y1="348" x2="178" y2="352"/>
+      <line x1="204" y1="346" x2="204" y2="352"/>
+      <line x1="230" y1="348" x2="230" y2="352"/>
+      <line x1="256" y1="346" x2="256" y2="352"/>
+      <line x1="284" y1="344" x2="284" y2="352" stroke="#D97757" stroke-width="2"/>
+      <line x1="310" y1="348" x2="310" y2="352"/>
+      <line x1="336" y1="348" x2="336" y2="352"/>
+      <line x1="362" y1="348" x2="362" y2="352"/>
+      <line x1="386" y1="346" x2="386" y2="352"/>
+    </g>
+  </g>
+
+  <!-- 4. 案头朱砂印匣（右上角，朱文印，点睛之笔） -->
+  <g filter="url(#c1-shadow-seal)">
+    <rect x="306" y="96" width="94" height="94" rx="14" fill="url(#c1-seal-grad)" stroke="#AC4627" stroke-width="2"/>
+    <rect x="313" y="103" width="80" height="80" rx="9" fill="none" stroke="#FAF8F2" stroke-width="1.8" opacity="0.88"/>
+    <g transform="translate(353.00,143.00) scale(0.23729,-0.23729) translate(-128.00,-91.00)"><path d="M48 205 66 192Q58 190 46 176Q34 161 16 145L13 147Q27 164 36.5 179.5Q46 195 48 205ZM57 154 75 141Q66 138 57 120V-18L43 -25Q44 -1 44 18V102Q32 85 13 65L10 67Q17 77 27.5 93.5Q38 110 46.0 127.0Q54 144 57 154ZM150 168Q150 145 151 129L138 124V132H94L88 126L76 138L82 142Q82 167 81 184L101 175L94 169V138H110Q110 187 109 208L129 199L122 193V138H138Q138 165 137 183L157 174ZM74 107H131L140 116L155 101H105Q93 101 83 98ZM139 30 168 53 170 50Q143 21 134 4L123 18Q128 23 127 35V69H102Q103 38 96.5 20.0Q90 2 69 -16L66 -14Q82 6 85.5 23.0Q89 40 89 58Q89 72 88 83L102 75H126L132 84L146 72L139 67ZM179 137Q182 85 195 47Q209 87 211 137ZM180 206 203 195 195 190Q189 168 181 143H217L228 154L245 137H224Q219 71 203 34Q222 3 246 -2V-6Q231 -8 228 -17Q209 -1 195 25Q166 -6 116 -26L114 -23Q161 1 189 36Q176 75 175 125Q167 100 155 79L152 80Q165 116 172.5 154.0Q180 192 180 206Z" fill="#FAF8F2"/></g>
+  </g>
+</svg>

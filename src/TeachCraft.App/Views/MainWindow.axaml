@@ -1,0 +1,479 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TeachCraft.App.ViewModels"
+        xmlns:views="using:TeachCraft.App.Views"
+        xmlns:controls="using:TeachCraft.App.Controls"
+        x:Class="TeachCraft.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        x:Name="Root"
+        Title="知微 · TeachCraft"
+        Icon="/Assets/teachcraft.ico"
+        Width="1200" Height="840"
+        MinWidth="1120" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource PaperBrush}"
+        DragDrop.AllowDrop="True"
+        DragDrop.DragOver="OnDragOver"
+        DragDrop.Drop="OnDrop">
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="232,*">
+        <!-- ==================== 侧栏 ==================== -->
+        <Border Grid.Column="0" Background="{StaticResource SidebarBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="16,24,16,14">
+                <StackPanel Grid.Row="0">
+                    <StackPanel Orientation="Horizontal" Spacing="11" Margin="4,0,0,0">
+                        <Border Width="36" Height="36" CornerRadius="3"
+                                BorderBrush="#8CC6613F" BorderThickness="1" Background="#0DD97757">
+                            <TextBlock Text="微" FontFamily="{StaticResource SerifFont}" FontSize="19"
+                                       Foreground="{StaticResource AccentDeepBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Spacing="4">
+                            <TextBlock Text="知微" FontFamily="{StaticResource SerifFont}" FontSize="18"
+                                       LetterSpacing="3" Foreground="{StaticResource InkBrush}" />
+                            <TextBlock Text="TEACHCRAFT" FontFamily="{StaticResource MonoFont}" FontSize="8"
+                                       LetterSpacing="2.4" Foreground="{StaticResource MutedBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*" Margin="6,26,6,8">
+                        <TextBlock Grid.Column="0" Text="工作台" FontSize="10" LetterSpacing="1.6"
+                                   Foreground="{StaticResource MutedBrush}" />
+                        <Border Grid.Column="1" Height="1" Background="{StaticResource LineBrush}"
+                                Margin="9,0,0,0" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Spacing="2">
+                        <Button Classes="nav" Classes.active="{Binding IsAllActive}" Click="OnNavAll" AutomationProperties.Name="全部工具"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Width="2" Height="14" CornerRadius="1"
+                                        Background="{StaticResource AccentBrush}" Margin="0,0,9,0"
+                                        IsVisible="{Binding IsAllActive}" />
+                                <TextBlock Grid.Column="1" Text="全部工具" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="10" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+
+                        <Button Classes="nav" Click="OnNavProject" AutomationProperties.Name="分晓 · 成绩条" HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Width="19" />
+                                <TextBlock Grid.Column="1" Text="分晓 · 成绩条" VerticalAlignment="Center" />
+                                <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
+                                        CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
+                                    <TextBlock Text="常备" FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                </Border>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="Auto,*" Margin="6,24,6,8">
+                        <TextBlock Grid.Column="0" Text="分类" FontSize="10" LetterSpacing="1.6"
+                                   Foreground="{StaticResource MutedBrush}" />
+                        <Border Grid.Column="1" Height="1" Background="{StaticResource LineBrush}"
+                                Margin="9,0,0,0" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Spacing="2">
+                        <Button Classes="nav" Classes.active="{Binding IsImageActive}" Click="OnNavImage" AutomationProperties.Name="图片处理"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Width="2" Height="14" CornerRadius="1"
+                                        Background="{StaticResource AccentBrush}" Margin="0,0,9,0"
+                                        IsVisible="{Binding IsImageActive}" />
+                                <TextBlock Grid.Column="1" Text="图片处理" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="04" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <Button Classes="nav" Classes.active="{Binding IsFileActive}" Click="OnNavFile" AutomationProperties.Name="格式工厂"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Width="2" Height="14" CornerRadius="1"
+                                        Background="{StaticResource AccentBrush}" Margin="0,0,9,0"
+                                        IsVisible="{Binding IsFileActive}" />
+                                <TextBlock Grid.Column="1" Text="格式工厂" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="06" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="7" Margin="6,0">
+                    <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="5" Height="5" Fill="{StaticResource MossBrush}"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Text="LOCAL ONLY" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                   LetterSpacing="1.6" Foreground="{StaticResource MossBrush}" />
+                    </StackPanel>
+                    <TextBlock Text="文件只在这台电脑上处理，不上传、不留存。" FontSize="10.5"
+                               LineHeight="17" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+                    <TextBlock Text="V1.0.0" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                               LetterSpacing="1.2" Foreground="#A29C8C" Margin="0,4,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== 主区 ==================== -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto">
+            <ScrollViewer x:Name="MainScroll" Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                <Border MaxWidth="1104" Margin="40,30,40,36" HorizontalAlignment="Center">
+                    <StackPanel Spacing="0">
+
+                        <!-- 页首 -->
+                        <Grid ColumnDefinitions="*,300" Margin="0,0,0,28">
+                            <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="18" Height="1" Background="{StaticResource AccentBrush}"
+                                            VerticalAlignment="Center" Opacity="0.8" />
+                                    <TextBlock Text="TOOLBOX / 教师工具箱" FontFamily="{StaticResource MonoFont}"
+                                               FontSize="10" LetterSpacing="2.6"
+                                               Foreground="{StaticResource MutedBrush}" />
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,12,0,10">
+                                    <TextBlock Text="知微" FontFamily="{StaticResource SerifFont}" FontSize="52"
+                                               LetterSpacing="5" Foreground="{StaticResource InkBrush}" />
+                                    <TextBlock Text="TeachCraft" FontFamily="{StaticResource SerifFont}" FontSize="15"
+                                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom"
+                                               Margin="0,0,0,12" />
+                                </StackPanel>
+
+                                <TextBlock Text="见微知著。把成绩、图片与文档里的琐碎，收进一只放在案头的盒子。"
+                                           FontSize="12.5" LineHeight="24" Foreground="{StaticResource InkSoftBrush}" />
+
+                                <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,12,0,0">
+                                    <TextBlock Text="10 件工具" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               LetterSpacing="1.3" Foreground="{StaticResource MutedBrush}" />
+                                    <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               Foreground="#C9C1AE" />
+                                    <TextBlock Text="本机处理" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               LetterSpacing="1.3" Foreground="{StaticResource MutedBrush}" />
+                                    <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               Foreground="#C9C1AE" />
+                                    <TextBlock Text="无需联网" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               LetterSpacing="1.3" Foreground="{StaticResource MutedBrush}" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="9">
+                                <Panel>
+                                    <TextBox x:Name="SearchBox" Classes="search"
+                                             Text="{Binding SearchText, Mode=TwoWay}"
+                                             PlaceholderText="搜索工具或格式" />
+                                    <Path Width="13" Height="13" Stretch="Uniform" Margin="12,0,0,0"
+                                          HorizontalAlignment="Left" VerticalAlignment="Center"
+                                          Data="M6 1.4 A4.6 4.6 0 1 1 6 10.6 A4.6 4.6 0 1 1 6 1.4 M9.6 9.6 L13 13"
+                                          Stroke="{StaticResource MutedBrush}" StrokeThickness="1.3"
+                                          StrokeLineCap="Round" IsHitTestVisible="False" />
+                                    <Border HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,9,0"
+                                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                            CornerRadius="4" Background="{StaticResource PaperBrush}"
+                                            Padding="4,2" IsHitTestVisible="False">
+                                        <TextBlock Text="CTRL K" FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                                   LetterSpacing="0.8" Foreground="{StaticResource MutedBrush}" />
+                                    </Border>
+                                </Panel>
+                                <TextBlock Text="{Binding SearchSummary}" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="9" LetterSpacing="1.2" Foreground="#A29C8C"
+                                           HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,0,0,26" />
+
+                        <!-- 01 案头常备 -->
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,0,0,14">
+                            <TextBlock Text="01" FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                       Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="案头常备" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       Margin="12,0,0,0" />
+                            <TextBlock Grid.Column="2" Text="PINNED" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                       LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
+                                       VerticalAlignment="Center" Margin="12,0,0,0" />
+                            <Border Grid.Column="3" Height="1" Background="{StaticResource LineBrush}"
+                                    Margin="12,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Text="01" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                       Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Border Background="{StaticResource PinnedBrush}" BorderBrush="{StaticResource LineBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="26,24" ClipToBounds="True">
+                            <Grid ColumnDefinitions="*,372" ColumnSpacing="34">
+                                <Border Grid.Column="0" Width="2" CornerRadius="1"
+                                        Background="{StaticResource AccentBrush}"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Height="44" Margin="-26,2,0,0" />
+
+                                <StackPanel Grid.Column="0" Margin="8,0,0,0">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+                                        <Viewbox Width="26" Height="26">
+                                            <Canvas Width="120" Height="120">
+                                                <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                                           RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                                           Stroke="#E7E3D8" StrokeThickness="3" />
+                                                <Rectangle Canvas.Left="26" Canvas.Top="32" Width="68" Height="12"
+                                                           RadiusX="3" RadiusY="3" Fill="#141413" />
+                                                <Rectangle Canvas.Left="26" Canvas.Top="52" Width="68" Height="16"
+                                                           RadiusX="3" RadiusY="3" Fill="#E7E3D8" />
+                                                <Rectangle Canvas.Left="28" Canvas.Top="54" Width="38" Height="12"
+                                                           RadiusX="2" RadiusY="2" Fill="#3D3B36" />
+                                                <Rectangle Canvas.Left="26" Canvas.Top="76" Width="68" Height="12"
+                                                           RadiusX="3" RadiusY="3" Fill="#85806F" />
+                                                <Line StartPoint="72,24" EndPoint="72,96" Stroke="#D97757"
+                                                      StrokeThickness="3.5" StrokeLineCap="Round" />
+                                                <Ellipse Canvas.Left="68.5" Canvas.Top="20.5" Width="7" Height="7"
+                                                         Fill="#D97757" />
+                                            </Canvas>
+                                        </Viewbox>
+                                        <TextBlock Text="GRADESTRIP / 分晓" FontFamily="{StaticResource MonoFont}"
+                                                   FontSize="9" LetterSpacing="2.2"
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="分晓" FontFamily="{StaticResource SerifFont}" FontSize="30"
+                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="· GradeStrip" FontFamily="{StaticResource SerifFont}" FontSize="18"
+                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+                                    </StackPanel>
+
+                                    <TextBlock Text="把智学网导出的成绩总表，变成一叠可以裁开的成绩条。多考进退、学科诊断、学生画像，都在同一张纸上。"
+                                               FontSize="12.5" LineHeight="23" TextWrapping="Wrap"
+                                               Foreground="{StaticResource InkSoftBrush}" Margin="0,8,0,14"
+                                               MaxWidth="430" HorizontalAlignment="Left" />
+
+                                    <WrapPanel Margin="0,0,0,16">
+                                        <Border Classes="chip" Margin="0,0,6,0"><TextBlock Text="成绩条导出" FontSize="10.5" Foreground="#6B6557" /></Border>
+                                        <Border Classes="chip" Margin="0,0,6,0"><TextBlock Text="多考对比" FontSize="10.5" Foreground="#6B6557" /></Border>
+                                        <Border Classes="chip" Margin="0,0,6,0"><TextBlock Text="学科诊断" FontSize="10.5" Foreground="#6B6557" /></Border>
+                                        <Border Classes="chip"><TextBlock Text="学生画像" FontSize="10.5" Foreground="#6B6557" /></Border>
+                                    </WrapPanel>
+
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                                                    VerticalAlignment="Center">
+                                            <Ellipse Width="6" Height="6" Fill="{StaticResource MossBrush}"
+                                                     VerticalAlignment="Center" />
+                                            <TextBlock Text="已就绪" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                                       LetterSpacing="0.8" Foreground="{StaticResource MossBrush}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                            <Button Classes="ghost" Content="项目详情" Click="OnOpenProject" />
+                                            <Button Classes="primary" Content="打开应用" Click="OnLaunchGradeStrip" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+
+                                <ContentControl Grid.Column="1" VerticalAlignment="Center">
+                                    <controls:StripPreview />
+                                </ContentControl>
+                            </Grid>
+                        </Border>
+
+                        <!-- 02 图片处理 -->
+                        <Grid x:Name="ImageSectionHead" ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,30,0,14"
+                              IsVisible="{Binding HasImageResults}">
+                            <TextBlock Text="02" FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                       Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="图片处理" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       Margin="12,0,0,0" />
+                            <TextBlock Grid.Column="2" Text="IMAGE" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                       LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
+                                       VerticalAlignment="Center" Margin="12,0,0,0" />
+                            <Border Grid.Column="3" Height="1" Background="{StaticResource LineBrush}"
+                                    Margin="12,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Text="{Binding ImageCountLabel}" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <ItemsControl x:Name="ImageToolsList" ItemsSource="{Binding VisibleImageTools}"
+                                      IsVisible="{Binding HasImageResults}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="2" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ToolItemViewModel">
+                                    <Button Classes="tool-card" Margin="0,0,7,7" Click="OnOpenTool" Tag="{Binding}"
+                                                ToolTip.Tip="{Binding Description}"
+                                                AutomationProperties.Name="{Binding Name}">
+                                        <Grid ColumnDefinitions="44,*,18" ColumnSpacing="13">
+                                            <Border Grid.Column="0" Classes="tool-glyph" Width="44" Height="44"
+                                                    CornerRadius="7" BorderBrush="#E3DDCE" BorderThickness="1"
+                                                    Background="#FCFAF4">
+                                                <TextBlock Text="{Binding Glyph}" Classes="tool-glyph-text"
+                                                           FontFamily="{StaticResource SerifFont}" FontSize="17"
+                                                           Foreground="#6E6859" HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding No}" FontFamily="{StaticResource MonoFont}"
+                                                               FontSize="9" LetterSpacing="1"
+                                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                                    <TextBlock Text="{Binding Id}" FontFamily="{StaticResource MonoFont}"
+                                                               FontSize="9" LetterSpacing="0.6"
+                                                               Foreground="#ACA595" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                           LetterSpacing="0.3" Foreground="{StaticResource InkBrush}" />
+                                                <TextBlock Text="{Binding Description}" FontSize="11.5"
+                                                           Foreground="{StaticResource MutedBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="↗" Classes="arrow-glyph" FontSize="14"
+                                                       Foreground="#9C9585" Opacity="0"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- 03 格式工厂 -->
+                        <Grid x:Name="FileSectionHead" ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,30,0,14"
+                              IsVisible="{Binding HasFileResults}">
+                            <TextBlock Text="03" FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                       Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="格式工厂" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       Margin="12,0,0,0" />
+                            <TextBlock Grid.Column="2" Text="FILE / PDF" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                       LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
+                                       VerticalAlignment="Center" Margin="12,0,0,0" />
+                            <Border Grid.Column="3" Height="1" Background="{StaticResource LineBrush}"
+                                    Margin="12,0" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Text="{Binding FileCountLabel}" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <ItemsControl x:Name="FileToolsList" ItemsSource="{Binding VisibleFileTools}"
+                                      IsVisible="{Binding HasFileResults}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="2" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ToolItemViewModel">
+                                    <Button Classes="tool-card" Margin="0,0,7,7" Click="OnOpenTool" Tag="{Binding}"
+                                                ToolTip.Tip="{Binding Description}"
+                                                AutomationProperties.Name="{Binding Name}">
+                                        <Grid ColumnDefinitions="44,*,18" ColumnSpacing="13">
+                                            <Border Grid.Column="0" Classes="tool-glyph" Width="44" Height="44"
+                                                    CornerRadius="7" BorderBrush="#E3DDCE" BorderThickness="1"
+                                                    Background="#FCFAF4">
+                                                <TextBlock Text="{Binding Glyph}" Classes="tool-glyph-text"
+                                                           FontFamily="{StaticResource SerifFont}" FontSize="17"
+                                                           Foreground="#6E6859" HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding No}" FontFamily="{StaticResource MonoFont}"
+                                                               FontSize="9" LetterSpacing="1"
+                                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                                    <TextBlock Text="{Binding Id}" FontFamily="{StaticResource MonoFont}"
+                                                               FontSize="9" LetterSpacing="0.6"
+                                                               Foreground="#ACA595" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"
+                                                           LetterSpacing="0.3" Foreground="{StaticResource InkBrush}" />
+                                                <TextBlock Text="{Binding Description}" FontSize="11.5"
+                                                           Foreground="{StaticResource MutedBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="↗" Classes="arrow-glyph" FontSize="14"
+                                                       Foreground="#9C9585" Opacity="0"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel IsVisible="{Binding IsEmptyVisible}" Spacing="8" Margin="0,40,0,20">
+                            <TextBlock Text="微" FontFamily="{StaticResource SerifFont}" FontSize="30"
+                                       Foreground="#C6BFAE" HorizontalAlignment="Center" />
+                            <TextBlock HorizontalAlignment="Center" FontSize="12.5"
+                                       Foreground="{StaticResource MutedBrush}">
+                                <Run Text="没有找到叫「" />
+                                <Run Text="{Binding SearchText}" Foreground="{StaticResource InkBrush}" FontWeight="SemiBold" />
+                                <Run Text="」的工具，换个格式名试试。" />
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,30,0,0">
+                            <Border Grid.ColumnSpan="4" Height="1" Background="{StaticResource LineBrush}"
+                                    VerticalAlignment="Top" />
+                            <TextBlock Grid.Column="0" Text="知微 · TEACHCRAFT" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9" LetterSpacing="1.1" Foreground="#A8A192" Margin="0,16,0,0" />
+                            <TextBlock Grid.Column="1" Text="见微知著" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9" LetterSpacing="1.1" Foreground="#A8A192" Margin="14,16,0,0" />
+                            <TextBlock Grid.Column="3" Text="DESIGNED AFTER 分晓 · GRADESTRIP"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="9" LetterSpacing="1.1"
+                                       Foreground="#A8A192" Margin="0,16,0,0" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+
+            <!-- 状态栏 -->
+            <Border Grid.Row="1" Height="36" Background="{StaticResource PaperBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="40,0">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center">
+                        <Ellipse Width="6" Height="6" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                   MaxWidth="820" TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="{Binding StatusText}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="V1.0.0 · 10 TOOLS"
+                               FontFamily="{StaticResource MonoFont}" FontSize="9" LetterSpacing="1.2"
+                               Foreground="#A8A192" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 抽屉 ==================== -->
+        <Grid Grid.ColumnSpan="2" IsVisible="{Binding IsPanelOpen}" ZIndex="10">
+            <Border x:Name="Backdrop" Background="{StaticResource OverlayBrush}" PointerPressed="OnBackdropPressed" />
+            <Border x:Name="PanelHost" Classes="panel" Width="452" HorizontalAlignment="Right"
+                    BoxShadow="-26 0 70 0 #1A141413">
+                <Border.RenderTransform>
+                    <TranslateTransform X="452" />
+                </Border.RenderTransform>
+                <Grid>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="28,26,28,32">
+                            <views:ToolPanelView x:Name="ToolPanel" DataContext="{Binding SelectedTool}"
+                                                 IsVisible="{Binding #Root.DataContext.IsToolPanelOpen}"
+                                                 FilePickRequested="OnPickFiles"
+                                                 RunRequested="OnRunTool"
+                                                 CloseRequested="OnClosePanel" />
+                            <views:ProjectPanelView x:Name="ProjectPanel" IsVisible="{Binding IsProjectPanelOpen}"
+                                                    CloseRequested="OnClosePanel"
+                                                    LaunchRequested="OnProjectLaunch" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

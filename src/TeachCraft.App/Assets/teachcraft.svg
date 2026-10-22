@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+  
+  <!-- 第一排：长墨条 + 陶土重点块 -->
+  <rect x="26" y="30" width="46" height="12" rx="3" fill="#141413"/>
+  <rect x="76" y="30" width="18" height="12" rx="3" fill="#D97757"/>
+
+  <!-- 第二排：浅色工具槽 + 内部深墨滑动块 -->
+  <rect x="26" y="48" width="68" height="16" rx="3" fill="#E7E3D8"/>
+  <rect x="28" y="50" width="22" height="12" rx="2" fill="#3D3B36"/>
+  <rect x="54" y="50" width="38" height="12" rx="2" fill="#FAF9F5"/>
+  <rect x="58" y="53" width="20" height="6" rx="1.5" fill="#85806F"/>
+
+  <!-- 第三排：三段式工具单元格 (墨色、灰调、浅槽) -->
+  <rect x="26" y="70" width="20" height="14" rx="3" fill="#3D3B36"/>
+  <rect x="50" y="70" width="20" height="14" rx="3" fill="#85806F"/>
+  <rect x="74" y="70" width="20" height="14" rx="3" fill="#141413"/>
+
+  <!-- 垂直裁切与聚焦基准线 (穿透第一与第二排，精准停在分界处) -->
+  <line x1="74" y1="22" x2="74" y2="94" stroke="#D97757" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="74" cy="22" r="3.5" fill="#D97757"/>
+  <circle cx="74" cy="94" r="2.5" fill="#D97757"/>
+</svg>

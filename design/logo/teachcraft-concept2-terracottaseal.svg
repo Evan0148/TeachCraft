@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="c2-seal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E17755" />
+      <stop offset="50%" stop-color="#D06442" />
+      <stop offset="100%" stop-color="#B24929" />
+    </linearGradient>
+    <linearGradient id="c2-rim-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.25" />
+    </linearGradient>
+    <filter id="c2-shadow" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#842E15" flood-opacity="0.32" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#842E15" flood-opacity="0.16" />
+    </filter>
+  </defs>
+
+  <rect x="36" y="36" width="440" height="440" rx="108" fill="url(#c2-seal-grad)" stroke="#9F3E21" stroke-width="2" filter="url(#c2-shadow)"/>
+  <rect x="38" y="38" width="436" height="436" rx="106" fill="none" stroke="url(#c2-rim-grad)" stroke-width="2"/>
+  <rect x="68" y="68" width="376" height="376" rx="80" fill="none" stroke="#FAF8F2" stroke-width="4.5" opacity="0.92"/>
+  <rect x="80" y="80" width="352" height="352" rx="70" fill="none" stroke="#FAF8F2" stroke-width="1.8" opacity="0.6"/>
+
+  <g stroke="#FAF8F2" stroke-width="3" stroke-linecap="round" opacity="0.85">
+    <line x1="256" y1="56" x2="256" y2="76"/>
+    <line x1="256" y1="436" x2="256" y2="456"/>
+    <line x1="56" y1="256" x2="76" y2="256"/>
+    <line x1="436" y1="256" x2="456" y2="256"/>
+  </g>
+
+  <g transform="translate(256.00,246.00) scale(1.02542,-1.02542) translate(-128.00,-91.00)"><path d="M48 205 66 192Q58 190 46 176Q34 161 16 145L13 147Q27 164 36.5 179.5Q46 195 48 205ZM57 154 75 141Q66 138 57 120V-18L43 -25Q44 -1 44 18V102Q32 85 13 65L10 67Q17 77 27.5 93.5Q38 110 46.0 127.0Q54 144 57 154ZM150 168Q150 145 151 129L138 124V132H94L88 126L76 138L82 142Q82 167 81 184L101 175L94 169V138H110Q110 187 109 208L129 199L122 193V138H138Q138 165 137 183L157 174ZM74 107H131L140 116L155 101H105Q93 101 83 98ZM139 30 168 53 170 50Q143 21 134 4L123 18Q128 23 127 35V69H102Q103 38 96.5 20.0Q90 2 69 -16L66 -14Q82 6 85.5 23.0Q89 40 89 58Q89 72 88 83L102 75H126L132 84L146 72L139 67ZM179 137Q182 85 195 47Q209 87 211 137ZM180 206 203 195 195 190Q189 168 181 143H217L228 154L245 137H224Q219 71 203 34Q222 3 246 -2V-6Q231 -8 228 -17Q209 -1 195 25Q166 -6 116 -26L114 -23Q161 1 189 36Q176 75 175 125Q167 100 155 79L152 80Q165 116 172.5 154.0Q180 192 180 206Z" fill="#FAF8F2"/></g>
+  <text x="256" y="412" text-anchor="middle" font-family="'Anthropic Mono', Consolas, monospace" font-size="13" font-weight="600" letter-spacing="4.8" fill="#FAF8F2" opacity="0.75">TEACHCRAFT</text>
+</svg>

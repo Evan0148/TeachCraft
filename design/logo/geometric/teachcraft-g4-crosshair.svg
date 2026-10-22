@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 4个极简工具条 (围绕双轴排列) -->
+  <!-- 左上条目 -->
+  <rect x="25" y="30" width="34" height="14" rx="3" fill="#141413"/>
+  <!-- 右上条目 -->
+  <rect x="67" y="30" width="28" height="14" rx="3" fill="#85806F"/>
+  
+  <!-- 左下条目 (带槽) -->
+  <rect x="25" y="66" width="34" height="18" rx="3" fill="#E7E3D8"/>
+  <rect x="27" y="68" width="20" height="14" rx="2" fill="#3D3B36"/>
+
+  <!-- 右下条目 -->
+  <rect x="67" y="66" width="28" height="18" rx="3" fill="#141413"/>
+
+  <!-- 水平贯穿刻度基准线 -->
+  <line x1="20" y1="53" x2="100" y2="53" stroke="#E7E3D8" stroke-width="2.5" stroke-dasharray="4 4"/>
+  <circle cx="20" cy="53" r="2.5" fill="#85806F"/>
+  <circle cx="100" cy="53" r="2.5" fill="#85806F"/>
+
+  <!-- 纵向陶土朱红裁切光标 (GradeStrip signature) -->
+  <line x1="63" y1="22" x2="63" y2="96" stroke="#D97757" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="63" cy="22" r="3.5" fill="#D97757"/>
+</svg>

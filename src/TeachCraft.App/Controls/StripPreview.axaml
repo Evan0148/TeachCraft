@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TeachCraft.App.Controls.StripPreview"
+             Width="360">
+    <Grid>
+        <!-- 叠在下面的一张纸 -->
+        <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="1" CornerRadius="6" Margin="7,7,0,0" Opacity="0.9">
+            <Border.RenderTransform>
+                <RotateTransform Angle="0.7" />
+            </Border.RenderTransform>
+        </Border>
+
+        <Border Background="{StaticResource CardBrush}" BorderBrush="#DDD7C6" BorderThickness="1"
+                CornerRadius="6" Padding="12,10,12,12">
+            <StackPanel Spacing="0">
+                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="九6班 · 第一次段考" FontSize="9.5"
+                                   Foreground="{StaticResource InkBrush}" />
+                        <Border Height="1" Background="#EFEBE0" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="个人成绩条" FontFamily="{StaticResource MonoFont}"
+                               FontSize="7.5" LetterSpacing="1.2" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Bottom" />
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,2,0,7">
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <Border Width="6" Height="6" CornerRadius="1" Background="{StaticResource Tier1Brush}" />
+                        <TextBlock Text="1-3" FontFamily="{StaticResource MonoFont}" FontSize="7" Foreground="#8E8878" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <Border Width="6" Height="6" CornerRadius="1" Background="{StaticResource Tier2Brush}" />
+                        <TextBlock Text="4-10" FontFamily="{StaticResource MonoFont}" FontSize="7" Foreground="#8E8878" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <Border Width="6" Height="6" CornerRadius="1" Background="{StaticResource Tier3Brush}" />
+                        <TextBlock Text="11-20" FontFamily="{StaticResource MonoFont}" FontSize="7" Foreground="#8E8878" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <Border Width="6" Height="6" CornerRadius="1" Background="{StaticResource Tier4Brush}" />
+                        <TextBlock Text="21-35" FontFamily="{StaticResource MonoFont}" FontSize="7" Foreground="#8E8878" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <Border Width="6" Height="6" CornerRadius="1" Background="{StaticResource Tier5Brush}" />
+                        <TextBlock Text="36+" FontFamily="{StaticResource MonoFont}" FontSize="7" Foreground="#8E8878" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="1.2*,0.72*,0.72*,0.92*,0.56*"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                      ColumnSpacing="2" RowSpacing="2">
+                    <!-- 表头 -->
+                    <Border Grid.Row="0" Grid.Column="0" Background="#F7F9FC" CornerRadius="2" Padding="4,3">
+                        <TextBlock Text="姓名" FontSize="8" Foreground="#595959" />
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="1" Background="#F7F9FC" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="语文" FontSize="8" Foreground="#595959" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="2" Background="#F7F9FC" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="数学" FontSize="8" Foreground="#595959" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="3" Background="#F7F9FC" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="总分" FontSize="8" Foreground="#595959" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="0" Grid.Column="4" Background="#F7F9FC" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="班次" FontSize="8" Foreground="#595959" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <!-- 1 -->
+                    <Border Grid.Row="1" Grid.Column="0" Background="#EAF2FF" CornerRadius="2" Padding="5,3">
+                        <TextBlock Text="黄骏峰" FontSize="8.5" Foreground="#1F3864" />
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="102" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="2" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="85" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="3" Background="#FFE699" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="754.9" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#9C5700" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="4" Background="#F2F2F2" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="1" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <!-- 2 -->
+                    <Border Grid.Row="2" Grid.Column="0" Background="#EAF2FF" CornerRadius="2" Padding="5,3">
+                        <TextBlock Text="肖悦家" FontSize="8.5" Foreground="#1F3864" />
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="1" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="99" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="2" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="88" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="3" Background="#FFE699" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="749.1" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#9C5700" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="2" Grid.Column="4" Background="#F2F2F2" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="2" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <!-- 3 -->
+                    <Border Grid.Row="3" Grid.Column="0" Background="#EAF2FF" CornerRadius="2" Padding="5,3">
+                        <TextBlock Text="黄北辰" FontSize="8.5" Foreground="#1F3864" />
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="1" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="98" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="2" Background="{StaticResource Tier1Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="77" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="White" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="3" Background="#FFE699" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="699.9" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#9C5700" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="3" Grid.Column="4" Background="#F2F2F2" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="3" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <!-- 4 -->
+                    <Border Grid.Row="4" Grid.Column="0" Background="#EAF2FF" CornerRadius="2" Padding="5,3">
+                        <TextBlock Text="谢声烨" FontSize="8.5" Foreground="#1F3864" />
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="1" Background="{StaticResource Tier2Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="96" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="2" Background="{StaticResource Tier2Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="84" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="3" Background="#FFE699" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="651.2" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#9C5700" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="4" Background="#F2F2F2" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="8" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <!-- 5 -->
+                    <Border Grid.Row="5" Grid.Column="0" Background="#EAF2FF" CornerRadius="2" Padding="5,3">
+                        <TextBlock Text="李瑞鹏" FontSize="8.5" Foreground="#1F3864" />
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="1" Background="{StaticResource Tier4Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="71" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="2" Background="{StaticResource Tier4Brush}" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="63" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="3" Background="#FFE699" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="547.3" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#9C5700" HorizontalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="5" Grid.Column="4" Background="#F2F2F2" CornerRadius="2" Padding="0,3">
+                        <TextBlock Text="24" FontFamily="{StaticResource MonoFont}" FontSize="8.5" Foreground="#262626" HorizontalAlignment="Center" />
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

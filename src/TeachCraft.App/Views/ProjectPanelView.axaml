@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TeachCraft.App.Views.ProjectPanelView">
+    <StackPanel Spacing="0">
+        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,18">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                <Border Width="18" Height="1" Background="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                        Opacity="0.8" />
+                <TextBlock Text="PINNED" FontFamily="{StaticResource MonoFont}" FontSize="10" LetterSpacing="2.4"
+                           Foreground="{StaticResource MutedBrush}" />
+                <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="10" Foreground="#C9C1AE" />
+                <TextBlock Text="案头常备" FontSize="10.5" LetterSpacing="0.8"
+                           Foreground="{StaticResource MutedBrush}" />
+            </StackPanel>
+            <Button Grid.Column="1" Classes="panel-close" Click="OnClose" VerticalAlignment="Top">
+                <Path Width="11" Height="11" Stretch="Uniform"
+                      Data="M3,3 L11,11 M11,3 L3,11" Stroke="{Binding $parent[Button].Foreground}"
+                      StrokeThickness="1.4" StrokeLineCap="Round" />
+            </Button>
+        </Grid>
+
+        <TextBlock FontFamily="{StaticResource SerifFont}" FontSize="32" LetterSpacing="1"
+                   Foreground="{StaticResource InkBrush}">
+            <Run Text="分晓" />
+            <Run Text="· GradeStrip" FontSize="19" Foreground="#8E8776" />
+        </TextBlock>
+        <TextBlock Text="GRADESTRIP · 2026.10" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                   LetterSpacing="1.3" Foreground="{StaticResource AccentDeepBrush}" Margin="0,5,0,14" />
+        <TextBlock Text="一位老师从智学网导出总表，到手里攥着一叠裁好的成绩条，中间只隔着一次拖放。多场考试按顺序排好，进退步、学科诊断、学生画像一起算。"
+                   FontSize="12.5" LineHeight="23" TextWrapping="Wrap"
+                   Foreground="{StaticResource InkSoftBrush}" Margin="0,0,0,20" />
+
+        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6"
+                ClipToBounds="True" Background="#FFFFFF">
+            <Image Source="avares://TeachCraft/Assets/Shots/overview.png" Stretch="Uniform" />
+        </Border>
+        <TextBlock Text="01 · 数据概览 / 科目表现与班次分布" FontFamily="{StaticResource MonoFont}"
+                   FontSize="8.5" LetterSpacing="1.1" Foreground="{StaticResource MutedBrush}"
+                   Margin="0,6,0,12" />
+
+        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6"
+                ClipToBounds="True" Background="#FFFFFF">
+            <Image Source="avares://TeachCraft/Assets/Shots/strips.png" Stretch="Uniform" />
+        </Border>
+        <TextBlock Text="02 · 成绩条 / A4 横向 · 一页宽" FontFamily="{StaticResource MonoFont}"
+                   FontSize="8.5" LetterSpacing="1.1" Foreground="{StaticResource MutedBrush}"
+                   Margin="0,6,0,18" />
+
+        <Border Height="1" Background="{StaticResource LineBrush}" />
+        <Grid ColumnDefinitions="50,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,4,0,0">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="平台" FontSize="10.5" Foreground="{StaticResource MutedBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="WINDOWS / MACOS" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource InkSoftBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="输入" FontSize="10.5" Foreground="{StaticResource MutedBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text=".xlsx / .xlsm / .xls" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource InkSoftBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="输出" FontSize="10.5" Foreground="{StaticResource MutedBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="A4 横向成绩条 .xlsx" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource InkSoftBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="数据" FontSize="10.5" Foreground="{StaticResource MutedBrush}" Margin="0,9,0,0" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="全程本机，文件不上传" FontSize="10.5" Foreground="{StaticResource InkSoftBrush}" Margin="0,9,0,0" />
+        </Grid>
+
+        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,8,0,0" />
+        <StackPanel Spacing="0" Margin="0,6,0,0">
+            <Grid ColumnDefinitions="18,*" Margin="0,7,0,7">
+                <TextBlock Text="A" FontFamily="{StaticResource MonoFont}" FontSize="9" Foreground="{StaticResource AccentDeepBrush}" />
+                <TextBlock Grid.Column="1" Text="多场考试按时间排序，任选基准算进退步" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource InkSoftBrush}" />
+            </Grid>
+            <Grid ColumnDefinitions="18,*" Margin="0,7,0,7">
+                <TextBlock Text="B" FontFamily="{StaticResource MonoFont}" FontSize="9" Foreground="{StaticResource AccentDeepBrush}" />
+                <TextBlock Grid.Column="1" Text="学科诊断：得分率、分段分布与教学建议" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource InkSoftBrush}" />
+            </Grid>
+            <Grid ColumnDefinitions="18,*" Margin="0,7,0,7">
+                <TextBlock Text="C" FontFamily="{StaticResource MonoFont}" FontSize="9" Foreground="{StaticResource AccentDeepBrush}" />
+                <TextBlock Grid.Column="1" Text="学生画像：单科对照、班级位置、历次走势" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource InkSoftBrush}" />
+            </Grid>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,18,0,0">
+            <Button Grid.Column="0" Classes="ghost" Content="关闭" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" Height="38" Click="OnClose" />
+            <Button Grid.Column="1" Classes="primary" Content="打开分晓" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" Height="38" Click="OnLaunch" />
+        </Grid>
+    </StackPanel>
+</UserControl>

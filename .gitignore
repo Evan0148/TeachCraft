@@ -1,0 +1,38 @@
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+
+# Build outputs
+**/bin/
+**/obj/
+publish/
+dist/
+artifacts/
+temp/
+TestResults/
+*.trx
+*.nupkg
+
+# NuGet
+packages/
+*.nuget.props
+*.nuget.targets
+
+# 设计走查临时截图（资源目录中的 png 仍需提交）
+shot-*.png
+preview-*.png
+
+# Trae / 编辑器缓存
+.trae-html-share-packages/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.log

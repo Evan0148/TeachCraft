@@ -1,0 +1,1517 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:GradeStrip.App.ViewModels"
+        xmlns:ctl="using:GradeStrip.App.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="800"
+        x:Class="GradeStrip.App.Views.MainWindow"
+        x:Name="RootWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/gradestrip.ico"
+        Title="分晓 · GradeStrip"
+        Width="1080" Height="700"
+        MinWidth="1040" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        DragDrop.AllowDrop="True"
+        DragDrop.DragOver="OnDragOver"
+        DragDrop.Drop="OnDrop">
+
+    <Grid ColumnDefinitions="208,*">
+
+        <!-- 侧栏 -->
+        <Border Grid.Column="0"
+                Background="{StaticResource PaperBrush}"
+                BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid RowDefinitions="Auto,*,Auto" Margin="18,24,18,18">
+
+                <StackPanel Grid.Row="0" Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="6.5"
+                                Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource LineBrush}"
+                                BorderThickness="1"
+                                ClipToBounds="True">
+                            <Canvas Width="28" Height="28">
+                                <Border Canvas.Left="5.5" Canvas.Top="6" Width="17" Height="3" CornerRadius="0.8"
+                                        Background="{StaticResource InkBrush}" />
+                                <Border Canvas.Left="5.5" Canvas.Top="11.5" Width="17" Height="4" CornerRadius="1"
+                                        Background="{StaticResource PaperDeepBrush}">
+                                    <Border HorizontalAlignment="Left" Width="10" CornerRadius="0.8"
+                                            Background="{StaticResource InkSoftBrush}" />
+                                </Border>
+                                <Border Canvas.Left="5.5" Canvas.Top="18" Width="17" Height="3" CornerRadius="0.8"
+                                        Background="{StaticResource LineBrush}" />
+                                <Rectangle Canvas.Left="17" Canvas.Top="3.8" Width="1.5" Height="20.4"
+                                           Fill="{StaticResource AccentBrush}" RadiusX="0.75" RadiusY="0.75" />
+                                <Ellipse Canvas.Left="16.25" Canvas.Top="3" Width="3" Height="3"
+                                         Fill="{StaticResource AccentBrush}" />
+                            </Canvas>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Text="分晓" Classes="display" FontSize="15" />
+                            <TextBlock Text="GRADESTRIP" Classes="mono-label" FontSize="8.5"
+                                       LetterSpacing="1.6" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="工作区" Classes="label" Margin="12,0,0,8" />
+                        <Button Classes="nav" Classes.active="{Binding IsOverviewNavActive}"
+                                Click="OnNavOverview">
+                            <Grid ColumnDefinitions="20,*">
+                                <TextBlock Text="01" Classes="mono-label" FontSize="10"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="数据概览" />
+                            </Grid>
+                        </Button>
+                        <Button Classes="nav" Classes.active="{Binding IsStripsVisible}"
+                                Click="OnNavStrips">
+                            <Grid ColumnDefinitions="20,*">
+                                <TextBlock Text="02" Classes="mono-label" FontSize="10"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="成绩条" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- 考试批次快捷列表 -->
+                    <StackPanel Spacing="3" Margin="0,16,0,0" IsVisible="{Binding HasData}">
+                        <Grid ColumnDefinitions="*,Auto" Margin="12,0,12,6">
+                            <TextBlock Text="考试批次" Classes="label" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Classes="link" Content="管理..." Click="OnOpenExamManager" FontSize="11" />
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding ExamSessions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ExamSessionItem">
+                                    <Button Classes="nav" Classes.active="{Binding IsActive}"
+                                            Tag="{Binding Order}" Click="OnSelectSessionFromNav">
+                                        <Grid ColumnDefinitions="20,*">
+                                            <TextBlock Text="{Binding Order, StringFormat='{}{0:D2}'}"
+                                                       Classes="mono-label" FontSize="10"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding ExamName}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="nav nav-action" Click="OnAddExamSession"
+                                ToolTip.Tip="导入另一场考试成绩进行对比">
+                            <Grid ColumnDefinitions="20,*">
+                                <TextBlock Text="+" Classes="mono-label" FontSize="13"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="导入下一场..."
+                                           Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="10">
+                    <TextBlock Text="{Binding SourceFileName}" FontSize="10.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               TextWrapping="Wrap" IsVisible="{Binding HasData}" />
+                    <Border Height="1" Background="{StaticResource LineBrush}" />
+                    <TextBlock Text="LOCAL ONLY · 文件不上传" Classes="mono-label" FontSize="9" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 主区 -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto">
+
+            <Grid Grid.Row="0" Margin="34,28,34,0" ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="6">
+                    <ctl:MorphTextBlock Text="{Binding HeaderEyebrow}"
+                                        FontFamily="{StaticResource MonoFont}"
+                                        FontSize="9.5"
+                                        Foreground="{StaticResource MutedBrush}"
+                                        IsVisible="{Binding HasDataMeta}" />
+                    <TextBlock Text="{Binding HeaderTitle}" Classes="display" FontSize="27"
+                               TextWrapping="Wrap" Margin="0,-2,0,0" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding HasDataMeta}">
+                        <TextBlock Text="{Binding ClassName}" FontSize="12"
+                                   Foreground="{StaticResource InkSoftBrush}" />
+                        <TextBlock Text="/" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                        <TextBlock Text="{Binding SheetSummary}" Classes="label"
+                                   FontSize="10.5" VerticalAlignment="Center" />
+                        <Border Background="#F4F0E6" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,2" VerticalAlignment="Center" IsVisible="{Binding HasMultipleExams}">
+                            <TextBlock Text="{Binding ExamSessionCountText, StringFormat='共 {0}'}" Classes="mono-label"
+                                       FontSize="9.5" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Button Classes="ghost" Content="选择成绩表" Click="OnPickFile" IsVisible="{Binding !HasData}" />
+                    <Button Classes="ghost" Content="📚 考试管理" Click="OnOpenExamManager" IsVisible="{Binding HasData}" />
+                    <Button Classes="primary" Content="导出成绩条"
+                            IsEnabled="{Binding HasData}" Click="OnExport" />
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1" Height="1" Background="{StaticResource LineBrush}" Margin="34,22,34,0" />
+
+            <!-- 空状态 -->
+            <StackPanel Grid.Row="2" Classes="view-transition" IsVisible="{Binding IsEmptyVisible}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="18" Width="560">
+                <Grid Height="276">
+                    <Border Classes="drop-box" CornerRadius="18" Background="#FAF9F5" />
+                    <Rectangle Stroke="#D6D1C4" StrokeThickness="1.5" StrokeDashArray="5,4"
+                               RadiusX="18" RadiusY="18" IsHitTestVisible="False" />
+                    <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <!-- 品牌矢量徽标 -->
+                        <Border Width="48" Height="48" CornerRadius="12"
+                                Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource LineBrush}"
+                                BorderThickness="1.5"
+                                HorizontalAlignment="Center">
+                            <Canvas Width="48" Height="48">
+                                <Border Canvas.Left="10" Canvas.Top="11" Width="28" Height="5" CornerRadius="1.5"
+                                        Background="{StaticResource InkBrush}" />
+                                <Border Canvas.Left="10" Canvas.Top="20" Width="28" Height="6.5" CornerRadius="1.5"
+                                        Background="{StaticResource PaperDeepBrush}">
+                                    <Border HorizontalAlignment="Left" Width="16" CornerRadius="1.2"
+                                            Background="{StaticResource InkSoftBrush}" />
+                                </Border>
+                                <Border Canvas.Left="10" Canvas.Top="30.5" Width="28" Height="5" CornerRadius="1.5"
+                                        Background="{StaticResource LineBrush}" />
+                                <Rectangle Canvas.Left="29" Canvas.Top="7" Width="2.5" Height="34"
+                                           Fill="{StaticResource AccentBrush}" RadiusX="1.25" RadiusY="1.25" />
+                                <Ellipse Canvas.Left="27.75" Canvas.Top="5.5" Width="5" Height="5"
+                                         Fill="{StaticResource AccentBrush}" />
+                            </Canvas>
+                        </Border>
+                        <TextBlock Text="把成绩总表放进来" Classes="display" FontSize="26"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="自动识别「班级全学科成绩汇总」，一步生成可打印的个人成绩条"
+                                   TextAlignment="Center" TextWrapping="Wrap" FontSize="12.5"
+                                   Foreground="{StaticResource MutedBrush}" />
+                        <Button Classes="primary" Content="选择成绩表" HorizontalAlignment="Center"
+                                Padding="24,9" Click="OnPickFile" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="支持 .xlsx / .xlsm · 也可以把文件直接拖进窗口"
+                           Classes="mono-label" FontSize="10" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- 数据概览 -->
+            <ScrollViewer x:Name="OverviewScrollViewer" Grid.Row="2" Classes="view-transition" IsVisible="{Binding IsOverviewVisible}"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border x:Name="OverviewRoot" Width="{Binding $parent[ScrollViewer].Viewport.Width}" Padding="34,20,34,26">
+                <StackPanel Spacing="14">
+
+                    <!-- 提示横幅 (当表格为简表或数据不完整时展示) -->
+                    <Border Background="#FBF3EC" BorderBrush="#E5C7B3" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10"
+                            IsVisible="{Binding HasImportNotice}">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0" Text="💡" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding ImportNotice}" FontSize="12"
+                                       Foreground="#A04A28" VerticalAlignment="Center" TextWrapping="Wrap" />
+                            <Button Grid.Column="2" Classes="ghost" Content="✕" Padding="6,2" FontSize="11"
+                                    Click="OnDismissNotice" ToolTip.Tip="关闭提示" />
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                        <Border Grid.Column="0" Classes="card" Padding="16,13" DataContext="{Binding Kpis[0]}">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{Binding Label}" Classes="label" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="{Binding Value}" Classes="numeral"
+                                               FontSize="30" Foreground="{Binding Accent}" />
+                                    <TextBlock Text="{Binding Unit}" FontSize="12"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,7" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding Note}" FontSize="11"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Classes="card clickable" Padding="16,13" DataContext="{Binding Kpis[1]}"
+                                PointerPressed="OnToggleAbsent"
+                                ToolTip.Tip="点击切换：总分统计是否剔除缺考学生">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{Binding Label}" Classes="label" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="{Binding Value}" Classes="numeral"
+                                               FontSize="30" Foreground="{Binding Accent}" />
+                                    <TextBlock Text="{Binding Unit}" FontSize="12"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,7" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding Note}" FontSize="11"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Classes="card" Padding="16,13" DataContext="{Binding Kpis[2]}">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{Binding Label}" Classes="label" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="{Binding Value}" Classes="numeral"
+                                               FontSize="30" Foreground="{Binding Accent}" />
+                                    <TextBlock Text="{Binding Unit}" FontSize="12"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,7" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding Note}" FontSize="11"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="3" Classes="card" Padding="16,13" DataContext="{Binding Kpis[3]}">
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="{Binding Label}" Classes="label" />
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="{Binding Value}" Classes="numeral"
+                                               FontSize="30" Foreground="{Binding Accent}" />
+                                    <TextBlock Text="{Binding Unit}" FontSize="12"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,7" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding Note}" FontSize="11"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="1.12*,*">
+                        <Border Classes="card" Margin="0,0,14,0">
+                            <StackPanel Spacing="14">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="display" Text="科目表现" FontSize="17" />
+                                    <TextBlock Grid.Column="1" Classes="label" Text="按均分差距排序 · 班级平均分"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding SubjectStats}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SubjectStat">
+                                            <Grid ColumnDefinitions="70,*,86" Margin="0,0,0,8"
+                                                  ToolTip.Tip="{Binding RangeText}">
+                                                <Button Classes="link" Content="{Binding Name}"
+                                                        Tag="{Binding Name}" Click="OnSubjectClick"
+                                                        FontSize="12.5" FontWeight="Medium"
+                                                        VerticalAlignment="Center" />
+                                                <Border Grid.Column="1" Height="12" CornerRadius="6"
+                                                        Background="#F0EDE3" ClipToBounds="True"
+                                                        VerticalAlignment="Center" Margin="0,0,10,0">
+                                                    <ctl:ProportionalPanel>
+                                                        <Border CornerRadius="6"
+                                                                Background="{Binding Accent}"
+                                                                ctl:ProportionalPanel.Weight="{Binding FillWeight}" />
+                                                        <Border ctl:ProportionalPanel.Weight="{Binding RestWeight}" />
+                                                    </ctl:ProportionalPanel>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="3"
+                                                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding AverageText}"
+                                                               Classes="numeral" FontSize="14" />
+                                                    <TextBlock Text="{Binding FullMarkText}" Classes="label"
+                                                               FontSize="9.5" VerticalAlignment="Bottom"
+                                                               Margin="0,0,0,2" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Classes="card">
+                            <StackPanel Spacing="16">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="display" Text="班次分布" FontSize="17" />
+                                    <TextBlock Grid.Column="1" Classes="label" Text="按总分班次"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Border Height="14" CornerRadius="7" ClipToBounds="True" Background="#F0EDE3">
+                                    <ctl:TierBar ItemsSource="{Binding TierStats}" />
+                                </Border>
+
+                                <ItemsControl ItemsSource="{Binding TierStats}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:TierStat">
+                                            <Grid ColumnDefinitions="14,*,36,44" Margin="0,0,0,9">
+                                                <Border Width="10" Height="10" CornerRadius="2"
+                                                        Background="{Binding Fill}" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="6,0,0,0"
+                                                           FontSize="12" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2" Text="{Binding CountText}"
+                                                           Classes="numeral" FontSize="13"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3" Text="{Binding PercentText}"
+                                                           Classes="caption" HorizontalAlignment="Right"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Border Height="1" Background="#F0EBDF" Margin="0,4,0,0" />
+
+                                <TextBlock Text="总分进退步" Classes="label" FontSize="10" />
+                                <ItemsControl ItemsSource="{Binding TrendStats}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:TrendStat">
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,7">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Ellipse Width="6" Height="6" Fill="{Binding Accent}"
+                                                             VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Label}" FontSize="12"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Note}" FontSize="10"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding CountText}"
+                                                           Classes="numeral" FontSize="14"
+                                                           Foreground="{Binding Accent}"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Classes="card">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="display" Text="学生排行" FontSize="17" />
+                                <TextBlock Grid.Column="1" Classes="label" Text="点击姓名查看学生画像"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="44,120,84,66,66,78,*" Margin="0,6,0,2">
+                                <TextBlock Text="#" Classes="label" FontSize="10" />
+                                <TextBlock Grid.Column="1" Text="姓名" Classes="label" FontSize="10" />
+                                <TextBlock Grid.Column="2" Text="总分" Classes="label" FontSize="10" />
+                                <TextBlock Grid.Column="3" Text="校次" Classes="label" FontSize="10" />
+                                <TextBlock Grid.Column="4" Text="班次" Classes="label" FontSize="10" />
+                                <TextBlock Grid.Column="5" Text="进退步" Classes="label" FontSize="10" />
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding Students}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:StudentRow">
+                                        <Border Classes="rank-row" BorderBrush="#F0EDE3"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid ColumnDefinitions="44,120,84,66,66,78,*" Height="34">
+                                                <TextBlock Text="{Binding Index}" Classes="numeral" FontSize="12"
+                                                           Foreground="{StaticResource MutedBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <Button Grid.Column="1" Classes="link" Click="OnOpenStudent"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Left"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontSize="13"
+                                                               Foreground="{Binding $parent[Button].Foreground}" />
+                                                </Button>
+                                                <TextBlock Grid.Column="2" Text="{Binding TotalText}"
+                                                           Classes="numeral" FontSize="15"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="3" Text="{Binding SchoolRankText}"
+                                                           Classes="numeral" FontSize="12" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="4" Text="{Binding ClassRankText}"
+                                                           Classes="numeral" FontSize="12" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="5" Text="{Binding TrendText}"
+                                                           FontSize="11.5" Foreground="{Binding TrendBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <Border Grid.Column="6" Height="6" CornerRadius="3"
+                                                        Background="#F0EDE3" ClipToBounds="True"
+                                                        VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <ctl:ProportionalPanel>
+                                                        <Border CornerRadius="3" Background="{Binding BarBrush}"
+                                                                ctl:ProportionalPanel.Weight="{Binding BarWeight}" />
+                                                        <Border ctl:ProportionalPanel.Weight="{Binding RestWeight}" />
+                                                    </ctl:ProportionalPanel>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+                </Border>
+            </ScrollViewer>
+
+            <!-- 学生画像（二级界面） -->
+            <ScrollViewer x:Name="StudentDetailScrollViewer" Grid.Row="2" Classes="view-transition" IsVisible="{Binding IsDetailVisible}"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Width="{Binding $parent[ScrollViewer].Viewport.Width}" Padding="34,18,34,26">
+                    <StackPanel Spacing="14">
+                        <Button Classes="ghost back-btn" HorizontalAlignment="Left" Click="OnBackToOverview"
+                                Content="← 返回学生排名" Padding="12,6" FontSize="12" />
+
+                        <StackPanel Spacing="14" DataContext="{Binding Detail}">
+                            <!-- 身份与总分 -->
+                            <Border Classes="card" Padding="24,20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="5">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <TextBlock Text="{Binding NoText}" Classes="mono-label"
+                                                       FontSize="11" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}" Classes="display" FontSize="34" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ExamNo}" Classes="label" FontSize="10.5" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="36"
+                                                VerticalAlignment="Center">
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="总分" Classes="label" FontSize="10" />
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <TextBlock Text="{Binding TotalText}" Classes="numeral"
+                                                           FontSize="30" />
+                                                <TextBlock Text="{Binding TotalRateText}" Classes="label"
+                                                           FontSize="9.5" VerticalAlignment="Bottom"
+                                                           Margin="0,0,0,6" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="班级名次" Classes="label" FontSize="10" />
+                                            <TextBlock Text="{Binding ClassRankText}" Classes="numeral"
+                                                       FontSize="26" />
+                                            <TextBlock Text="{Binding ClassRankNote}" Classes="label"
+                                                       FontSize="9.5" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="年级名次" Classes="label" FontSize="10" />
+                                            <TextBlock Text="{Binding SchoolRankText}" Classes="numeral"
+                                                       FontSize="26" />
+                                            <TextBlock Text="{Binding SchoolRankNote}" Classes="label"
+                                                       FontSize="9.5" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <Grid ColumnDefinitions="1.6*,*" ColumnSpacing="14">
+                                <!-- 科目对照 -->
+                                <Border Classes="card" Padding="20,18">
+                                    <StackPanel Spacing="12">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Classes="display" Text="科目对照" FontSize="17" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
+                                                        VerticalAlignment="Center">
+                                                <Border Width="2" Height="12" Background="{StaticResource AccentBrush}"
+                                                        VerticalAlignment="Center" />
+                                                <TextBlock Text="班级均分" Classes="label" FontSize="9.5" />
+                                                <TextBlock Text="·" Classes="label" FontSize="9.5" />
+                                                <TextBlock Text="条形＝个人得分率" Classes="label" FontSize="9.5" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid ColumnDefinitions="62,*,84,56,56,40" Margin="0,0,0,2">
+                                            <TextBlock Text="科目" Classes="label" FontSize="10" />
+                                            <TextBlock Grid.Column="2" Text="得分" Classes="label" FontSize="10"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Column="3" Text="校次" Classes="label" FontSize="10"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Column="4" Text="班次" Classes="label" FontSize="10"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Grid.Column="5" Text="进退" Classes="label" FontSize="10"
+                                                       HorizontalAlignment="Right" />
+                                        </Grid>
+
+                                        <ItemsControl ItemsSource="{Binding Subjects}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:DetailSubjectRow">
+                                                    <Grid ColumnDefinitions="62,*,84,56,56,40" Height="30"
+                                                          Margin="0,0,0,4">
+                                                        <Button Classes="link" Content="{Binding Name}"
+                                                                Tag="{Binding Name}" Click="OnSubjectClick"
+                                                                FontSize="12.5" FontWeight="Medium"
+                                                                VerticalAlignment="Center" />
+                                                        <ctl:CompareBar Grid.Column="1" Height="12"
+                                                                        VerticalAlignment="Center"
+                                                                        Margin="0,0,12,0"
+                                                                        Fill="{Binding FillWeight}"
+                                                                        Average="{Binding AverageWeight}"
+                                                                        FillBrush="{Binding FillBrush}"
+                                                                        AverageBrush="{StaticResource AccentBrush}" />
+                                                        <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                                    Spacing="3" HorizontalAlignment="Right"
+                                                                    VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ScoreText}"
+                                                                       Classes="numeral" FontSize="14" />
+                                                            <TextBlock Text="{Binding FullText}" Classes="label"
+                                                                       FontSize="9.5" VerticalAlignment="Bottom"
+                                                                       Margin="0,0,0,2" />
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="3" Text="{Binding SchoolRankText}"
+                                                                   Classes="numeral" FontSize="11.5"
+                                                                   Foreground="{StaticResource InkSoftBrush}"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="4" Text="{Binding ClassRankText}"
+                                                                   Classes="numeral" FontSize="11.5"
+                                                                   Foreground="{StaticResource InkSoftBrush}"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="5" Text="{Binding DeltaText}"
+                                                                   FontSize="10" Foreground="{Binding DeltaBrush}"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 画像摘要 -->
+                                <Border Grid.Column="1" Classes="card" Padding="20,18">
+                                    <StackPanel Spacing="16">
+                                        <TextBlock Classes="display" Text="画像摘要" FontSize="17" />
+
+                                        <Grid ColumnDefinitions="*,*">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="高于班级均分" Classes="label" FontSize="10" />
+                                                <TextBlock Text="{Binding AboveText}" Classes="numeral"
+                                                           FontSize="24" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock Text="低于班级均分" Classes="label" FontSize="10" />
+                                                <TextBlock Text="{Binding BelowText}" Classes="numeral"
+                                                           FontSize="24"
+                                                           Foreground="{Binding BelowBrush}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Height="1" Background="#F0EDE3" />
+
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <TextBlock Text="最强" Classes="label" FontSize="10"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding StrongestText}"
+                                                           FontSize="12" HorizontalAlignment="Right"
+                                                           Foreground="{StaticResource InkBrush}" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <TextBlock Text="最弱" Classes="label" FontSize="10"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding WeakestText}"
+                                                           FontSize="12" HorizontalAlignment="Right"
+                                                           Foreground="{StaticResource InkBrush}" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <TextBlock Text="总分进退" Classes="label" FontSize="10"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{Binding TrendSummary}"
+                                                           FontSize="12" HorizontalAlignment="Right"
+                                                           Foreground="{Binding TrendBrush}" />
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <Border Height="1" Background="#F0EDE3" />
+
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="班级位置" Classes="label" FontSize="10" />
+                                            <StackPanel IsVisible="{Binding HasRank}" Spacing="6">
+                                                <ctl:PositionBar Height="8" Ratio="{Binding PositionWeight}" />
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Text="第 1 名" Classes="label" FontSize="9" />
+                                                    <TextBlock Grid.Column="1" Text="末位" Classes="label" FontSize="9" />
+                                                </Grid>
+                                            </StackPanel>
+                                            <Border IsVisible="{Binding !HasRank}" Background="#F7F5EE" CornerRadius="4" Padding="10,8">
+                                                <TextBlock Text="{Binding PositionNote}" Classes="label" FontSize="11"
+                                                           Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" />
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- 满 3 次考试对比专区 (折线图走势、波动指标与单科历次矩阵) -->
+                        <StackPanel Spacing="14" IsVisible="{Binding Detail.HasMultiExam}">
+                            <!-- 历次统考综合走势卡片 -->
+                            <Border Classes="card" Padding="22,18">
+                                <StackPanel Spacing="14">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                            <TextBlock Classes="display" Text="历次统考综合走势" FontSize="17" />
+                                            <Border Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                                    BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Detail.MultiExamProfile.ExamCount, StringFormat='共 {0} 场统考'}"
+                                                           Classes="mono-label" FontSize="9.5" />
+                                            </Border>
+                                            <Border Background="#F4F2EC" CornerRadius="4" Padding="8,2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Detail.MultiExamProfile.OverallTrendTag}"
+                                                           FontSize="10.5" FontWeight="SemiBold"
+                                                           Foreground="{Binding Detail.MultiExamProfile.OverallTrendBrush}" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- 走势维度切换 -->
+                                        <Border Grid.Column="1" Background="#EDE8DE" CornerRadius="6" Padding="2" Height="30">
+                                            <Grid ColumnDefinitions="Auto,Auto,Auto">
+                                                <Button Classes="rank-seg-btn"
+                                                        Classes.active="{Binding IsTrendScoreActive}"
+                                                        Content="总分走势"
+                                                        Click="OnSelectTrendScore"
+                                                        FontSize="11" Padding="10,0" />
+                                                <Button Grid.Column="1" Classes="rank-seg-btn"
+                                                        Classes.active="{Binding IsTrendClassRankActive}"
+                                                        Content="班排走势"
+                                                        Click="OnSelectTrendClassRank"
+                                                        FontSize="11" Padding="10,0" />
+                                                <Button Grid.Column="2" Classes="rank-seg-btn"
+                                                        Classes.active="{Binding IsTrendSchoolRankActive}"
+                                                        Content="校排走势"
+                                                        Click="OnSelectTrendSchoolRank"
+                                                        FontSize="11" Padding="10,0" />
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- 原生折线走势图 -->
+                                    <Border Height="180" Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="10">
+                                        <ctl:MultiExamTrendChart Height="160"
+                                                                Points="{Binding ActiveStudentTrendPoints}"
+                                                                Mode="{Binding ActiveStudentChartMode}"
+                                                                LineBrush="{Binding Detail.MultiExamProfile.OverallTrendBrush}" />
+                                    </Border>
+
+                                    <!-- 历次统考三大关键指标 -->
+                                    <Grid ColumnDefinitions="*,*,1.3*" ColumnSpacing="12">
+                                        <!-- 总分极值与极差 -->
+                                        <Border Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="14,11">
+                                            <StackPanel Spacing="5">
+                                                <TextBlock Text="总分极值与极差" Classes="label" FontSize="10" />
+                                                <Grid ColumnDefinitions="*,*">
+                                                    <StackPanel Spacing="1">
+                                                        <TextBlock Text="最高分" Classes="label" FontSize="9.5" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.HighestTotalText}" Classes="numeral" FontSize="15" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.HighestTotalExam}" Classes="label" FontSize="9"
+                                                                   Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="1">
+                                                        <TextBlock Text="最低分" Classes="label" FontSize="9.5" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.LowestTotalText}" Classes="numeral" FontSize="15" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.LowestTotalExam}" Classes="label" FontSize="9"
+                                                                   Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,2" />
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Text="总分极差跨度" Classes="label" FontSize="10" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Detail.MultiExamProfile.TotalRangeText}"
+                                                               Classes="numeral" FontSize="12.5" Foreground="{StaticResource AccentBrush}" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 班级名次波动 -->
+                                        <Border Grid.Column="1" Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="14,11">
+                                            <StackPanel Spacing="5">
+                                                <TextBlock Text="班级名次波动" Classes="label" FontSize="10" />
+                                                <Grid ColumnDefinitions="*,*">
+                                                    <StackPanel Spacing="1">
+                                                        <TextBlock Text="最佳名次" Classes="label" FontSize="9.5" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.BestClassRankText}" Classes="numeral" FontSize="15"
+                                                                   Foreground="{StaticResource MossBrush}" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.BestClassRankExam}" Classes="label" FontSize="9"
+                                                                   Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Spacing="1">
+                                                        <TextBlock Text="最差名次" Classes="label" FontSize="9.5" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.LowestClassRankText}" Classes="numeral" FontSize="15" />
+                                                        <TextBlock Text="{Binding Detail.MultiExamProfile.LowestClassRankExam}" Classes="label" FontSize="9"
+                                                                   Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,2" />
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Text="排名波动幅度" Classes="label" FontSize="10" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Detail.MultiExamProfile.ClassRankRangeText}"
+                                                               Classes="numeral" FontSize="12.5" Foreground="{StaticResource InkBrush}" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 态势综合诊断 -->
+                                        <Border Grid.Column="2" Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="14,11">
+                                            <StackPanel Spacing="6">
+                                                <TextBlock Text="学情综合态势评估" Classes="label" FontSize="10" />
+                                                <TextBlock Text="{Binding Detail.MultiExamProfile.OverallTrendDescription}"
+                                                           TextWrapping="Wrap" LineHeight="19" FontSize="11.5"
+                                                           Foreground="{StaticResource InkSoftBrush}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 历次学科表现对照矩阵卡片 -->
+                            <Border Classes="card" Padding="22,18">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Classes="display" Text="历次学科表现对照矩阵" FontSize="17" />
+                                        <TextBlock Grid.Column="1" Classes="label" Text="点击学科可穿透至单科深度分析" VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="70,1.4*,1.4*,90,80" Margin="10,0,10,2">
+                                        <TextBlock Text="科目" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="1" Text="得分演变 (历次)" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="2" Text="班排走势 (历次)" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="3" Text="综合进退" Classes="label" FontSize="10" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="4" Text="学科态势" Classes="label" FontSize="10" HorizontalAlignment="Right" />
+                                    </Grid>
+
+                                    <ItemsControl ItemsSource="{Binding Detail.MultiExamProfile.SubjectRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:SubjectTrajectoryRow">
+                                                <Border Classes="rank-row" CornerRadius="6" Padding="10,8" Margin="0,0,0,3">
+                                                    <Grid ColumnDefinitions="70,1.4*,1.4*,90,80">
+                                                        <Button Classes="link" Content="{Binding SubjectName}"
+                                                                Tag="{Binding SubjectName}" Click="OnSubjectClick"
+                                                                FontSize="12.5" FontWeight="Medium"
+                                                                VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding ExamScoresSummary}"
+                                                                   Classes="numeral" FontSize="12.5" VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding ExamRanksSummary}"
+                                                                   Classes="mono-label" FontSize="11.5" VerticalAlignment="Center"
+                                                                   Foreground="{StaticResource InkSoftBrush}" />
+                                                        <TextBlock Grid.Column="3" Text="{Binding NetDeltaText}"
+                                                                   Classes="numeral" FontSize="12.5" FontWeight="SemiBold"
+                                                                   Foreground="{Binding NetDeltaBrush}"
+                                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                        <Border Grid.Column="4" Background="#F4F2EC" CornerRadius="3"
+                                                                Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding TrendTag}" Classes="mono-label" FontSize="9.5"
+                                                                       Foreground="{Binding TrendTagBrush}" FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- 少于 3 次考试时的引导卡片 -->
+                        <Border IsVisible="{Binding !Detail.HasMultiExam}" Classes="card" Background="#FAF9F5" Padding="20,16">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Width="38" Height="38" CornerRadius="8" Background="#F0EDE3"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="📈" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="14,0,16,0" VerticalAlignment="Center" Spacing="3">
+                                    <TextBlock Text="历次统考综合走势与学科矩阵（导入满 3 次考试自动解锁）"
+                                               Classes="display" FontSize="14.5" />
+                                    <TextBlock Text="当前已录入考试尚未达到 3 场。在「考试管理」中继续导入考试，即可在此自动解锁该学生的历次总分/名次走势图、极差指标与跨考学科对照矩阵。"
+                                               FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Classes="ghost" Content="+ 导入下一场考试" Click="OnAddExamSession"
+                                        VerticalAlignment="Center" Padding="14,7" FontSize="11.5" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+
+            <!-- 单科分析（二级界面） -->
+            <ScrollViewer x:Name="SubjectDetailScrollViewer" Grid.Row="2" Classes="view-transition" IsVisible="{Binding IsSubjectDetailVisible}"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Width="{Binding $parent[ScrollViewer].Viewport.Width}" Padding="34,18,34,26">
+                    <StackPanel Spacing="14">
+                        <Button Classes="ghost back-btn" HorizontalAlignment="Left" Click="OnBackToOverview"
+                                Content="← 返回概览" Padding="12,6" FontSize="12" />
+
+                        <StackPanel Spacing="14" DataContext="{Binding SubjectDetail}">
+                            <!-- 1. 学科核心指标卡 -->
+                            <Border Classes="card" Padding="24,20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="5">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <TextBlock Text="学科分析" Classes="mono-label" FontSize="11" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding SubjectName}" Classes="display" FontSize="34" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding RankAmongSubjectsText}" Classes="label" FontSize="10.5" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="36" VerticalAlignment="Center">
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="满分" Classes="label" FontSize="10" />
+                                            <TextBlock Text="{Binding FullMarkText}" Classes="numeral" FontSize="26" />
+                                            <TextBlock Text="学科参照" Classes="label" FontSize="9.5" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="班级均分" Classes="label" FontSize="10" />
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding AverageText}" Classes="numeral" FontSize="28" Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Text="{Binding AverageRateText}" Classes="label" FontSize="10" VerticalAlignment="Bottom" Margin="0,0,0,5" />
+                                            </StackPanel>
+                                            <TextBlock Text="全班均分得分率" Classes="label" FontSize="9.5" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="最高分" Classes="label" FontSize="10" />
+                                            <TextBlock Text="{Binding HighestText}" Classes="numeral" FontSize="26" Foreground="{StaticResource MossBrush}" />
+                                            <TextBlock Text="{Binding HighestStudentText}" Classes="label" FontSize="9.5" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="1">
+                                            <TextBlock Text="及格率" Classes="label" FontSize="10" />
+                                            <TextBlock Text="{Binding PassRateText}" Classes="numeral" FontSize="26" />
+                                            <TextBlock Text="{Binding PassCountText}" Classes="label" FontSize="9.5" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- 2. 分数段分布与年级学情诊断 -->
+                            <Grid ColumnDefinitions="360,*" ColumnSpacing="14">
+                                <!-- 分数分布与学科底线指标 -->
+                                <Border Classes="card" Padding="20,18">
+                                    <StackPanel Spacing="14">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Classes="display" Text="分数段分布" FontSize="17" />
+                                            <TextBlock Grid.Column="1" Classes="label" Text="按卷面得分率统计" VerticalAlignment="Center" />
+                                        </Grid>
+                                        <ctl:TierBar Height="14" ItemsSource="{Binding Tiers}" />
+
+                                        <ItemsControl ItemsSource="{Binding Tiers}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:TierStat">
+                                                    <Grid ColumnDefinitions="14,*,48,46" Margin="0,0,0,8">
+                                                        <Border Width="10" Height="10" CornerRadius="2"
+                                                                Background="{Binding Fill}" VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="8,0,0,0"
+                                                                   FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource InkBrush}" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding CountText}"
+                                                                   Classes="numeral" FontSize="13"
+                                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                        <TextBlock Grid.Column="3" Text="{Binding PercentText}"
+                                                                   Classes="caption" HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,2,0,2" />
+
+                                        <TextBlock Text="学科底线与离散特征" Classes="label" FontSize="10" />
+                                        <StackPanel Spacing="7">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="班级极差 (最高-最低)" FontSize="11.5" Foreground="{StaticResource InkSoftBrush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding RangeText}" Classes="numeral" FontSize="12" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="优秀率 (≥85%满分)" FontSize="11.5" Foreground="{StaticResource InkSoftBrush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding ExcellentRateText}" Classes="numeral" FontSize="12" Foreground="{StaticResource MossBrush}" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="及格率 (≥60%满分)" FontSize="11.5" Foreground="{StaticResource InkSoftBrush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding PassRateText}" Classes="numeral" FontSize="12" Foreground="{StaticResource AccentBrush}" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Text="最低分" FontSize="11.5" Foreground="{StaticResource InkSoftBrush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding LowestText}" Classes="numeral" FontSize="12" />
+                                            </Grid>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 诊断摘要：年级专属深度教研诊断系统 -->
+                                <Border Grid.Column="1" Classes="card" Padding="22,18">
+                                    <StackPanel Spacing="12">
+                                        <!-- 标题与年级学段专属标识 -->
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBlock Classes="display" Text="学情诊断" FontSize="17" />
+                                            <Border Grid.Column="1" Background="{StaticResource PaperDeepBrush}"
+                                                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                                    CornerRadius="4" Padding="8,3" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding GradeBadge}" Classes="mono-label"
+                                                           FontSize="9.5" Foreground="{StaticResource AccentBrush}" />
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- 1. 年级常模与宏观达标盘点 -->
+                                        <Border Background="#FAF9F5" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="12,10">
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="学情达标评估" Classes="label" FontSize="10" />
+                                                <TextBlock Text="{Binding MacroAssessment}" TextWrapping="Wrap"
+                                                           LineHeight="19" FontSize="11.5"
+                                                           Foreground="{StaticResource InkBrush}" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- 2. 两极分化与临界生预警 -->
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="{Binding PolarizationAssessment}" TextWrapping="Wrap"
+                                                       LineHeight="18" FontSize="11.5"
+                                                       Foreground="{StaticResource InkSoftBrush}" />
+                                            <TextBlock Text="{Binding BorderlineAssessment}" TextWrapping="Wrap"
+                                                       LineHeight="18" FontSize="11.5"
+                                                       Foreground="{StaticResource InkSoftBrush}" />
+                                        </StackPanel>
+
+                                        <Border Height="1" Background="{StaticResource LineBrush}" />
+
+                                        <!-- 3. 针对性教学策略与提分路径 -->
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="教研与分层辅导建议" Classes="label" FontSize="10" />
+                                            <ItemsControl ItemsSource="{Binding ActionStrategies}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,5">
+                                                            <Ellipse Width="4" Height="4" Fill="{StaticResource AccentBrush}"
+                                                                     VerticalAlignment="Top" Margin="0,6,8,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                                                       LineHeight="18" FontSize="11.5"
+                                                                       Foreground="{StaticResource InkSoftBrush}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- 3. 本科目全班学生排名列表 -->
+                            <Border Classes="card" Padding="20,18">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Classes="display" Text="单科学生排名" FontSize="17" />
+                                        <TextBlock Grid.Column="1" Classes="label" Text="点击姓名可穿透至个人画像" VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="44,110,*,80,68" Margin="10,0,10,2">
+                                        <TextBlock Text="名次" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="1" Text="姓名" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="2" Text="得分率 vs 均分线" Classes="label" FontSize="10" />
+                                        <TextBlock Grid.Column="3" Text="单科得分" Classes="label" FontSize="10" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="4" Text="较均分" Classes="label" FontSize="10" HorizontalAlignment="Right" />
+                                    </Grid>
+
+                                    <ItemsControl ItemsSource="{Binding Students}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:SubjectStudentRow">
+                                                <Border Classes="rank-row" CornerRadius="6" Padding="10,7" Margin="0,0,0,2">
+                                                    <Grid ColumnDefinitions="44,110,*,80,68">
+                                                        <TextBlock Text="{Binding RankText}" Classes="mono-label" FontSize="11" VerticalAlignment="Center" />
+                                                        <Button Grid.Column="1" Classes="link" Content="{Binding StudentName}"
+                                                                Tag="{Binding StudentName}" Click="OnStudentNameClick"
+                                                                FontSize="13" VerticalAlignment="Center" />
+                                                        <ctl:CompareBar Grid.Column="2" Height="12" VerticalAlignment="Center" Margin="0,0,16,0"
+                                                                        Fill="{Binding FillWeight}"
+                                                                        Average="{Binding AverageWeight}"
+                                                                        AverageBrush="{StaticResource AccentBrush}" />
+                                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ScoreText}" Classes="numeral" FontSize="14" />
+                                                            <TextBlock Text="{Binding RateText}" Classes="label" FontSize="9.5" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="4" Text="{Binding DeltaText}" FontSize="11"
+                                                                   Foreground="{Binding DeltaBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+
+            <!-- 成绩条 -->
+            <Grid Grid.Row="2" IsVisible="{Binding IsStripsVisible}"
+                  Margin="34,18,34,0" RowDefinitions="Auto,*">
+
+                <Border Classes="card" Padding="16,14" Margin="0,0,0,14">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                        <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Classes="display" Text="导出设置" FontSize="16" />
+                            <TextBlock Text="A4 横向 · 一页宽" Classes="label" FontSize="9.5" />
+                        </StackPanel>
+
+                        <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="8">
+                            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="首表" Classes="label" FontSize="10" />
+                                <NumericUpDown Value="{Binding FirstGroupSize, Mode=TwoWay}" FontSize="12"
+                                               Minimum="1" Maximum="20" Increment="1"
+                                               Width="74" Height="32" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="每表" Classes="label" FontSize="10" />
+                                <NumericUpDown Value="{Binding GroupSize, Mode=TwoWay}" FontSize="12"
+                                               Minimum="1" Maximum="30" Increment="1"
+                                               Width="74" Height="32" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="排名维度" Classes="label" FontSize="10" />
+                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32" Width="92">
+                                    <Grid ColumnDefinitions="*,*">
+                                        <Button Classes="rank-seg-btn"
+                                                Classes.active="{Binding !UseSchoolRank}"
+                                                Content="班排"
+                                                Click="OnSelectClassRank"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                FontSize="11" />
+                                        <Button Grid.Column="1"
+                                                Classes="rank-seg-btn"
+                                                Classes.active="{Binding UseSchoolRank}"
+                                                Content="校排"
+                                                Click="OnSelectSchoolRank"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                FontSize="11" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="对比基准" Classes="label" FontSize="10" />
+                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32" Width="142">
+                                    <Grid ColumnDefinitions="*,*,*">
+                                        <Button Classes="rank-seg-btn"
+                                                Classes.active="{Binding IsComparisonPrevious}"
+                                                IsEnabled="{Binding HasActiveExamPrevious}"
+                                                Content="上一场"
+                                                Click="OnSelectCompPrevious"
+                                                ToolTip.Tip="与前一场统考对比进退步"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                FontSize="10.5" />
+                                        <Button Grid.Column="1"
+                                                Classes="rank-seg-btn"
+                                                Classes.active="{Binding IsComparisonFirst}"
+                                                IsEnabled="{Binding HasMultipleExams}"
+                                                Content="首次"
+                                                Click="OnSelectCompFirst"
+                                                ToolTip.Tip="与第 1 次基准考对比进退步"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                FontSize="10.5" />
+                                        <Button Grid.Column="2"
+                                                Classes="rank-seg-btn"
+                                                Classes.active="{Binding IsComparisonOriginal}"
+                                                Content="自带"
+                                                Click="OnSelectCompOriginal"
+                                                ToolTip.Tip="使用表格自带进退步"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                FontSize="10.5" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4" Spacing="2" VerticalAlignment="Center" MinWidth="80">
+                                <TextBlock Text="成绩条标题" Classes="label" FontSize="10" />
+                                <TextBox Text="{Binding TitleOverride, Mode=TwoWay}" FontSize="12" Height="32"
+                                         HorizontalAlignment="Stretch"
+                                         PlaceholderText="留空自动生成" VerticalContentAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10"
+                                    VerticalAlignment="Center">
+                            <CheckBox IsChecked="{Binding IncludeLegend, Mode=TwoWay}"
+                                      FontSize="11.5" Content="首页图例" />
+                            <Button Classes="primary" Content="导出 xlsx" Click="OnExport" Padding="14,7" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" AllowAutoHide="True" HorizontalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding StripItems}" Margin="0,0,20,24">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="14" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PreviewItem">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="Auto,Auto,*" IsVisible="{Binding IsHeader}"
+                                          Margin="0,4,0,2">
+                                        <TextBlock Text="{Binding HeaderText}" Classes="display" FontSize="14" />
+                                        <TextBlock Grid.Column="1" Text="{Binding HeaderMeta}" Classes="caption"
+                                                   Margin="10,2,0,0" />
+                                        <Border Grid.Column="2" Height="1" Background="{StaticResource LineBrush}"
+                                                VerticalAlignment="Center" Margin="14,0,0,0" />
+                                    </Grid>
+
+                                    <Border IsVisible="{Binding IsTitleBlock}"
+                                            Background="{StaticResource CardBrush}"
+                                            BorderBrush="#AAB4C5" BorderThickness="0,1,0,1"
+                                            Padding="18,14">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="{Binding TitleText}" Classes="display"
+                                                       FontSize="17" HorizontalAlignment="Center"
+                                                       TextWrapping="Wrap" TextAlignment="Center" />
+                                            <StackPanel Orientation="Horizontal" Spacing="18"
+                                                        HorizontalAlignment="Center"
+                                                        IsVisible="{Binding HasLegend}">
+                                                <StackPanel Orientation="Horizontal" Spacing="9">
+                                                    <TextBlock Text="{Binding LegendRankText}" Classes="caption"
+                                                               FontSize="9.5" VerticalAlignment="Center" />
+                                                    <ItemsControl ItemsSource="{Binding TierLegend}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="9" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:LegendItem">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <Border Width="11" Height="11" CornerRadius="2"
+                                                                            Background="{Binding Fill}"
+                                                                            BorderBrush="#D9DEE7" BorderThickness="1"
+                                                                            VerticalAlignment="Center" />
+                                                                    <TextBlock Text="{Binding Text}" Classes="caption"
+                                                                               FontSize="9.5" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="9">
+                                                    <TextBlock Text="进退步" Classes="caption" FontSize="9.5"
+                                                               VerticalAlignment="Center" />
+                                                    <ItemsControl ItemsSource="{Binding DeltaLegend}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="9" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:LegendItem">
+                                                                <TextBlock Text="{Binding Text}"
+                                                                           Foreground="{Binding Foreground}"
+                                                                           FontSize="9.5" VerticalAlignment="Center" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border IsVisible="{Binding IsStrip}"
+                                            Background="{StaticResource CardBrush}"
+                                            BorderBrush="#AAB4C5" BorderThickness="0,1,0,1"
+                                            ClipToBounds="True">
+                                        <Grid ColumnDefinitions="108,*">
+                                            <Border Grid.Column="0" Background="#EAF2FF"
+                                                    BorderBrush="#D9DEE7" BorderThickness="0,0,1,0"
+                                                    Padding="6,7">
+                                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5"
+                                                                HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding Strip.NoText}" Classes="numeral"
+                                                                   FontSize="11"
+                                                                   Foreground="{StaticResource MutedBrush}" />
+                                                        <TextBlock Text="{Binding Strip.Name}" FontSize="13.5"
+                                                                   FontWeight="Bold" Foreground="#1F3864" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Strip.ExamNo}" FontSize="9.5"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               HorizontalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <ItemsControl ItemsSource="{Binding Strip.Cells}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal" />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:StripCell">
+                                                            <Grid Width="50" RowDefinitions="20,30,18">
+                                                                <Border Grid.Row="0" Background="#F7F9FC"
+                                                                        BorderBrush="#D9DEE7"
+                                                                        BorderThickness="0,0,1,0">
+                                                                    <TextBlock Text="{Binding Subject}"
+                                                                               FontSize="10.5"
+                                                                               Foreground="#595959"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                                <Border Grid.Row="1" Background="{Binding Fill}"
+                                                                        BorderBrush="#D9DEE7"
+                                                                        BorderThickness="0,0,1,0">
+                                                                    <TextBlock Text="{Binding ScoreText}"
+                                                                               Foreground="{Binding ScoreBrush}"
+                                                                               FontSize="15" FontWeight="Bold"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                                <Border Grid.Row="2" BorderBrush="#D9DEE7"
+                                                                        BorderThickness="0,0,1,0">
+                                                                    <TextBlock Text="{Binding Note}"
+                                                                               Foreground="{Binding NoteBrush}"
+                                                                               FontSize="9.5"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <!-- 总分 -->
+                                                <Grid Width="76" RowDefinitions="20,30,18">
+                                                    <Border Grid.Row="0" Background="#EAF2FF"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="总分" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#1F3864"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="1" Background="#FFE699"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding Strip.TotalText}"
+                                                                   Foreground="#9C5700" FontSize="17"
+                                                                   FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="2" BorderBrush="#D9DEE7"
+                                                            BorderThickness="0,0,1,0" />
+                                                </Grid>
+
+                                                <!-- 校次 -->
+                                                <Grid Width="50" RowDefinitions="20,30,18">
+                                                    <Border Grid.Row="0" Background="#EAF2FF"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="校次" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#1F3864"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="1" Background="{Binding Strip.SchoolRankFill}"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding Strip.SchoolRankText}"
+                                                                   Foreground="{Binding Strip.SchoolRankForeground}" FontSize="15"
+                                                                   FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="2" BorderBrush="#D9DEE7"
+                                                            BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding Strip.SchoolDeltaText}"
+                                                                   Foreground="{Binding Strip.SchoolDeltaBrush}"
+                                                                   FontSize="9.5"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- 班次 -->
+                                                <Grid Width="50" RowDefinitions="20,30,18">
+                                                    <Border Grid.Row="0" Background="#EAF2FF"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="班次" FontSize="10.5" FontWeight="Bold"
+                                                                   Foreground="#1F3864"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="1" Background="{Binding Strip.ClassRankFill}"
+                                                            BorderBrush="#D9DEE7" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding Strip.ClassRankText}"
+                                                                   Foreground="{Binding Strip.ClassRankForeground}" FontSize="15"
+                                                                   FontWeight="Bold"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <Border Grid.Row="2" BorderBrush="#D9DEE7"
+                                                            BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding Strip.ClassDeltaText}"
+                                                                   Foreground="{Binding Strip.ClassDeltaBrush}"
+                                                                   FontSize="9.5"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- 状态栏 -->
+            <Border Grid.Row="3" Margin="34,0,34,14" Padding="0,8"
+                    Background="{StaticResource PaperBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+                <Grid ColumnDefinitions="Auto,*">
+                    <Ellipse Grid.Column="0" Width="6" Height="6" Fill="{Binding StatusBrush}"
+                             VerticalAlignment="Center" Margin="0,0,8,0">
+                        <Ellipse.Transitions>
+                            <Transitions>
+                                <BrushTransition Property="Fill" Duration="0:0:0.25" />
+                            </Transitions>
+                        </Ellipse.Transitions>
+                    </Ellipse>
+                    <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding Status}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 考试批次管理弹窗 (Modal Overlay) -->
+        <Grid Grid.ColumnSpan="2" Background="#70141413"
+              IsVisible="{Binding IsExamManagerOpen}">
+            <Border Classes="card" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Width="720" MaxHeight="600" Padding="28,24" Background="{StaticResource PaperBrush}">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <!-- 弹窗顶栏 -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                        <StackPanel Spacing="3">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="考试批次管理" Classes="display" FontSize="19" />
+                                <Border Background="#EFECE3" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ExamSessionCountText}" Classes="mono-label" FontSize="10" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="按时间先后递进排列（第 1 考为首次基准）。支持调整次序、切换主考或替换数据。"
+                                       FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="ghost" Content="✕" Click="OnCloseExamManager"
+                                Padding="8,4" FontSize="13" VerticalAlignment="Top" />
+                    </Grid>
+
+                    <!-- 考试列表 -->
+                    <Border Grid.Row="1" Background="{StaticResource CardBrush}"
+                            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                            CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                        <ScrollViewer MaxHeight="340" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="暂未导入任何考试" Classes="label" HorizontalAlignment="Center"
+                                           Margin="0,20" IsVisible="{Binding !HasData}" />
+                                <ItemsControl ItemsSource="{Binding ExamSessions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ExamSessionItem">
+                                            <Border BorderBrush="{StaticResource LineBrush}"
+                                                    BorderThickness="1" CornerRadius="6"
+                                                    Padding="12,10" Margin="0,0,0,6">
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="#FAF9F5" />
+                                                </Border.Background>
+                                                <Grid ColumnDefinitions="32,*,Auto">
+                                                    <!-- 序号徽标 -->
+                                                    <Border Width="26" Height="26" CornerRadius="5"
+                                                            Background="{StaticResource PaperDeepBrush}"
+                                                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Order, StringFormat='{}{0:D2}'}"
+                                                                   Classes="mono-label" FontSize="10.5"
+                                                                   FontWeight="SemiBold"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+
+                                                    <!-- 考场信息 -->
+                                                    <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center" Margin="10,0,14,0">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <TextBlock Text="{Binding OrderTitle}" Classes="mono-label" FontSize="10.5"
+                                                                       Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                            <TextBlock Text="·" Classes="label" FontSize="10" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding ExamName}" FontWeight="SemiBold" FontSize="12.5"
+                                                                       Foreground="{StaticResource InkBrush}" TextTrimming="CharacterEllipsis"
+                                                                       MaxWidth="250" VerticalAlignment="Center" />
+                                                            <Border Background="#E6EFE6" CornerRadius="3" Padding="5,1"
+                                                                    IsVisible="{Binding IsActive}" VerticalAlignment="Center">
+                                                                <TextBlock Text="当前主视图" FontSize="9.5" Foreground="{StaticResource MossBrush}"
+                                                                           FontWeight="Medium" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding FileName}" Classes="mono-label" FontSize="10"
+                                                                       Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis"
+                                                                       MaxWidth="220" />
+                                                            <TextBlock Text="·" Classes="label" FontSize="10" />
+                                                            <TextBlock Text="{Binding SummaryText}" Classes="label" FontSize="10" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <!-- 操作动作组 -->
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                        <Button Classes="ghost" Content="设为主考"
+                                                                Tag="{Binding Order}" Click="OnSetActiveSession"
+                                                                IsVisible="{Binding !IsActive}"
+                                                                Padding="7,4" FontSize="11" />
+                                                        <Button Classes="ghost" Content="↑"
+                                                                Tag="{Binding Order}" Click="OnMoveSessionUp"
+                                                                IsEnabled="{Binding CanMoveUp}"
+                                                                Padding="7,4" FontSize="11" ToolTip.Tip="向前调整次序" />
+                                                        <Button Classes="ghost" Content="↓"
+                                                                Tag="{Binding Order}" Click="OnMoveSessionDown"
+                                                                IsEnabled="{Binding CanMoveDown}"
+                                                                Padding="7,4" FontSize="11" ToolTip.Tip="向后调整次序" />
+                                                        <Button Classes="ghost" Content="替换"
+                                                                Tag="{Binding Order}" Click="OnReplaceSession"
+                                                                Padding="7,4" FontSize="11" ToolTip.Tip="用新的表格替换该场数据" />
+                                                        <Button Classes="ghost" Content="删除"
+                                                                Tag="{Binding Order}" Click="OnRemoveSession"
+                                                                Padding="7,4" FontSize="11" Foreground="{StaticResource AccentDeepBrush}"
+                                                                ToolTip.Tip="移除该场考试" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- 弹窗底栏 -->
+                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
+                        <Button Grid.Column="0" Classes="ghost" Content="+ 导入下一场考试" Click="OnAddExamSession"
+                                Padding="16,8" FontSize="12.5" />
+                        <Button Grid.Column="1" Classes="primary" Content="完成" Click="OnCloseExamManager"
+                                HorizontalAlignment="Right" Padding="24,8" FontSize="12.5" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
