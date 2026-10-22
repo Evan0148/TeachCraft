@@ -113,9 +113,9 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 ## 五、分晓（GradeStrip）集成约定
 
 - 分晓以 **项目引用 + 程序集内嵌** 的方式进入工具箱；点击「打开应用」在 **同一进程** 里创建 `GradeStrip.App.Views.MainWindow`，不要改成启动外部 exe。
-- `vendor/gradestrip` 是 **只读快照**，来源：`Evan0148/GradeStrip`，提交 `db0baeb`（2026-10-22）。
-- 同步方式：从上游复制 `src/GradeStrip.App`、`src/GradeStrip.Core`（排除 `bin/obj` 与 `*.user`），保持相对目录结构；若上游新增 App 级 `StaticResource`（笔刷、字体、样式），必须同步进 `src/TeachCraft.App/App.axaml`，否则 XAML 会在运行时找不到资源。
-- 发布目录里的 `GradeStrip.App.exe` 由 `RemoveGradeStripAppHost` target 自动删除，只保留 DLL。
+- `vendor/gradestrip` 是 **只读快照**，来源：`Evan0148/GradeStrip`，提交 `db0baeb`（2026-10-22）。唯一的结构性改动是把 `GradeStrip.App` 的 `OutputType` 改为 `Library`：它在本项目里只作为窗口模块使用；若保留 `WinExe`，framework-dependent 发布会报 `NETSDK1151`（自包含可执行文件不能被非自包含可执行文件引用）。
+- 同步方式：从上游复制 `src/GradeStrip.App`、`src/GradeStrip.Core`（排除 `bin/obj` 与 `*.user`），保持相对目录结构；复制后把 `OutputType` 改为 `Library`，并删除 `ApplicationIcon` / `ApplicationManifest` 属性。若上游新增 App 级 `StaticResource`（笔刷、字体、样式），必须同步进 `src/TeachCraft.App/App.axaml`，否则 XAML 会在运行时找不到资源。
+- 发布目录里的 `GradeStrip.App.exe` / `GradeStrip.App.runtimeconfig.json` 由 `RemoveGradeStripAppHost` target 兜底删除，只保留 DLL。
 
 ---
 

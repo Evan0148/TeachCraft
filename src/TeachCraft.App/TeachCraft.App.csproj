@@ -26,9 +26,10 @@
     <ProjectReference Include="..\..\vendor\gradestrip\src\GradeStrip.App\GradeStrip.App.csproj" />
   </ItemGroup>
 
-  <!-- 分晓以程序集形式在主窗口中打开，发布目录里不需要它自己的 exe。 -->
+  <!-- 分晓以程序集形式在主窗口中打开，发布目录里不需要它自己的 exe / runtimeconfig。 -->
   <Target Name="RemoveGradeStripAppHost" AfterTargets="Publish">
     <Delete Files="$(PublishDir)GradeStrip.App.exe" />
+    <Delete Files="$(PublishDir)GradeStrip.App.runtimeconfig.json" />
   </Target>
 
 </Project>

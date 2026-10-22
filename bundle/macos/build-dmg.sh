@@ -55,6 +55,11 @@ cp -R "$PUBLISH_DIR"/* "$MACOS_DIR/"
 # 清理 .pdb，避免 codesign 将其误判为未签名子代码组件
 find "$MACOS_DIR" -type f -name "*.pdb" -delete
 
+# QuestPDF 的默认字体档案会被 codesign 当作 MacOS/ 下的子代码，移到 Resources
+if [ -f "$MACOS_DIR/QuestPDF.Fonts.Lato.br" ]; then
+    mv "$MACOS_DIR/QuestPDF.Fonts.Lato.br" "$RESOURCES_DIR/"
+fi
+
 # 写入 Info.plist（只替换版本占位符）
 sed "s/<string>1.0.0<\/string>/<string>${PLIST_VER}<\/string>/g" bundle/macos/Info.plist > "$CONTENTS_DIR/Info.plist"
 

@@ -1,0 +1,9 @@
+# 统一使用 LF，保证 macOS 的 bash 脚本在任意平台提交/检出后仍可执行
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary
+*.ttf binary
+*.otf binary
+*.zip binary
