@@ -13,6 +13,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using SeatGrid.App;
 using TeachCraft.App.ViewModels;
 using TeachCraft.Core.Tools;
 
@@ -20,6 +21,7 @@ namespace TeachCraft.App.Views;
 
 public partial class MainWindow : Window
 {
+    private SeatGridWindow? _seatGridWindow;
     public MainWindow()
     {
         InitializeComponent();
@@ -367,6 +369,29 @@ public partial class MainWindow : Window
         };
 
     private void OnProjectLaunch(object? sender, EventArgs e) => OnLaunchGradeStrip(sender, new RoutedEventArgs());
+
+    // ----------------------------- 归位 · SeatGrid -----------------------------
+
+    private void OnLaunchSeatGrid(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_seatGridWindow is { IsVisible: true })
+            {
+                _seatGridWindow.Activate();
+                return;
+            }
+
+            _seatGridWindow = new SeatGridWindow();
+            _seatGridWindow.Closed += (_, _) => _seatGridWindow = null;
+            _seatGridWindow.Show();
+            ViewModel.SetStatus("已打开 归位 · SeatGrid");
+        }
+        catch (Exception ex)
+        {
+            ViewModel.SetStatus("打开 归位 失败：" + ex.Message, true);
+        }
+    }
 
     // ----------------------------- 分晓 -----------------------------
 

@@ -3,6 +3,8 @@
   <Folder Name="/tests/">
     <Project Path="tests/TeachCraft.Tests/TeachCraft.Tests.csproj" />
   </Folder>
+  <Project Path="src/SeatGrid.App/SeatGrid.App.csproj" />
+  <Project Path="src/SeatGrid.Core/SeatGrid.Core.csproj" />
   <Project Path="src/TeachCraft.App/TeachCraft.App.csproj" />
   <Project Path="src/TeachCraft.Core/TeachCraft.Core.csproj" />
 </Solution>

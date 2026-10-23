@@ -6,7 +6,7 @@
 
 ## 一、项目定位
 
-「知微」是面向教师的本地工具箱：10 件图片 / PDF 小工具，加上「分晓 · GradeStrip」成绩条生成器，统一使用分晓的纸墨设计语言与本地优先原则。技术栈为 **C# / .NET 10 + Avalonia 12**，所有文件处理在本机完成，不上传、不留存。
+「知微」是面向教师的本地工具箱：10 件图片 / PDF 小工具，加上「分晓 · GradeStrip」成绩条生成器与「归位 · SeatGrid」座位表生成器，统一使用分晓的纸墨设计语言与本地优先原则。技术栈为 **C# / .NET 10 + Avalonia 12**，所有文件处理在本机完成，不上传、不留存。
 
 ---
 
@@ -46,7 +46,7 @@ $$\text{v}\{Major\}.\{Minor\}.\{Patch\}[-\text{preview}.\{RunNumber\}]$$
 | **Minor** | 新增工具、新增输出格式、新增平台支持、界面大改版 |
 | **Patch** | Bug 修复、文案/间距/性能微调 |
 
-当前基线：`1.0.0`（首个完整版本，2026-10-23）。
+当前基线：`1.1.0`（2026-10-23 新增「归位 · SeatGrid」，按 Minor 晋级）。`1.0.0` 是首个完整工具箱版本。
 
 ---
 
@@ -96,10 +96,12 @@ chmod +x bundle/macos/build-dmg.sh
 ```
 TeachCraft.slnx
 Directory.Build.props        # 版本号唯一来源
-src/TeachCraft.App           # Avalonia 桌面端（工具箱壳 + 分晓入口）
+src/TeachCraft.App           # Avalonia 桌面端（工具箱壳 + 分晓 / 归位入口）
 src/TeachCraft.Core          # 图片 / PDF 处理引擎
+src/SeatGrid.App             # 归位座位表窗口
+src/SeatGrid.Core            # 名单识别、排座、PNG/PDF/Excel 导出
 vendor/gradestrip            # 分晓 App + Core 的只读快照
-tests/TeachCraft.Tests       # xUnit 测试（9 项）
+tests/TeachCraft.Tests       # xUnit 测试（16 项）
 installer                    # Inno Setup 脚本与中文语言文件
 bundle/macos                 # Info.plist / Entitlements / DMG 脚本
 scripts/version.ps1          # 版本号计算
@@ -119,7 +121,20 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 
 ---
 
-## 六、编码与设计准则
+## 六、归位（SeatGrid）集成约定
+
+- 归位以独立 Avalonia 窗口运行，但**由工具箱同进程打开**（`SeatGridWindow`），单实例复用；不要改成外部 exe。
+- 数据管线固定为：`RosterImporter` → `SeatingEngine` → `SeatChartComposer` → `SeatChartRenderer` / `SeatChartExcelExporter` / `SeatGridConfigIO`。界面、PNG、PDF、Excel 共用同一个 `SeatChartDocument`，不得各自写一套布局。
+- 名单识别必须同时支持 **带表头** 与 **无表头** 的 xlsx / xls / csv；不得要求用户套用固定模板。识别字段：姓名、性别、学号、身高、视力、成绩、原小组、备注。
+- 座位坐标统一用 `SeatPosition(Group, Row, Column)`；`Row=0` 永远表示靠近讲台的第一排。教师视角 / 学生视角只改变展示顺序，不改变物理座位。
+- 打印 PDF 采用「高分辨率 PNG 嵌入 A4」的方案（QuestPDF），不要改回 SkiaSharp 矢量 PDF：后者会把整个中文字体内嵌，单张座位表可达 23MB。
+- 导出路径不得覆盖已导入的名单文件；UI 层必须做 `IsSamePath` 检查。
+- 新增第 11 件小工具或归位的新导出格式时，按 Minor 版本晋级，并同步 `.memory/09-归位座位表.md`。
+- 归位的默认格子缩放为 85%（68px），保证 1440 宽窗口能完整显示 4 组 × 2 列；用户可在设置里改回 100%（80px）。
+
+---
+
+## 七、编码与设计准则
 
 1. **语言**：界面中文，工具 ID 用等宽拉丁（`image-convert` 等）；异常消息面向老师，必须是可读中文。
 2. **设计语言**：沿用分晓的 Anthropic 纸墨色板（`#FAF9F5` / `#141413` / `#D97757`）、Anthropic Serif + Mono 字体、1px 细边白卡、无阴影、0.12–0.32s 克制动效。
@@ -133,8 +148,9 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 
 ---
 
-## 七、验证要求
+## 八、验证要求
 
-- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与 9 项 xUnit 测试。
+- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与 16 项 xUnit 测试。
 - 涉及图片 / PDF 引擎的改动，必须额外用真实文件跑一遍：格式转换、PDF 合并、Word→PDF、PDF 转图片。
-- 发布前用 `--shot` / `--panel <tool-id>` / `--gradestrip-shot` 做一次视觉走查（详见 `.memory/07-验证与测试资产.md`）。
+- 涉及归位的改动，必须额外验证：带表头 / 无表头名单识别、配置 xlsx 往返、PNG / PDF / Excel 三种导出。
+- 发布前用 `--shot` / `--panel <tool-id>` / `--gradestrip-shot` / `--seatgrid-shot` 做一次视觉走查（详见 `.memory/07-验证与测试资产.md`）。

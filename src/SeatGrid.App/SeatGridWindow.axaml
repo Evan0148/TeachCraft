@@ -1,0 +1,683 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:SeatGrid.App"
+        xmlns:controls="using:SeatGrid.App.Controls"
+        x:Class="SeatGrid.App.SeatGridWindow"
+        x:DataType="app:SeatGridViewModel"
+        Title="归位 · SeatGrid"
+        Width="1440" Height="920"
+        MinWidth="1240" MinHeight="780"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource PaperBrush}">
+    <Design.DataContext>
+        <app:SeatGridViewModel />
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+        <Style Selector="Border.settings-card">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+        <Style Selector="Border.chart-card">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontFamily" Value="{StaticResource SerifFont}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.4" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="#9C9585" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="ComboBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="Button.top">
+            <Setter Property="Padding" Value="11,6" />
+            <Setter Property="FontSize" Value="11.5" />
+        </Style>
+        <Style Selector="Button.mode">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+        <Style Selector="Button.mode.active">
+            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="BorderBrush" Value="#D6D1C4" />
+        </Style>
+        <Style Selector="Button.mode:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F7F4EB" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.accent">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E7C8BB" />
+            <Setter Property="Foreground" Value="#FFF8F4" />
+        </Style>
+        <Style Selector="ListBox.roster">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.roster ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Margin" Value="0,1" />
+        </Style>
+        <Style Selector="ListBox.roster ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#F7F4EB" />
+        </Style>
+        <Style Selector="ListBox.roster ListBoxItem:selected">
+            <Setter Property="Background" Value="#F1EEE5" />
+        </Style>
+        <Style Selector="Border.seat-tag">
+            <Setter Property="Background" Value="#F7F4EB" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="5,1" />
+        </Style>
+        <Style Selector="Border.seat-tag.assigned">
+            <Setter Property="Background" Value="#FBEDE7" />
+            <Setter Property="BorderBrush" Value="#E9C4B6" />
+        </Style>
+        <Style Selector="Button.seat-cell">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid>
+                        <Border Name="SeatSurface"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              HorizontalContentAlignment="Center"
+                                              VerticalContentAlignment="Center" />
+                        </Border>
+                        <Rectangle Name="SeatDashed" Margin="1" RadiusX="5" RadiusY="5"
+                                   Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1"
+                                   StrokeDashArray="4,3"
+                                   IsVisible="{ReflectionBinding ShowEmptyFrame}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.seat-cell:pointerover /template/ Border#SeatSurface">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+        </Style>
+        <Style Selector="Button.seat-cell.selected /template/ Border#SeatSurface">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- ==================== 顶栏 ==================== -->
+        <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,12">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                    <Border Width="38" Height="38" CornerRadius="4"
+                            Background="#0DD97757" BorderBrush="#8CC6613F" BorderThickness="1">
+                        <TextBlock Text="位" FontFamily="{StaticResource SerifFont}" FontSize="19"
+                                   Foreground="{StaticResource AccentDeepBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="归位" FontFamily="{StaticResource SerifFont}" FontSize="19"
+                                   LetterSpacing="3" Foreground="{StaticResource InkBrush}" />
+                        <TextBlock Text="SEATGRID" FontFamily="{StaticResource MonoFont}" FontSize="8"
+                                   LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
+                    </StackPanel>
+                    <Border Width="1" Height="30" Background="{StaticResource LineBrush}" Margin="7,0" />
+                    <TextBlock Text="{Binding Title}" FontFamily="{StaticResource SerifFont}" FontSize="22"
+                               Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"
+                               MaxWidth="280" TextTrimming="CharacterEllipsis" />
+                    <Border Classes="chip" VerticalAlignment="Center">
+                        <TextBlock Text="课堂应用" FontSize="9.5" Foreground="#6B6557" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="primary top" Content="导入名单" Click="OnImportRoster"
+                            IsEnabled="{Binding IsIdle}" AutomationProperties.Name="导入名单" />
+                    <ComboBox Classes="field" Width="104" ItemsSource="{Binding ArrangeModes}"
+                              SelectedIndex="{Binding ArrangeModeIndex, Mode=TwoWay}"
+                              ToolTip.Tip="自动排座方式" />
+                    <Button Classes="accent top" Content="自动排座" Click="OnAutoArrange"
+                            IsEnabled="{Binding IsIdle}" AutomationProperties.Name="自动排座" />
+                    <Button Classes="ghost top" Content="预览" Click="OnPreview"
+                            IsEnabled="{Binding HasStudents}" />
+                    <Button Classes="ghost top" Content="打印" Click="OnPrint"
+                            IsEnabled="{Binding HasStudents}" />
+                    <Button Classes="ghost top" Content="导出图片" Click="OnExportImage"
+                            IsEnabled="{Binding HasStudents}" />
+                    <Button Classes="ghost top" Content="导出 Excel" Click="OnExportExcel"
+                            IsEnabled="{Binding HasStudents}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== 主体 ==================== -->
+        <Grid Grid.Row="1" ColumnDefinitions="264,*,372" ColumnSpacing="14" Margin="16,14">
+            <!-- 名单 -->
+            <Border Grid.Column="0" Classes="panel" Padding="13">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="8">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="名单" FontFamily="{StaticResource SerifFont}" FontSize="17"
+                                       Foreground="{StaticResource InkBrush}" />
+                            <Border Classes="chip" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StudentCount}" FontFamily="{StaticResource MonoFont}"
+                                           FontSize="9.5" Foreground="#6B6557" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding ImportSource}" FontSize="9"
+                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                                   MaxWidth="118" TextTrimming="CharacterEllipsis"
+                                   ToolTip.Tip="{Binding ImportSource}" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="1" Text="{Binding RosterStats}" FontFamily="{StaticResource MonoFont}"
+                               FontSize="9.5" LetterSpacing="0.5" Foreground="{StaticResource MutedBrush}" />
+
+                    <TextBox Grid.Row="2" Classes="search" Text="{Binding SearchText, Mode=TwoWay}"
+                             PlaceholderText="搜索姓名 / 学号 / 小组" />
+
+                    <Grid Grid.Row="3">
+                        <ListBox Classes="roster" ItemsSource="{Binding FilteredStudents}"
+                                 SelectedItem="{Binding SelectedStudent, Mode=TwoWay}"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="app:StudentViewModel">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8"
+                                          AutomationProperties.Name="{Binding Name}">
+                                        <Ellipse Width="6" Height="6" Fill="{Binding GenderBrush}"
+                                                 VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource InkBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Meta}" FontSize="9.5"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Classes="seat-tag"
+                                                Classes.assigned="{Binding IsAssigned}" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding SeatLabel}" FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="8.5" Foreground="#8E8776" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel IsVisible="{Binding IsRosterEmpty}" Spacing="5"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RosterEmptyText}" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="15" Foreground="{StaticResource MutedBrush}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="导入名单后，这里会出现学生。" FontSize="10"
+                                       Foreground="#A29C8C" HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Grid.Row="4" Background="#F8F6F0" BorderBrush="{StaticResource LineBrush}"
+                            BorderThickness="1" CornerRadius="7" Padding="10,9">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="{Binding SelectedSeatLabel}" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9.5" Foreground="{StaticResource AccentDeepBrush}" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="5">
+                                <Button Classes="primary" Content="放入所选学生" Padding="8,5" FontSize="10.5"
+                                        Click="OnAssign" IsEnabled="{Binding CanAssign}" />
+                                <Button Grid.Column="1" Classes="ghost" Content="清空座位" Padding="8,5"
+                                        FontSize="10.5" Click="OnClearSeat" IsEnabled="{Binding CanClearSeat}" />
+                            </Grid>
+                            <TextBlock Text="先点座位，再选左侧学生，最后点「放入」。"
+                                       Classes="helper" />
+                        </StackPanel>
+                    </Border>
+
+                    <Expander Grid.Row="5" Header="编辑学生 / 新增" HorizontalAlignment="Stretch"
+                              FontSize="11" IsExpanded="False">
+                        <StackPanel Spacing="7" Margin="0,8,0,0">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <TextBox Classes="field" Text="{Binding EditName, Mode=TwoWay}" PlaceholderText="姓名" />
+                                <TextBox Grid.Column="1" Classes="field" Text="{Binding EditNumber, Mode=TwoWay}" PlaceholderText="学号" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <ComboBox Classes="field" ItemsSource="{Binding GenderOptions}"
+                                          SelectedIndex="{Binding EditGenderIndex, Mode=TwoWay}" />
+                                <TextBox Grid.Column="1" Classes="field" Text="{Binding EditHeight, Mode=TwoWay}"
+                                         PlaceholderText="身高 cm" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                <TextBox Classes="field" Text="{Binding EditVision, Mode=TwoWay}" PlaceholderText="视力" />
+                                <TextBox Grid.Column="1" Classes="field" Text="{Binding EditNotes, Mode=TwoWay}"
+                                         PlaceholderText="备注" />
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Classes="primary" Content="保存修改" Padding="10,5" FontSize="10.5"
+                                        Click="OnApplyStudent" />
+                                <Button Classes="ghost" Content="删除" Padding="10,5" FontSize="10.5"
+                                        Click="OnDeleteStudent" />
+                                <Button Classes="link" Content="+ 新增学生" FontSize="10.5"
+                                        Click="OnAddStudent" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+                </Grid>
+            </Border>
+
+            <!-- 座位表 -->
+            <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="9">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Classes="mode" Classes.active="{Binding IsTeacherView}"
+                                Content="教师视角" Click="OnTeacherView" />
+                        <Button Classes="mode" Classes.active="{Binding IsStudentView}"
+                                Content="学生视角" Click="OnStudentView" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="点击座位选中，再从左侧名单放人；打印与导出会保留同一套配色。"
+                               FontSize="9.5" Foreground="{StaticResource MutedBrush}"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <Border Grid.Column="2" Classes="chip" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SeatStats}" FontFamily="{StaticResource MonoFont}"
+                                   FontSize="9.5" Foreground="#6B6557" />
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Classes="chart-card">
+                    <Grid>
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">
+                                <TextBlock Text="{Binding Title}" FontFamily="{StaticResource SerifFont}"
+                                           FontSize="22" FontWeight="{Binding TitleWeight}"
+                                           Foreground="{StaticResource InkBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding InfoLine}" FontSize="10.5"
+                                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center"
+                                           Margin="0,3,0,10" />
+
+                                <Border IsVisible="{Binding PodiumOnTop}" Width="{Binding PodiumWidth}"
+                                        Height="40" Margin="{Binding PodiumTopMargin}"
+                                        HorizontalAlignment="Center" Background="{Binding PodiumBackgroundBrush}"
+                                        BorderBrush="{Binding SeatBorderBrush}" BorderThickness="1"
+                                        CornerRadius="8">
+                                    <TextBlock Text="讲　台" FontSize="11.5" Foreground="{Binding PodiumTextBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+
+                                <ItemsControl ItemsSource="{Binding Groups}" HorizontalAlignment="Center">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="22" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="app:GroupViewModel">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Label}"
+                                                           IsVisible="{Binding ShowHints}"
+                                                           Margin="{Binding LabelMargin}"
+                                                           Foreground="{Binding LabelBrush}" FontSize="9.5"
+                                                           FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                                <ItemsControl ItemsSource="{Binding Rows}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="app:RowViewModel">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                                                        Margin="0,0,0,6">
+                                                                <Border Width="44" IsVisible="{Binding ShowRowLabel}">
+                                                                    <TextBlock Text="{Binding Label}"
+                                                                               TextAlignment="Right" FontSize="9"
+                                                                               Foreground="{Binding LabelBrush}"
+                                                                               VerticalAlignment="Center" />
+                                                                </Border>
+                                                                <ItemsControl ItemsSource="{Binding Seats}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal" Spacing="6" />
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate x:DataType="app:SeatCellViewModel">
+                                                                            <Button Classes="seat-cell"
+                                                                                    Classes.selected="{Binding IsSelected}"
+                                                                                    Width="{Binding Width}"
+                                                                                    Height="{Binding Height}"
+                                                                                    Background="{Binding Fill}"
+                                                                                    BorderBrush="{Binding Stroke}"
+                                                                                    BorderThickness="{Binding BorderThickness}"
+                                                                                    Foreground="{Binding NameBrush}"
+                                                                                    Tag="{Binding}"
+                                                                                    Click="OnSeatClick"
+                                                                                    ToolTip.Tip="{Binding PositionLabel}"
+                                                                                    AutomationProperties.Name="{Binding AutomationName}">
+                                                                                <TextBlock Text="{Binding DisplayName}"
+                                                                                           FontSize="{Binding FontSize}"
+                                                                                           FontWeight="{Binding FontWeight}"
+                                                                                           Foreground="{Binding NameBrush}"
+                                                                                           HorizontalAlignment="Center"
+                                                                                           VerticalAlignment="Center" />
+                                                                            </Button>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Border IsVisible="{Binding PodiumOnBottom}" Width="{Binding PodiumWidth}"
+                                        Height="40" Margin="{Binding PodiumBottomMargin}"
+                                        HorizontalAlignment="Center" Background="{Binding PodiumBackgroundBrush}"
+                                        BorderBrush="{Binding SeatBorderBrush}" BorderThickness="1"
+                                        CornerRadius="8">
+                                    <TextBlock Text="讲　台" FontSize="11.5" Foreground="{Binding PodiumTextBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <Border IsVisible="{Binding IsChartEmpty}" Background="#F2FAF9F5"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="10">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                                <TextBlock Text="还没有名单" FontFamily="{StaticResource SerifFont}" FontSize="26"
+                                           Foreground="{StaticResource InkBrush}" HorizontalAlignment="Center" />
+                                <TextBlock Text="导入 Excel / CSV 名单，软件会自动识别姓名、性别、身高与视力。"
+                                           FontSize="11.5" Foreground="{StaticResource MutedBrush}"
+                                           HorizontalAlignment="Center" />
+                                <Button Classes="primary" Content="导入名单" Click="OnImportRoster"
+                                        HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 设置 -->
+            <Border Grid.Column="2" Classes="panel">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="14" Spacing="11">
+                        <!-- 布局 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="9">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="section-title" Text="视角模式" />
+                                    <TextBlock Grid.Column="1" Text="VIEW" FontFamily="{StaticResource MonoFont}"
+                                               FontSize="8.5" Foreground="#A29C8C" VerticalAlignment="Center" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                                    <Button Classes="mode" Classes.active="{Binding IsTeacherView}"
+                                            Content="教师视角" Click="OnTeacherView" />
+                                    <Button Grid.Column="1" Classes="mode" Classes.active="{Binding IsStudentView}"
+                                            Content="学生视角" Click="OnStudentView" />
+                                </Grid>
+                                <TextBlock Text="教师视角讲台在下方，适合打印给教师查看。"
+                                           Classes="helper" />
+
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,5,0,0">
+                                    <TextBlock Classes="field-label" Text="小组数量" />
+                                    <TextBlock Grid.Column="1" Text="{Binding GroupCountLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="1" Maximum="8" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding GroupCount, Mode=TwoWay}" />
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="field-label" Text="每组排数" />
+                                    <TextBlock Grid.Column="1" Text="{Binding RowCountLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="1" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding RowCount, Mode=TwoWay}" />
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="field-label" Text="每组人数（列）" />
+                                    <TextBlock Grid.Column="1" Text="{Binding ColumnCountLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="1" Maximum="4" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding ColumnCount, Mode=TwoWay}" />
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="field-label" Text="格子大小" />
+                                    <TextBlock Grid.Column="1" Text="{Binding CellSizeLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="50" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding CellScale, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 标题 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="section-title" Text="座位表标题" />
+                                <TextBox Classes="field" Text="{Binding Title, Mode=TwoWay}"
+                                         PlaceholderText="例如：九年级六班座位表" />
+                                <CheckBox IsChecked="{Binding BoldTitle, Mode=TwoWay}" Content="标题加粗"
+                                          FontSize="11" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="field-label" Text="班主任" />
+                                        <TextBox Classes="field" Text="{Binding HeadTeacher, Mode=TwoWay}"
+                                                 PlaceholderText="可选" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Classes="field-label" Text="班长" />
+                                        <TextBox Classes="field" Text="{Binding Monitor, Mode=TwoWay}"
+                                                 PlaceholderText="可选" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="{Binding InfoLine}" FontSize="9.5"
+                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 样式 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="9">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="section-title" Text="座位表样式" />
+                                    <Button Grid.Column="1" Classes="link" Content="重置"
+                                            Click="OnResetStyle" FontSize="10.5" />
+                                </Grid>
+                                <WrapPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="座位背景" />
+                                        <controls:ColorSwatchButton Color="{Binding SeatBackgroundColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="座位背景颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="空位背景" />
+                                        <controls:ColorSwatchButton Color="{Binding EmptySeatColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="空位背景颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="姓名颜色" />
+                                        <controls:ColorSwatchButton Color="{Binding SeatTextColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="姓名颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="边框颜色" />
+                                        <controls:ColorSwatchButton Color="{Binding SeatBorderColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="座位边框颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="讲台底色" />
+                                        <controls:ColorSwatchButton Color="{Binding PodiumBackgroundColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="讲台底色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="讲台文字" />
+                                        <controls:ColorSwatchButton Color="{Binding PodiumTextColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="讲台文字颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="组标题" />
+                                        <controls:ColorSwatchButton Color="{Binding GroupLabelColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="组标题颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="排标题" />
+                                        <controls:ColorSwatchButton Color="{Binding RowLabelColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="排标题颜色" />
+                                    </StackPanel>
+                                    <StackPanel Width="102" Spacing="4" Margin="0,0,4,8">
+                                        <TextBlock Classes="field-label" Text="女生标记" />
+                                        <controls:ColorSwatchButton Color="{Binding FemaleMarkColor, Mode=TwoWay}"
+                                                                    AutomationProperties.Name="女生标记颜色" />
+                                    </StackPanel>
+                                </WrapPanel>
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="field-label" Text="讲台与座位距离" />
+                                    <TextBlock Grid.Column="1" Text="{Binding PodiumGapLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding PodiumGap, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 文字与显示 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="section-title" Text="文字与显示" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="field-label" Text="名字字体大小" />
+                                    <TextBlock Grid.Column="1" Text="{Binding NameFontSizeLabel}"
+                                               Classes="numeral" FontSize="11" />
+                                </Grid>
+                                <Slider Minimum="10" Maximum="36" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding NameFontSize, Mode=TwoWay}" />
+
+                                <CheckBox IsChecked="{Binding BoldNames, Mode=TwoWay}" Content="名字加粗"
+                                          FontSize="11" />
+                                <CheckBox IsChecked="{Binding SpaceTwoCharNames, Mode=TwoWay}"
+                                          Content="两字姓名自动加空格" FontSize="11" />
+                                <CheckBox IsChecked="{Binding MarkFemales, Mode=TwoWay}" Content="标记女生"
+                                          FontSize="11" />
+                                <TextBlock Text="开启后，女生姓名使用强调色；关闭则统一用姓名颜色。"
+                                           Classes="helper" />
+
+                                <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,3" />
+                                <CheckBox IsChecked="{Binding HideEmptySeats, Mode=TwoWay}"
+                                          Content="隐藏空座位" FontSize="11" />
+                                <TextBlock Text="未安排学生的座位将隐藏虚线框。" Classes="helper" />
+                                <CheckBox IsChecked="{Binding ShowGroupRowHints, Mode=TwoWay}"
+                                          Content="显示组排提示" FontSize="11" />
+                                <TextBlock Text="关闭后隐藏「第几组」和「第几排」提示。" Classes="helper" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 配置 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="section-title" Text="Excel 配置" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                    <Button Classes="primary" Content="导出配置" Padding="10,6" FontSize="10.5"
+                                            Click="OnExportConfig" IsEnabled="{Binding IsIdle}" />
+                                    <Button Grid.Column="1" Classes="ghost" Content="导入配置" Padding="10,6"
+                                            FontSize="10.5" Click="OnImportConfig" IsEnabled="{Binding IsIdle}" />
+                                </Grid>
+                                <TextBlock Text="配置文件包含座位设置、名单与座位位置；导入会覆盖当前状态。"
+                                           Classes="helper" />
+                                <TextBlock Text="请勿修改导出的配置表格结构，否则可能无法导入。"
+                                           FontSize="9.5" Foreground="{StaticResource AccentDeepBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 状态栏 ==================== -->
+        <Border Grid.Row="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+                Padding="18,9">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <Ellipse Width="5" Height="5" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusText}" FontSize="10.5"
+                               Foreground="{StaticResource MutedBrush}"
+                               TextTrimming="CharacterEllipsis" MaxWidth="760" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding SeatStats}"
+                           FontFamily="{StaticResource MonoFont}" FontSize="9"
+                           Foreground="#A29C8C" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="LOCAL ONLY · 名单不上传"
+                           FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                           LetterSpacing="1.2" Foreground="{StaticResource MossBrush}"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
+

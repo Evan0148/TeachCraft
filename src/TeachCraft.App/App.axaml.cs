@@ -23,9 +23,62 @@ public partial class App : Application
             var window = new MainWindow { DataContext = viewModel };
             desktop.MainWindow = window;
 
-            if (!CaptureGradeStripIfRequested(desktop)) CaptureIfRequested(desktop, window);        }
+            if (!CaptureGradeStripIfRequested(desktop) && !CaptureSeatGridIfRequested(desktop) &&
+                !ShowSeatGridDemoIfRequested(desktop))
+                CaptureIfRequested(desktop, window);
+        }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>本地走查：打开一个带演示名单的归位窗口，便于人工检查交互。</summary>
+    private static bool ShowSeatGridDemoIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        if (!args.Contains("--seatgrid-demo")) return false;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            await Task.Delay(450);
+            var window = new SeatGrid.App.SeatGridWindow();
+            window.LoadDemoData();
+            window.Show();
+        });
+
+        return true;
+    }
+
+    /// <summary>设计走查：打开「归位」并装载演示名单后截图。</summary>
+    private static bool CaptureSeatGridIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--seatgrid-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+                var window = new SeatGrid.App.SeatGridWindow();
+                window.LoadDemoData();
+                window.Show();
+                await Task.Delay(1600);
+                window.CaptureTo(target);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
     }
 
     /// <summary>设计走查：只打开「分晓」窗口并截图，确认它能在工具箱里正常渲染。</summary>

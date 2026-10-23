@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SeatGrid.App.SeatPreviewWindow"
+        Title="打印预览 · 归位"
+        Width="1080" Height="820"
+        MinWidth="820" MinHeight="620"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,12">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Border Width="30" Height="30" CornerRadius="3"
+                            Background="#0DD97757" BorderBrush="#8CC6613F" BorderThickness="1">
+                        <TextBlock Text="位" FontFamily="{StaticResource SerifFont}" FontSize="15"
+                                   Foreground="{StaticResource AccentDeepBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Spacing="1" VerticalAlignment="Center">
+                        <TextBlock Text="打印预览" FontFamily="{StaticResource SerifFont}" FontSize="18"
+                                   Foreground="{StaticResource InkBrush}" />
+                        <TextBlock x:Name="Subtitle" Text="" FontFamily="{StaticResource MonoFont}"
+                                   FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                    <Button Classes="ghost" Content="打开文件夹" Click="OnOpenFolder" />
+                    <Button Classes="primary" Content="关闭" Click="OnClose" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Margin="18" Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10"
+                Padding="14" ClipToBounds="True">
+            <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                <Image x:Name="PreviewImage" />
+            </Viewbox>
+        </Border>
+
+        <Border Grid.Row="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+                Padding="18,9">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="本机生成 · 导出的 PNG / 打印 PDF 与此预览一致"
+                           FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="LOCAL ONLY"
+                           FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                           LetterSpacing="1.2" Foreground="{StaticResource MossBrush}"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

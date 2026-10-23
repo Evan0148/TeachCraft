@@ -1,0 +1,326 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using SeatGrid.Core;
+using SeatGrid.Core.Export;
+using SeatGrid.Core.Rendering;
+using SeatGrid.Core.Roster;
+
+namespace SeatGrid.App;
+
+public partial class SeatGridWindow : Window
+{
+    private string? _rosterPath;
+
+    public SeatGridWindow() : this(new SeatGridViewModel())
+    {
+    }
+
+    public SeatGridWindow(SeatGridViewModel viewModel)
+    {
+        InitializeComponent();
+        DataContext = viewModel;
+    }
+
+    private SeatGridViewModel ViewModel => (SeatGridViewModel)DataContext!;
+
+    /// <summary>设计走查用：装载演示名单并截图。</summary>
+    public void LoadDemoData()
+    {
+        ViewModel.LoadRoster(DemoRoster.Create());
+        ViewModel.ArrangeModeIndex = 1;
+        ViewModel.AutoArrange();
+        ViewModel.SetStatus("演示名单 · 已按男女交替自动排座");
+    }
+
+    public void CaptureTo(string path)
+    {
+        var pixelSize = new PixelSize((int)Bounds.Width, (int)Bounds.Height);
+        using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+        bitmap.Render(this);
+        using var stream = File.Create(path);
+        bitmap.Save(stream, new PngBitmapEncoderOptions());
+    }
+
+    // ----------------------------- 名单 -----------------------------
+
+    private async void OnImportRoster(object? sender, RoutedEventArgs e)
+    {
+        var path = await PickOpenAsync("导入名单", new FilePickerFileType("名单文件")
+        {
+            Patterns = new[] { "*.xlsx", "*.xls", "*.csv" },
+        });
+        if (path is null) return;
+
+        ViewModel.IsBusy = true;
+        try
+        {
+            var result = await Task.Run(() => RosterImporter.Import(path));
+            ViewModel.LoadRoster(result);
+            _rosterPath = path;
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "导入名单失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    // ----------------------------- 排座 / 座位操作 -----------------------------
+
+    private void OnAutoArrange(object? sender, RoutedEventArgs e) => ViewModel.AutoArrange();
+
+    private void OnTeacherView(object? sender, RoutedEventArgs e) => ViewModel.IsStudentView = false;
+
+    private void OnStudentView(object? sender, RoutedEventArgs e) => ViewModel.IsStudentView = true;
+
+    private void OnSeatClick(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.Tag is SeatCellViewModel seat)
+            ViewModel.SelectSeat(seat);
+    }
+
+    private void OnAssign(object? sender, RoutedEventArgs e) => ViewModel.AssignSelectedStudent();
+
+    private void OnClearSeat(object? sender, RoutedEventArgs e) => ViewModel.ClearSelectedSeat();
+
+    private void OnApplyStudent(object? sender, RoutedEventArgs e) => ViewModel.ApplyStudentEdit();
+
+    private void OnAddStudent(object? sender, RoutedEventArgs e) => ViewModel.AddStudent();
+
+    private void OnDeleteStudent(object? sender, RoutedEventArgs e) => ViewModel.DeleteSelectedStudent();
+
+    private void OnResetStyle(object? sender, RoutedEventArgs e) => ViewModel.ResetStyle();
+
+    // ----------------------------- 预览 / 打印 / 导出 -----------------------------
+
+    private async void OnPreview(object? sender, RoutedEventArgs e)
+    {
+        ViewModel.IsBusy = true;
+        try
+        {
+            var document = ViewModel.ComposeDocument();
+            var path = await Task.Run(() => SeatChartRenderer.RenderPngToTemp(document, 2.0));
+            var preview = new SeatPreviewWindow(path, ViewModel.Title, ViewModel.SeatStats);
+            await preview.ShowDialog(this);
+            ViewModel.SetStatus("预览已生成，导出图片会得到同一张图。");
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "生成预览失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    private async void OnPrint(object? sender, RoutedEventArgs e)
+    {
+        ViewModel.IsBusy = true;
+        try
+        {
+            var document = ViewModel.ComposeDocument();
+            var directory = Path.Combine(Path.GetTempPath(), "TeachCraft", "SeatGrid");
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, SafeFileName("-打印.pdf"));
+            await Task.Run(() => SeatChartRenderer.RenderPdf(document, path));
+
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            ViewModel.SetStatus("已生成打印 PDF，请在打开的阅读器里打印。");
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "生成打印文件失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    private async void OnExportImage(object? sender, RoutedEventArgs e)
+    {
+        var path = await PickSaveAsync("导出座位表图片", SafeFileName(".png"), ".png",
+            new FilePickerFileType("PNG 图片") { Patterns = new[] { "*.png" } });
+        if (path is null) return;
+        if (IsSamePath(path, _rosterPath))
+        {
+            ViewModel.SetStatus("导出路径不能覆盖已导入的名单文件。", true);
+            return;
+        }
+
+        ViewModel.IsBusy = true;
+        try
+        {
+            var document = ViewModel.ComposeDocument();
+            await Task.Run(() => SeatChartRenderer.RenderPng(document, path, 2.0));
+            ViewModel.SetStatus($"已导出图片：{Path.GetFileName(path)}");
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "导出图片失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    private async void OnExportExcel(object? sender, RoutedEventArgs e)
+    {
+        var path = await PickSaveAsync("导出座位表 Excel", SafeFileName(".xlsx"), ".xlsx",
+            new FilePickerFileType("Excel 工作簿") { Patterns = new[] { "*.xlsx" } });
+        if (path is null) return;
+        if (IsSamePath(path, _rosterPath))
+        {
+            ViewModel.SetStatus("导出路径不能覆盖已导入的名单文件。", true);
+            return;
+        }
+
+        ViewModel.IsBusy = true;
+        try
+        {
+            var document = ViewModel.ComposeDocument();
+            var assignments = ViewModel.GetCoreAssignments();
+            var students = ViewModel.GetModels();
+            await Task.Run(() => SeatChartExcelExporter.ExportSeatChart(document, assignments, students, path));
+            ViewModel.SetStatus($"已导出 Excel：{Path.GetFileName(path)}");
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "导出 Excel 失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    private async void OnExportConfig(object? sender, RoutedEventArgs e)
+    {
+        var path = await PickSaveAsync("导出座位配置", SafeFileName("-配置.xlsx"), ".xlsx",
+            new FilePickerFileType("Excel 工作簿") { Patterns = new[] { "*.xlsx" } });
+        if (path is null) return;
+        if (IsSamePath(path, _rosterPath))
+        {
+            ViewModel.SetStatus("配置路径不能覆盖已导入的名单文件。", true);
+            return;
+        }
+
+        ViewModel.IsBusy = true;
+        try
+        {
+            var settings = ViewModel.ToSettings();
+            var assignments = ViewModel.GetCoreAssignments();
+            var students = ViewModel.GetModels();
+            await Task.Run(() => SeatGridConfigIO.Export(path, settings, students, assignments));
+            ViewModel.SetStatus($"已导出配置：{Path.GetFileName(path)}");
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "导出配置失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    private async void OnImportConfig(object? sender, RoutedEventArgs e)
+    {
+        var path = await PickOpenAsync("导入座位配置", new FilePickerFileType("座位配置")
+        {
+            Patterns = new[] { "*.xlsx" },
+        });
+        if (path is null) return;
+
+        ViewModel.IsBusy = true;
+        try
+        {
+            var config = await Task.Run(() => SeatGridConfigIO.Import(path));
+            ViewModel.ApplyConfig(config);
+            _rosterPath = null;
+        }
+        catch (Exception ex)
+        {
+            Report(ex, "导入配置失败");
+        }
+        finally
+        {
+            ViewModel.IsBusy = false;
+        }
+    }
+
+    // ----------------------------- 文件选择 -----------------------------
+
+    private async Task<string?> PickOpenAsync(string title, FilePickerFileType fileType)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter = new[] { fileType },
+        });
+
+        return files.Count == 0 ? null : files[0].TryGetLocalPath();
+    }
+
+    private async Task<string?> PickSaveAsync(
+        string title,
+        string suggestedName,
+        string extension,
+        FilePickerFileType fileType)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = suggestedName,
+            DefaultExtension = extension.TrimStart('.'),
+            FileTypeChoices = new[] { fileType },
+        });
+
+        return file?.TryGetLocalPath();
+    }
+
+    private string SafeFileName(string suffix)
+    {
+        var title = string.IsNullOrWhiteSpace(ViewModel.Title) ? "座位表" : ViewModel.Title.Trim();
+        foreach (var invalid in Path.GetInvalidFileNameChars())
+            title = title.Replace(invalid, '-');
+
+        return title + suffix;
+    }
+
+    private static bool IsSamePath(string path, string? other)
+    {
+        if (string.IsNullOrWhiteSpace(other)) return false;
+
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(path),
+                Path.GetFullPath(other),
+                StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void Report(Exception ex, string prefix)
+    {
+        ViewModel.SetStatus(ex is SeatGridException ? ex.Message : $"{prefix}：{ex.Message}", true);
+    }
+}

@@ -14,12 +14,13 @@
 | `06-决策与踩坑记录.md` | 选型原因、遇到的问题与修复 |
 | `07-验证与测试资产.md` | 测试、走查命令、验证结论 |
 | `08-待办与后续.md` | 已知边界与下一步 |
+| `09-归位座位表.md` | 座位表应用：名单识别、排座、导出 |
 
 ## 关键事实
 
-- 产品名：**知微 · TeachCraft**；正式名中的「分晓」模块为 **分晓 · GradeStrip**。
-- 技术栈：C# / .NET 10 + Avalonia 12.1.4，图片 SkiaSharp，PDF PdfSharpCore + PDFium，排版 QuestPDF，文档 OpenXml。
-- 工具数：10（图片 4 + 格式 6），另有「分晓」常备入口。
-- 版本基线：`1.0.0`，唯一版本源为 `Directory.Build.props`。
+- 产品名：**知微 · TeachCraft**；常备应用：**分晓 · GradeStrip** 与 **归位 · SeatGrid**。
+- 技术栈：C# / .NET 10 + Avalonia 12.1.4，图片 SkiaSharp，PDF PdfSharpCore + PDFium，排版 QuestPDF，文档 OpenXml，座位表名单 ClosedXML / ExcelDataReader。
+- 工具数：10 件小工具（图片 4 + 格式 6）+ 2 件常备应用（分晓、归位）。
+- 版本基线：`1.1.0`，唯一版本源为 `Directory.Build.props`。
 - 仓库：`https://github.com/Evan0148/TeachCraft`。
 - 隐私：100% 本机处理，文件不上传、不留存。
