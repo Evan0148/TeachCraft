@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 讲台宽带 -->
+  <rect x="28" y="26" width="64" height="9" rx="2.5" fill="#141413"/>
+
+  <!-- 2x3 宽大课桌排布 -->
+  <!-- Row 1 -->
+  <rect x="28" y="42" width="28" height="12" rx="2.5" fill="#3D3B36"/>
+  <rect x="64" y="42" width="28" height="12" rx="2.5" fill="#E7E3D8"/>
+
+  <!-- Row 2: 左侧为实心安排座，右侧为带有虚线边框的等待入座席 -->
+  <rect x="28" y="58" width="28" height="12" rx="2.5" fill="#D97757"/>
+  <rect x="64" y="58" width="28" height="12" rx="2.5" fill="none" stroke="#85806F" stroke-width="1.8" stroke-dasharray="3 2"/>
+
+  <!-- Row 3 -->
+  <rect x="28" y="74" width="28" height="12" rx="2.5" fill="#85806F"/>
+  <rect x="64" y="74" width="28" height="12" rx="2.5" fill="#141413"/>
+
+  <!-- 走道中央对齐标尺 -->
+  <line x1="60" y1="20" x2="60" y2="94" stroke="#D97757" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="60" cy="20" r="3.5" fill="#D97757"/>
+</svg>

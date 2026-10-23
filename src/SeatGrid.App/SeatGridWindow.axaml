@@ -176,12 +176,43 @@
         <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,12">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
-                    <Border Width="38" Height="38" CornerRadius="4"
-                            Background="#0DD97757" BorderBrush="#8CC6613F" BorderThickness="1">
-                        <TextBlock Text="位" FontFamily="{StaticResource SerifFont}" FontSize="19"
-                                   Foreground="{StaticResource AccentDeepBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    <Viewbox Width="38" Height="38">
+                        <Canvas Width="120" Height="120">
+                            <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                       RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                       Stroke="#E7E3D8" StrokeThickness="3"/>
+                            <Rectangle Canvas.Left="38" Canvas.Top="26" Width="44" Height="9"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#141413"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="42" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="42" Canvas.Top="42" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="65" Canvas.Top="42" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="81" Canvas.Top="42" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#141413"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="58" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="42" Canvas.Top="58" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#D97757"/>
+                            <Rectangle Canvas.Left="65" Canvas.Top="58" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="81" Canvas.Top="58" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="74" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#141413"/>
+                            <Rectangle Canvas.Left="42" Canvas.Top="74" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="65" Canvas.Top="74" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="81" Canvas.Top="74" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                            <Line StartPoint="57.5,20" EndPoint="57.5,92" Stroke="#D97757"
+                                  StrokeThickness="3" StrokeLineCap="Round"/>
+                            <Ellipse Canvas.Left="54" Canvas.Top="16.5" Width="7" Height="7"
+                                     Fill="#D97757"/>
+                        </Canvas>
+                    </Viewbox>
                     <StackPanel VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="归位" FontFamily="{StaticResource SerifFont}" FontSize="19"
                                    LetterSpacing="3" Foreground="{StaticResource InkBrush}" />
@@ -443,17 +474,20 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <Border IsVisible="{Binding IsChartEmpty}" Background="#F2FAF9F5"
+                        <Border IsVisible="{Binding IsChartEmpty}"
+                                Background="#F7F4EC"
                                 BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                CornerRadius="10">
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-                                <TextBlock Text="还没有名单" FontFamily="{StaticResource SerifFont}" FontSize="26"
+                                CornerRadius="12" Padding="26,20"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                MaxWidth="420">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="还没有名单" FontFamily="{StaticResource SerifFont}" FontSize="22"
                                            Foreground="{StaticResource InkBrush}" HorizontalAlignment="Center" />
                                 <TextBlock Text="导入 Excel / CSV 名单，软件会自动识别姓名、性别、身高与视力。"
-                                           FontSize="11.5" Foreground="{StaticResource MutedBrush}"
-                                           HorizontalAlignment="Center" />
+                                           FontSize="11" Foreground="{StaticResource MutedBrush}"
+                                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="340" />
                                 <Button Classes="primary" Content="导入名单" Click="OnImportRoster"
-                                        HorizontalAlignment="Center" />
+                                        HorizontalAlignment="Center" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
                     </Grid>

@@ -7,7 +7,7 @@
         x:DataType="vm:MainViewModel"
         x:Name="Root"
         Title="知微 · TeachCraft"
-        Icon="/Assets/teachcraft.ico"
+        Icon="avares://TeachCraft/Assets/teachcraft.ico"
         Width="1200" Height="840"
         MinWidth="1120" MinHeight="720"
         WindowStartupLocation="CenterScreen"
@@ -26,12 +26,37 @@
             <Grid RowDefinitions="Auto,*,Auto" Margin="16,24,16,14">
                 <StackPanel Grid.Row="0">
                     <StackPanel Orientation="Horizontal" Spacing="11" Margin="4,0,0,0">
-                        <Border Width="36" Height="36" CornerRadius="3"
-                                BorderBrush="#8CC6613F" BorderThickness="1" Background="#0DD97757">
-                            <TextBlock Text="微" FontFamily="{StaticResource SerifFont}" FontSize="19"
-                                       Foreground="{StaticResource AccentDeepBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        <Viewbox Width="36" Height="36">
+                            <Canvas Width="120" Height="120">
+                                <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                           RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                           Stroke="#E7E3D8" StrokeThickness="3"/>
+                                <Rectangle Canvas.Left="26" Canvas.Top="30" Width="46" Height="12"
+                                           RadiusX="3" RadiusY="3" Fill="#141413"/>
+                                <Rectangle Canvas.Left="76" Canvas.Top="30" Width="18" Height="12"
+                                           RadiusX="3" RadiusY="3" Fill="#D97757"/>
+                                <Rectangle Canvas.Left="26" Canvas.Top="48" Width="68" Height="16"
+                                           RadiusX="3" RadiusY="3" Fill="#E7E3D8"/>
+                                <Rectangle Canvas.Left="28" Canvas.Top="50" Width="22" Height="12"
+                                           RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                <Rectangle Canvas.Left="54" Canvas.Top="50" Width="38" Height="12"
+                                           RadiusX="2" RadiusY="2" Fill="#FAF9F5"/>
+                                <Rectangle Canvas.Left="58" Canvas.Top="53" Width="20" Height="6"
+                                           RadiusX="1.5" RadiusY="1.5" Fill="#85806F"/>
+                                <Rectangle Canvas.Left="26" Canvas.Top="70" Width="20" Height="14"
+                                           RadiusX="3" RadiusY="3" Fill="#3D3B36"/>
+                                <Rectangle Canvas.Left="50" Canvas.Top="70" Width="20" Height="14"
+                                           RadiusX="3" RadiusY="3" Fill="#85806F"/>
+                                <Rectangle Canvas.Left="74" Canvas.Top="70" Width="20" Height="14"
+                                           RadiusX="3" RadiusY="3" Fill="#141413"/>
+                                <Line StartPoint="74,22" EndPoint="74,94" Stroke="#D97757"
+                                      StrokeThickness="3" StrokeLineCap="Round"/>
+                                <Ellipse Canvas.Left="70.5" Canvas.Top="18.5" Width="7" Height="7"
+                                         Fill="#D97757"/>
+                                <Ellipse Canvas.Left="71.5" Canvas.Top="91.5" Width="5" Height="5"
+                                         Fill="#D97757"/>
+                            </Canvas>
+                        </Viewbox>
                         <StackPanel VerticalAlignment="Center" Spacing="4">
                             <TextBlock Text="知微" FontFamily="{StaticResource SerifFont}" FontSize="18"
                                        LetterSpacing="3" Foreground="{StaticResource InkBrush}" />
@@ -63,7 +88,25 @@
 
                         <Button Classes="nav" Click="OnNavProject" AutomationProperties.Name="分晓 · 成绩条" HorizontalAlignment="Stretch">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Width="19" />
+                                <Viewbox Grid.Column="0" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Canvas Width="120" Height="120">
+                                        <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                                   RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                                   Stroke="#E7E3D8" StrokeThickness="3"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="32" Width="68" Height="12"
+                                                   RadiusX="3" RadiusY="3" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="52" Width="68" Height="16"
+                                                   RadiusX="3" RadiusY="3" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="28" Canvas.Top="54" Width="38" Height="12"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="76" Width="68" Height="12"
+                                                   RadiusX="3" RadiusY="3" Fill="#85806F"/>
+                                        <Line StartPoint="72,24" EndPoint="72,96" Stroke="#D97757"
+                                              StrokeThickness="3.5" StrokeLineCap="Round"/>
+                                        <Ellipse Canvas.Left="68.5" Canvas.Top="20.5" Width="7" Height="7"
+                                                 Fill="#D97757"/>
+                                    </Canvas>
+                                </Viewbox>
                                 <TextBlock Grid.Column="1" Text="分晓 · 成绩条" VerticalAlignment="Center" />
                                 <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
                                         CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
@@ -76,7 +119,43 @@
                         <Button Classes="nav" Click="OnLaunchSeatGrid" AutomationProperties.Name="归位 · 座位表"
                                 HorizontalAlignment="Stretch">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Width="19" />
+                                <Viewbox Grid.Column="0" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Canvas Width="120" Height="120">
+                                        <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                                   RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                                   Stroke="#E7E3D8" StrokeThickness="3"/>
+                                        <Rectangle Canvas.Left="38" Canvas.Top="26" Width="44" Height="9"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="42" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="42" Canvas.Top="42" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="65" Canvas.Top="42" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="81" Canvas.Top="42" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="58" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="42" Canvas.Top="58" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#D97757"/>
+                                        <Rectangle Canvas.Left="65" Canvas.Top="58" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="81" Canvas.Top="58" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="74" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="42" Canvas.Top="74" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="65" Canvas.Top="74" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="81" Canvas.Top="74" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                                        <Line StartPoint="57.5,20" EndPoint="57.5,92" Stroke="#D97757"
+                                              StrokeThickness="3" StrokeLineCap="Round"/>
+                                        <Ellipse Canvas.Left="54" Canvas.Top="16.5" Width="7" Height="7"
+                                                 Fill="#D97757"/>
+                                    </Canvas>
+                                </Viewbox>
                                 <TextBlock Grid.Column="1" Text="归位 · 座位表" VerticalAlignment="Center" />
                                 <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
                                         CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
@@ -89,7 +168,49 @@
                         <Button Classes="nav" Click="OnLaunchClassBlock" AutomationProperties.Name="时序 · 课程表"
                                 HorizontalAlignment="Stretch">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Width="19" />
+                                <Viewbox Grid.Column="0" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Canvas Width="120" Height="120">
+                                        <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                                   RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                                   Stroke="#E7E3D8" StrokeThickness="3"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="26" Width="13" Height="6"
+                                                   RadiusX="2" RadiusY="2" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="43" Canvas.Top="26" Width="13" Height="6"
+                                                   RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="60" Canvas.Top="26" Width="13" Height="6"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="77" Canvas.Top="26" Width="17" Height="6"
+                                                   RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="36" Width="13" Height="22"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="62" Width="13" Height="14"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="26" Canvas.Top="80" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="43" Canvas.Top="36" Width="13" Height="14"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="43" Canvas.Top="54" Width="13" Height="22"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#D97757"/>
+                                        <Rectangle Canvas.Left="43" Canvas.Top="80" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="60" Canvas.Top="36" Width="13" Height="24"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="60" Canvas.Top="64" Width="13" Height="12"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="60" Canvas.Top="80" Width="13" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="77" Canvas.Top="36" Width="17" Height="16"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="77" Canvas.Top="56" Width="17" Height="20"
+                                                   RadiusX="2.5" RadiusY="2.5" Fill="#85806F"/>
+                                        <Rectangle Canvas.Left="77" Canvas.Top="80" Width="17" Height="10"
+                                                   RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                                        <Line StartPoint="72,20" EndPoint="72,94" Stroke="#D97757"
+                                              StrokeThickness="3" StrokeLineCap="Round"/>
+                                        <Ellipse Canvas.Left="68.5" Canvas.Top="16.5" Width="7" Height="7"
+                                                 Fill="#D97757"/>
+                                    </Canvas>
+                                </Viewbox>
                                 <TextBlock Grid.Column="1" Text="时序 · 课程表" VerticalAlignment="Center" />
                                 <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
                                         CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
@@ -145,7 +266,7 @@
                     </StackPanel>
                     <TextBlock Text="文件只在这台电脑上处理，不上传、不留存。" FontSize="10.5"
                                LineHeight="17" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
-                    <TextBlock Text="V1.2.0" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                    <TextBlock Text="V1.2.1" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                LetterSpacing="1.2" Foreground="#A29C8C" Margin="0,4,0,0" />
                 </StackPanel>
             </Grid>
@@ -563,7 +684,7 @@
                                    MaxWidth="820" TextTrimming="CharacterEllipsis"
                                    ToolTip.Tip="{Binding StatusText}" />
                     </StackPanel>
-                    <TextBlock Grid.Column="2" Text="V1.2.0 · 10 TOOLS · 3 APPS"
+                    <TextBlock Grid.Column="2" Text="V1.2.1 · 10 TOOLS · 3 APPS"
                                FontFamily="{StaticResource MonoFont}" FontSize="9" LetterSpacing="1.2"
                                Foreground="#A8A192" VerticalAlignment="Center" />
                 </Grid>

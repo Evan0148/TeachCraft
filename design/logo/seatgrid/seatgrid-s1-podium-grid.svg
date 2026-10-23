@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+  
+  <!-- 讲台 (Podium): 教室前方居中墨色讲桌 -->
+  <rect x="38" y="26" width="44" height="9" rx="2.5" fill="#141413"/>
+
+  <!-- 第一排课桌 (Row 1): 左组2座 + 右组2座 -->
+  <rect x="26" y="42" width="13" height="10" rx="2" fill="#3D3B36"/>
+  <rect x="42" y="42" width="13" height="10" rx="2" fill="#E7E3D8"/>
+  <rect x="65" y="42" width="13" height="10" rx="2" fill="#85806F"/>
+  <rect x="81" y="42" width="13" height="10" rx="2" fill="#141413"/>
+
+  <!-- 第二排课桌 (Row 2): 包含一处陶土朱红的“就座/归位”高亮席位 -->
+  <rect x="26" y="58" width="13" height="10" rx="2" fill="#85806F"/>
+  <rect x="42" y="58" width="13" height="10" rx="2" fill="#D97757"/>
+  <rect x="65" y="58" width="13" height="10" rx="2" fill="#E7E3D8"/>
+  <rect x="81" y="58" width="13" height="10" rx="2" fill="#3D3B36"/>
+
+  <!-- 第三排课桌 (Row 3) -->
+  <rect x="26" y="74" width="13" height="10" rx="2" fill="#141413"/>
+  <rect x="42" y="74" width="13" height="10" rx="2" fill="#E7E3D8"/>
+  <rect x="65" y="74" width="13" height="10" rx="2" fill="#3D3B36"/>
+  <rect x="81" y="74" width="13" height="10" rx="2" fill="#85806F"/>
+
+  <!-- 贯穿中央走道的中轴视线/排座标尺 (陶土朱红，从讲台上方直达教室后方) -->
+  <line x1="57.5" y1="20" x2="57.5" y2="92" stroke="#D97757" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="57.5" cy="20" r="3.5" fill="#D97757"/>
+</svg>

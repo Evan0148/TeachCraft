@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 顶部星期指示条 (Mon-Fri 简化为4个列导轨标头) -->
+  <rect x="26" y="26" width="13" height="6" rx="2" fill="#141413"/>
+  <rect x="43" y="26" width="13" height="6" rx="2" fill="#85806F"/>
+  <rect x="60" y="26" width="13" height="6" rx="2" fill="#3D3B36"/>
+  <rect x="77" y="26" width="17" height="6" rx="2" fill="#E7E3D8"/>
+
+  <!-- 第1列 (星期一): 上午连堂课 + 下午课 + 课服 -->
+  <rect x="26" y="36" width="13" height="22" rx="2.5" fill="#3D3B36"/>
+  <rect x="26" y="62" width="13" height="14" rx="2.5" fill="#E7E3D8"/>
+  <rect x="26" y="80" width="13" height="10" rx="2" fill="#85806F"/>
+
+  <!-- 第2列 (星期二): 上午短课 + 核心陶土朱红课程块 + 晚自习 -->
+  <rect x="43" y="36" width="13" height="14" rx="2.5" fill="#85806F"/>
+  <rect x="43" y="54" width="13" height="22" rx="2.5" fill="#D97757"/>
+  <rect x="43" y="80" width="13" height="10" rx="2" fill="#141413"/>
+
+  <!-- 第3列 (星期三): 上午深墨大课 + 下午课 + 课后服务 -->
+  <rect x="60" y="36" width="13" height="24" rx="2.5" fill="#141413"/>
+  <rect x="60" y="64" width="13" height="12" rx="2.5" fill="#3D3B36"/>
+  <rect x="60" y="80" width="13" height="10" rx="2" fill="#E7E3D8"/>
+
+  <!-- 第4列 (星期四/五): 错落时段课块 -->
+  <rect x="77" y="36" width="17" height="16" rx="2.5" fill="#E7E3D8"/>
+  <rect x="77" y="56" width="17" height="20" rx="2.5" fill="#85806F"/>
+  <rect x="77" y="80" width="17" height="10" rx="2" fill="#3D3B36"/>
+
+  <!-- 纵向时序光标指针 (垂直对齐线，代表时刻与课程推进) -->
+  <line x1="72" y1="20" x2="72" y2="94" stroke="#D97757" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="72" cy="20" r="3.5" fill="#D97757"/>
+</svg>

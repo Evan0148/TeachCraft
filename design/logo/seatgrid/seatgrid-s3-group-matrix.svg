@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 顶部讲台 -->
+  <rect x="36" y="24" width="48" height="7" rx="2" fill="#141413"/>
+
+  <!-- 4 个小组大块 (每组 2x2 或 2 张拼桌) -->
+  <!-- 第1组 (左上) -->
+  <rect x="26" y="38" width="30" height="24" rx="4" fill="#3D3B36"/>
+  <rect x="29" y="41" width="11" height="8" rx="1.5" fill="#FAF9F5"/>
+  <rect x="42" y="41" width="11" height="8" rx="1.5" fill="#85806F"/>
+  <rect x="29" y="51" width="11" height="8" rx="1.5" fill="#85806F"/>
+  <rect x="42" y="51" width="11" height="8" rx="1.5" fill="#FAF9F5"/>
+
+  <!-- 第2组 (右上 - 含归位目标席) -->
+  <rect x="64" y="38" width="30" height="24" rx="4" fill="#E7E3D8"/>
+  <rect x="67" y="41" width="11" height="8" rx="1.5" fill="#3D3B36"/>
+  <rect x="80" y="41" width="11" height="8" rx="1.5" fill="#D97757"/>
+  <rect x="67" y="51" width="11" height="8" rx="1.5" fill="#141413"/>
+  <rect x="80" y="51" width="11" height="8" rx="1.5" fill="#85806F"/>
+
+  <!-- 第3组 (左下) -->
+  <rect x="26" y="68" width="30" height="24" rx="4" fill="#E7E3D8"/>
+  <rect x="29" y="71" width="11" height="8" rx="1.5" fill="#141413"/>
+  <rect x="42" y="71" width="11" height="8" rx="1.5" fill="#3D3B36"/>
+  <rect x="29" y="81" width="11" height="8" rx="1.5" fill="#85806F"/>
+  <rect x="42" y="81" width="11" height="8" rx="1.5" fill="#3D3B36"/>
+
+  <!-- 第4组 (右下) -->
+  <rect x="64" y="68" width="30" height="24" rx="4" fill="#85806F"/>
+  <rect x="67" y="71" width="11" height="8" rx="1.5" fill="#FAF9F5"/>
+  <rect x="80" y="71" width="11" height="8" rx="1.5" fill="#FAF9F5"/>
+  <rect x="67" y="81" width="11" height="8" rx="1.5" fill="#3D3B36"/>
+  <rect x="80" y="81" width="11" height="8" rx="1.5" fill="#141413"/>
+
+  <!-- 纵向十字定标线 -->
+  <line x1="60" y1="18" x2="60" y2="98" stroke="#D97757" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="60" cy="18" r="3" fill="#D97757"/>
+</svg>

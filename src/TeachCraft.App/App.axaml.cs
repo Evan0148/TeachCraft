@@ -99,13 +99,15 @@ public partial class App : Application
         if (index < 0 || index + 1 >= args.Length) return false;
 
         var target = args[index + 1];
+        var empty = index + 2 < args.Length && args[index + 2] == "empty";
+
         Dispatcher.UIThread.Post(async () =>
         {
             try
             {
                 await Task.Delay(500);
                 var window = new SeatGrid.App.SeatGridWindow();
-                window.LoadDemoData();
+                if (!empty) window.LoadDemoData();
                 window.Show();
                 await Task.Delay(1600);
                 window.CaptureTo(target);

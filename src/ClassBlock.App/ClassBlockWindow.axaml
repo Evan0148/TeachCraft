@@ -95,12 +95,49 @@
         <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,12">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
-                    <Border Width="38" Height="38" CornerRadius="4"
-                            Background="#0DD97757" BorderBrush="#8CC6613F" BorderThickness="1">
-                        <TextBlock Text="时" FontFamily="{StaticResource SerifFont}" FontSize="19"
-                                   Foreground="{StaticResource AccentDeepBrush}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    <Viewbox Width="38" Height="38">
+                        <Canvas Width="120" Height="120">
+                            <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                       RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                       Stroke="#E7E3D8" StrokeThickness="3"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="26" Width="13" Height="6"
+                                       RadiusX="2" RadiusY="2" Fill="#141413"/>
+                            <Rectangle Canvas.Left="43" Canvas.Top="26" Width="13" Height="6"
+                                       RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="60" Canvas.Top="26" Width="13" Height="6"
+                                       RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="77" Canvas.Top="26" Width="17" Height="6"
+                                       RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="36" Width="13" Height="22"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="62" Width="13" Height="14"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="26" Canvas.Top="80" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="43" Canvas.Top="36" Width="13" Height="14"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="43" Canvas.Top="54" Width="13" Height="22"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#D97757"/>
+                            <Rectangle Canvas.Left="43" Canvas.Top="80" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#141413"/>
+                            <Rectangle Canvas.Left="60" Canvas.Top="36" Width="13" Height="24"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#141413"/>
+                            <Rectangle Canvas.Left="60" Canvas.Top="64" Width="13" Height="12"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#3D3B36"/>
+                            <Rectangle Canvas.Left="60" Canvas.Top="80" Width="13" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="77" Canvas.Top="36" Width="17" Height="16"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#E7E3D8"/>
+                            <Rectangle Canvas.Left="77" Canvas.Top="56" Width="17" Height="20"
+                                       RadiusX="2.5" RadiusY="2.5" Fill="#85806F"/>
+                            <Rectangle Canvas.Left="77" Canvas.Top="80" Width="17" Height="10"
+                                       RadiusX="2" RadiusY="2" Fill="#3D3B36"/>
+                            <Line StartPoint="72,20" EndPoint="72,94" Stroke="#D97757"
+                                  StrokeThickness="3" StrokeLineCap="Round"/>
+                            <Ellipse Canvas.Left="68.5" Canvas.Top="16.5" Width="7" Height="7"
+                                     Fill="#D97757"/>
+                        </Canvas>
+                    </Viewbox>
                     <StackPanel VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="时序" FontFamily="{StaticResource SerifFont}" FontSize="19"
                                    LetterSpacing="3" Foreground="{StaticResource InkBrush}" />

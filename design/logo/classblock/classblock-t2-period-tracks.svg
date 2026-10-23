@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 第一排：上午时段 (4节课缩略条) -->
+  <rect x="26" y="30" width="18" height="12" rx="3" fill="#141413"/>
+  <rect x="48" y="30" width="22" height="12" rx="3" fill="#3D3B36"/>
+  <rect x="74" y="30" width="20" height="12" rx="3" fill="#85806F"/>
+
+  <!-- 第二排：下午时段 (含陶土朱红精微课块 + 课间导轨) -->
+  <rect x="26" y="48" width="68" height="16" rx="3" fill="#E7E3D8"/>
+  <rect x="28" y="50" width="26" height="12" rx="2" fill="#D97757"/>
+  <rect x="58" y="50" width="34" height="12" rx="2" fill="#FAF9F5"/>
+  <rect x="62" y="53" width="18" height="6" rx="1.5" fill="#141413"/>
+
+  <!-- 第三排：课服/晚修时段 -->
+  <rect x="26" y="70" width="30" height="14" rx="3" fill="#85806F"/>
+  <rect x="60" y="70" width="34" height="14" rx="3" fill="#3D3B36"/>
+
+  <!-- 贯穿时序指示轴 (带双端微圆点) -->
+  <line x1="42" y1="22" x2="42" y2="94" stroke="#D97757" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="42" cy="22" r="3.5" fill="#D97757"/>
+  <circle cx="42" cy="94" r="2.5" fill="#D97757"/>
+</svg>

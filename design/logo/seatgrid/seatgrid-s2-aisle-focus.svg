@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 讲台顶栏 -->
+  <rect x="26" y="26" width="34" height="8" rx="2.5" fill="#141413"/>
+  <rect x="66" y="26" width="28" height="8" rx="2.5" fill="#85806F"/>
+
+  <!-- 第一排 (大组座席：左侧两人位 + 右侧两人位) -->
+  <rect x="26" y="40" width="30" height="13" rx="3" fill="#141413"/>
+  <rect x="64" y="40" width="30" height="13" rx="3" fill="#E7E3D8"/>
+  <rect x="66" y="42" width="12" height="9" rx="2" fill="#3D3B36"/>
+
+  <!-- 第二排 (核心归位排：左深右浅，其中右侧嵌入朱红归位方块) -->
+  <rect x="26" y="58" width="30" height="13" rx="3" fill="#E7E3D8"/>
+  <rect x="28" y="60" width="14" height="9" rx="2" fill="#85806F"/>
+  <rect x="64" y="58" width="30" height="13" rx="3" fill="#D97757"/>
+  <rect x="66" y="60" width="12" height="9" rx="2" fill="#FAF9F5"/>
+
+  <!-- 第三排 -->
+  <rect x="26" y="76" width="30" height="13" rx="3" fill="#3D3B36"/>
+  <rect x="64" y="76" width="30" height="13" rx="3" fill="#85806F"/>
+
+  <!-- 垂直排座指引线 (穿透右组核心座位) -->
+  <line x1="72" y1="20" x2="72" y2="96" stroke="#D97757" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="72" cy="20" r="3.5" fill="#D97757"/>
+  <circle cx="72" cy="96" r="2.5" fill="#D97757"/>
+</svg>

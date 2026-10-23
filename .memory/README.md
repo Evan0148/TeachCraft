@@ -22,7 +22,7 @@
 - 产品名：**知微 · TeachCraft**；常备应用：**分晓 · GradeStrip**、**归位 · SeatGrid** 与 **时序 · ClassBlock**。
 - 技术栈：C# / .NET 10 + Avalonia 12.1.4，图片 SkiaSharp，PDF PdfSharpCore + PDFium，排版 QuestPDF，文档 OpenXml，名单 / 总表 ClosedXML / ExcelDataReader。
 - 工具数：10 件小工具（图片 4 + 格式 6）+ 3 件常备应用（分晓、归位、时序）。
-- 版本基线：`1.2.0`，唯一版本源为 `Directory.Build.props`。
+- 版本基线：`1.2.1`，唯一版本源为 `Directory.Build.props`。
 - 测试：19 项 xUnit（工具 9 + 归位 7 + 时序 3）。
 - 仓库：`https://github.com/Evan0148/TeachCraft`。
 - 隐私：100% 本机处理，文件不上传、不留存。

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <rect x="10" y="10" width="100" height="100" rx="24" fill="#FAF9F5" stroke="#E7E3D8" stroke-width="3"/>
+
+  <!-- 顶部基准线 -->
+  <line x1="26" y1="26" x2="94" y2="26" stroke="#E7E3D8" stroke-width="2"/>
+
+  <!-- 5日垂直课块条 (周一至周五) -->
+  <!-- 周一 -->
+  <rect x="26" y="34" width="10" height="28" rx="2.5" fill="#141413"/>
+  <rect x="26" y="66" width="10" height="18" rx="2.5" fill="#E7E3D8"/>
+
+  <!-- 周二 -->
+  <rect x="40" y="34" width="10" height="16" rx="2.5" fill="#85806F"/>
+  <rect x="40" y="54" width="10" height="30" rx="2.5" fill="#3D3B36"/>
+
+  <!-- 周三 (中枢轴 · 陶土红核心大课) -->
+  <rect x="54" y="34" width="12" height="22" rx="2.5" fill="#D97757"/>
+  <rect x="54" y="60" width="12" height="24" rx="2.5" fill="#141413"/>
+
+  <!-- 周四 -->
+  <rect x="70" y="34" width="10" height="32" rx="2.5" fill="#3D3B36"/>
+  <rect x="70" y="70" width="10" height="14" rx="2.5" fill="#85806F"/>
+
+  <!-- 周五 -->
+  <rect x="84" y="34" width="10" height="18" rx="2.5" fill="#E7E3D8"/>
+  <rect x="84" y="56" width="10" height="28" rx="2.5" fill="#141413"/>
+
+  <!-- 水平穿越的早午课间基准线与时间圆点 -->
+  <line x1="20" y1="52" x2="100" y2="52" stroke="#D97757" stroke-width="2.5" stroke-dasharray="3 3"/>
+  <circle cx="60" cy="20" r="3.5" fill="#D97757"/>
+  <line x1="60" y1="20" x2="60" y2="34" stroke="#D97757" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
