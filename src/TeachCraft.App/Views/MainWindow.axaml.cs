@@ -14,6 +14,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using SeatGrid.App;
+using ClassBlock.App;
 using TeachCraft.App.ViewModels;
 using TeachCraft.Core.Tools;
 
@@ -22,6 +23,7 @@ namespace TeachCraft.App.Views;
 public partial class MainWindow : Window
 {
     private SeatGridWindow? _seatGridWindow;
+    private ClassBlockWindow? _classBlockWindow;
     public MainWindow()
     {
         InitializeComponent();
@@ -390,6 +392,29 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             ViewModel.SetStatus("打开 归位 失败：" + ex.Message, true);
+        }
+    }
+
+    // ----------------------------- 时序 · ClassBlock -----------------------------
+
+    private void OnLaunchClassBlock(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_classBlockWindow is { IsVisible: true })
+            {
+                _classBlockWindow.Activate();
+                return;
+            }
+
+            _classBlockWindow = new ClassBlockWindow();
+            _classBlockWindow.Closed += (_, _) => _classBlockWindow = null;
+            _classBlockWindow.Show();
+            ViewModel.SetStatus("已打开 时序 · ClassBlock");
+        }
+        catch (Exception ex)
+        {
+            ViewModel.SetStatus("打开 时序 失败：" + ex.Message, true);
         }
     }
 

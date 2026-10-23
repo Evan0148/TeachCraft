@@ -24,11 +24,54 @@ public partial class App : Application
             desktop.MainWindow = window;
 
             if (!CaptureGradeStripIfRequested(desktop) && !CaptureSeatGridIfRequested(desktop) &&
-                !ShowSeatGridDemoIfRequested(desktop))
+                !CaptureClassBlockIfRequested(desktop) && !ShowSeatGridDemoIfRequested(desktop))
                 CaptureIfRequested(desktop, window);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>设计走查：打开「时序」并导入指定总表后截图。</summary>
+    private static bool CaptureClassBlockIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--classblock-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var master = index + 2 < args.Length ? args[index + 2] : null;
+        var className = index + 3 < args.Length ? args[index + 3] : null;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+                var window = new ClassBlock.App.ClassBlockWindow();
+                window.Show();
+
+                if (master is not null)
+                {
+                    await window.LoadMasterAsync(master);
+                    if (className is not null) await window.SelectClassAsync(className);
+                    await Task.Delay(400);
+                }
+
+                await Task.Delay(900);
+                window.CaptureTo(target);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
     }
 
     /// <summary>本地走查：打开一个带演示名单的归位窗口，便于人工检查交互。</summary>

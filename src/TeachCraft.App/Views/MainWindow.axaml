@@ -85,6 +85,19 @@
                                 </Border>
                             </Grid>
                         </Button>
+
+                        <Button Classes="nav" Click="OnLaunchClassBlock" AutomationProperties.Name="时序 · 课程表"
+                                HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Border Grid.Column="0" Width="19" />
+                                <TextBlock Grid.Column="1" Text="时序 · 课程表" VerticalAlignment="Center" />
+                                <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
+                                        CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
+                                    <TextBlock Text="课堂" FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                </Border>
+                            </Grid>
+                        </Button>
                     </StackPanel>
 
                     <Grid ColumnDefinitions="Auto,*" Margin="6,24,6,8">
@@ -132,7 +145,7 @@
                     </StackPanel>
                     <TextBlock Text="文件只在这台电脑上处理，不上传、不留存。" FontSize="10.5"
                                LineHeight="17" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
-                    <TextBlock Text="V1.1.0" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                    <TextBlock Text="V1.2.0" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                LetterSpacing="1.2" Foreground="#A29C8C" Margin="0,4,0,0" />
                 </StackPanel>
             </Grid>
@@ -167,7 +180,7 @@
                                            FontSize="12.5" LineHeight="24" Foreground="{StaticResource InkSoftBrush}" />
 
                                 <StackPanel Orientation="Horizontal" Spacing="9" Margin="0,12,0,0">
-                                    <TextBlock Text="10 件工具 · 2 件常备" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                    <TextBlock Text="10 件工具 · 3 件常备" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
                                                LetterSpacing="1.3" Foreground="{StaticResource MutedBrush}" />
                                     <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
                                                Foreground="#C9C1AE" />
@@ -218,7 +231,7 @@
                                        VerticalAlignment="Center" Margin="12,0,0,0" />
                             <Border Grid.Column="3" Height="1" Background="{StaticResource LineBrush}"
                                     Margin="12,0" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Text="02" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                            <TextBlock Grid.Column="4" Text="03" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
                                        Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                         </Grid>
 
@@ -340,6 +353,51 @@
                                                    Foreground="{StaticResource MossBrush}" />
                                     </StackPanel>
                                     <Button Classes="primary" Content="打开应用" Click="OnLaunchSeatGrid" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- 时序 · ClassBlock -->
+                        <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}"
+                                BorderThickness="1" CornerRadius="10" Padding="18,14" Margin="0,10,0,0">
+                            <Grid ColumnDefinitions="46,*,Auto" ColumnSpacing="14">
+                                <Border Grid.Column="0" Width="44" Height="44" CornerRadius="7"
+                                        Background="#FCFAF4" BorderBrush="#E3DDCE" BorderThickness="1"
+                                        VerticalAlignment="Center">
+                                    <Canvas Width="30" Height="30">
+                                        <Rectangle Canvas.Left="0" Canvas.Top="3" Width="30" Height="24"
+                                                   RadiusX="2" RadiusY="2" Fill="#FFFFFF"
+                                                   Stroke="#D6D1C4" StrokeThickness="1" />
+                                        <Line StartPoint="0,11" EndPoint="30,11" Stroke="#D6D1C4" StrokeThickness="1" />
+                                        <Line StartPoint="0,19" EndPoint="30,19" Stroke="#D6D1C4" StrokeThickness="1" />
+                                        <Line StartPoint="10,3" EndPoint="10,27" Stroke="#D6D1C4" StrokeThickness="1" />
+                                        <Line StartPoint="20,3" EndPoint="20,27" Stroke="#D6D1C4" StrokeThickness="1" />
+                                        <Rectangle Canvas.Left="11" Canvas.Top="12" Width="8" Height="6"
+                                                   RadiusX="1" RadiusY="1" Fill="#D97757" />
+                                    </Canvas>
+                                </Border>
+
+                                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                    <TextBlock Text="CLASSBLOCK / 时序" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                               LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="时序" FontFamily="{StaticResource SerifFont}" FontSize="21"
+                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="· ClassBlock" FontFamily="{StaticResource SerifFont}" FontSize="14"
+                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+                                    </StackPanel>
+                                    <TextBlock Text="导入课程总表，自动识别年级与班级；选中班级即可得到可直接打印的课程表。"
+                                               FontSize="11.5" Foreground="{StaticResource MutedBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                        <Ellipse Width="5" Height="5" Fill="{StaticResource MossBrush}" />
+                                        <TextBlock Text="已就绪" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                                   Foreground="{StaticResource MossBrush}" />
+                                    </StackPanel>
+                                    <Button Classes="primary" Content="打开应用" Click="OnLaunchClassBlock" />
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -505,7 +563,7 @@
                                    MaxWidth="820" TextTrimming="CharacterEllipsis"
                                    ToolTip.Tip="{Binding StatusText}" />
                     </StackPanel>
-                    <TextBlock Grid.Column="2" Text="V1.1.0 · 10 TOOLS · 2 APPS"
+                    <TextBlock Grid.Column="2" Text="V1.2.0 · 10 TOOLS · 3 APPS"
                                FontFamily="{StaticResource MonoFont}" FontSize="9" LetterSpacing="1.2"
                                Foreground="#A8A192" VerticalAlignment="Center" />
                 </Grid>

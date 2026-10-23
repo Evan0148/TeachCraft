@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TeachCraft.Core\TeachCraft.Core.csproj" />
     <ProjectReference Include="..\..\src\SeatGrid.Core\SeatGrid.Core.csproj" />
+    <ProjectReference Include="..\..\src\ClassBlock.Core\ClassBlock.Core.csproj" />
   </ItemGroup>
 
 </Project>
