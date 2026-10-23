@@ -1,5 +1,8 @@
 namespace GradeStrip.Core.Model;
 
+/// <summary>单题得分明细：题号 + 该生此题得分（null 表示缺答/未知）。</summary>
+public sealed record QuestionScore(string Label, double? Score);
+
 /// <summary>单个科目的成绩与排名信息。缺失值统一为 null。</summary>
 public sealed class SubjectScore
 {
@@ -23,6 +26,9 @@ public sealed class StudentRecord
 
     /// <summary>科目名 -> 成绩。</summary>
     public Dictionary<string, SubjectScore> Subjects { get; init; } = new();
+
+    /// <summary>得分明细（来自单科个人成绩单的题号/得分行，不含总分列）。null 表示本次导入无明细。</summary>
+    public IReadOnlyList<QuestionScore>? QuestionScores { get; init; }
 
     public SubjectScore Total { get; set; } = SubjectScore.Empty;
 

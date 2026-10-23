@@ -123,9 +123,31 @@ public sealed class StudentDetail
 
     public IReadOnlyList<DetailSubjectRow> Subjects { get; init; } = Array.Empty<DetailSubjectRow>();
 
+    /// <summary>得分明细（单科个人成绩单导入时可用），逐题对照班均。</summary>
+    public IReadOnlyList<QuestionDetailRow> QuestionRows { get; init; } = Array.Empty<QuestionDetailRow>();
+    public bool HasQuestionScores => QuestionRows.Count > 0;
+
     /// <summary>多考综合轨迹档案（满 3 次考试时激活）。</summary>
     public MultiExamProfile? MultiExamProfile { get; init; }
     public bool HasMultiExam => MultiExamProfile is not null && MultiExamProfile.IsAvailable;
+}
+
+/// <summary>学生画像里的单题得分明细行。条形＝个人得分率，刻度＝班均得分率（满分按全班最高分推断）。</summary>
+public sealed class QuestionDetailRow
+{
+    public string Label { get; init; } = string.Empty;
+    public string ScoreText { get; init; } = string.Empty;
+    public string FullText { get; init; } = string.Empty;
+    public string RateText { get; init; } = string.Empty;
+
+    /// <summary>个人得分率（条形长度）。</summary>
+    public double FillWeight { get; init; }
+
+    /// <summary>班均得分率（刻度位置）。</summary>
+    public double AverageWeight { get; init; }
+
+    public bool AboveAverage { get; init; }
+    public IBrush FillBrush { get; init; } = Palette.Ink;
 }
 
 public sealed class DetailSubjectRow

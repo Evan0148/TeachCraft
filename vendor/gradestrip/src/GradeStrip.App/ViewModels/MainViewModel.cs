@@ -856,8 +856,58 @@ public partial class MainViewModel : ViewModelBase
             },
             TrendBrush = Brush(Strips.DeltaColor(delta)),
             Subjects = rows,
+            QuestionRows = BuildQuestionRows(data, student),
             MultiExamProfile = BuildMultiExamProfile(student.Name, sessions),
         };
+    }
+
+    /// <summary>构建得分明细行：以全班逐题最高分为推断满分，刻度为班均得分率。</summary>
+    private static IReadOnlyList<QuestionDetailRow> BuildQuestionRows(ExamData data, StudentRecord student)
+    {
+        if (student.QuestionScores is not { Count: > 0 })
+            return Array.Empty<QuestionDetailRow>();
+
+        // 全班逐题统计：推断满分（全班最高分）与班均
+        var maxByLabel = new Dictionary<string, double>(StringComparer.Ordinal);
+        var sumByLabel = new Dictionary<string, double>(StringComparer.Ordinal);
+        var countByLabel = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var other in data.Students)
+        {
+            if (other.QuestionScores is null) continue;
+            foreach (var q in other.QuestionScores)
+            {
+                if (q.Score is not { } v) continue;
+                maxByLabel[q.Label] = Math.Max(maxByLabel.GetValueOrDefault(q.Label), v);
+                sumByLabel[q.Label] = sumByLabel.GetValueOrDefault(q.Label) + v;
+                countByLabel[q.Label] = countByLabel.GetValueOrDefault(q.Label) + 1;
+            }
+        }
+
+        var rows = new List<QuestionDetailRow>();
+        foreach (var q in student.QuestionScores)
+        {
+            var full = maxByLabel.GetValueOrDefault(q.Label);
+            var average = countByLabel.GetValueOrDefault(q.Label) > 0
+                ? sumByLabel.GetValueOrDefault(q.Label) / countByLabel[q.Label]
+                : 0;
+            var rate = q.Score is { } v && full > 0 ? Math.Clamp(v / full, 0, 1) : 0;
+            var averageRate = full > 0 ? Math.Clamp(average / full, 0, 1) : 0;
+            var above = q.Score is { } sv && full > 0 && sv > average;
+
+            rows.Add(new QuestionDetailRow
+            {
+                Label = q.Label,
+                ScoreText = Fmt(q.Score),
+                FullText = full > 0 ? $"/ {full:0.#}" : string.Empty,
+                RateText = q.Score is null ? "—" : $"{rate * 100:0}%",
+                FillWeight = rate,
+                AverageWeight = averageRate,
+                AboveAverage = above,
+                FillBrush = above ? Palette.Ink : Palette.InkSoft,
+            });
+        }
+
+        return rows;
     }
 
     private void BuildStrips(ExamData data)

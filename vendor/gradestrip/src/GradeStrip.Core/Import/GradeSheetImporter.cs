@@ -1669,6 +1669,7 @@ public static class GradeSheetImporter
             double? score = null;
             int? classRank = null;
             int? schoolRank = null;
+            List<QuestionScore>? questions = null;
 
             for (var r = sRow + 1; r < nextSRow; r++)
             {
@@ -1719,6 +1720,15 @@ public static class GradeSheetImporter
                         var nextC0 = CellStr(table.Rows[r + 1][0]);
                         if (nextC0 is "得分" || nextC0.StartsWith("得分"))
                         {
+                            // 逐题得分明细：题号行 + 得分行逐列配对（跳过总分列）
+                            questions ??= new List<QuestionScore>();
+                            for (var c = 1; c < table.Columns.Count; c++)
+                            {
+                                var label = CellStr(table.Rows[r][c]);
+                                if (label.Length == 0 || TotalNames.Contains(label)) continue;
+                                questions.Add(new QuestionScore(label, CellDouble(table.Rows[r + 1][c])));
+                            }
+
                             if (totalCol > 0)
                             {
                                 var tableScore = CellDouble(table.Rows[r + 1][totalCol]);
@@ -1765,6 +1775,7 @@ public static class GradeSheetImporter
                 ExamNo = sExamNo,
                 Subjects = scores,
                 Total = subjScore,
+                QuestionScores = questions is { Count: > 0 } ? questions : null,
             });
         }
 
