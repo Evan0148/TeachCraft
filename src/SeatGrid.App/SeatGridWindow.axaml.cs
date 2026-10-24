@@ -5,9 +5,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using SeatGrid.Core;
 using SeatGrid.Core.Export;
 using SeatGrid.Core.Rendering;
@@ -18,6 +22,14 @@ namespace SeatGrid.App;
 public partial class SeatGridWindow : Window
 {
     private string? _rosterPath;
+
+    // ----------------------------- 座位拖拽 -----------------------------
+    private SeatCellViewModel? _dragSource;
+    private Border? _dragGhost;
+    private SeatCellViewModel? _dropTarget;
+    private bool _dragStarted;
+    private bool _suppressSeatClick;
+    private Point _pressPoint;
 
     public SeatGridWindow() : this(new SeatGridViewModel())
     {
@@ -86,8 +98,131 @@ public partial class SeatGridWindow : Window
 
     private void OnSeatClick(object? sender, RoutedEventArgs e)
     {
+        if (_suppressSeatClick)
+        {
+            _suppressSeatClick = false;
+            return;
+        }
         if ((sender as Button)?.Tag is SeatCellViewModel seat)
             ViewModel.SelectSeat(seat);
+    }
+
+    private void OnSeatPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _suppressSeatClick = false;
+        if (ViewModel.IsBusy || sender is not Button { Tag: SeatCellViewModel seat }) return;
+        if (seat.IsEmpty) return;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+
+        _dragSource = seat;
+        _dragStarted = false;
+        _pressPoint = e.GetPosition(this);
+    }
+
+    private void OnSeatPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_dragSource is null || ViewModel.IsBusy) return;
+
+        var position = e.GetPosition(this);
+        if (!_dragStarted)
+        {
+            var dx = position.X - _pressPoint.X;
+            var dy = position.Y - _pressPoint.Y;
+            if (dx * dx + dy * dy < 36) return; // 6px 内仍视为点击
+            BeginDrag();
+        }
+
+        UpdateDrag(position);
+    }
+
+    private void OnSeatPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!_dragStarted)
+        {
+            _dragSource = null;
+            return; // 普通点击，交给 Click 处理
+        }
+
+        var source = _dragSource;
+        var target = _dropTarget;
+        EndDragVisuals();
+        _dragSource = null;
+        _dragStarted = false;
+        _suppressSeatClick = true;
+
+        if (source is not null && target is not null)
+            ViewModel.MoveSeatStudent(source, target);
+        else
+            ViewModel.SetStatus("已取消移动。");
+    }
+
+    private void OnSeatPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e) => CancelDrag();
+
+    private void BeginDrag()
+    {
+        _dragStarted = true;
+        var source = _dragSource!;
+        _dragGhost = new Border
+        {
+            Width = 92,
+            Height = 56,
+            Background = source.Fill,
+            BorderBrush = new SolidColorBrush(Color.Parse("#141413")),
+            BorderThickness = new Thickness(1.5),
+            CornerRadius = new CornerRadius(8),
+            Opacity = 0.94,
+            IsHitTestVisible = false,
+            Child = new TextBlock
+            {
+                Text = source.DisplayName,
+                FontSize = 14,
+                FontWeight = FontWeight.SemiBold,
+                Foreground = source.NameBrush,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        DragLayer.Children.Add(_dragGhost);
+    }
+
+    private void UpdateDrag(Point position)
+    {
+        if (_dragGhost is { } ghost)
+        {
+            Canvas.SetLeft(ghost, position.X - ghost.Width / 2);
+            Canvas.SetTop(ghost, position.Y - ghost.Height / 2);
+        }
+
+        var seat = FindSeatUnder(this.InputHitTest(position) as Visual);
+        if (!ReferenceEquals(seat, _dropTarget))
+        {
+            _dropTarget?.SetDropTarget(false);
+            _dropTarget = seat;
+            _dropTarget?.SetDropTarget(true);
+        }
+    }
+
+    private SeatCellViewModel? FindSeatUnder(Visual? visual)
+    {
+        var button = visual?.FindAncestorOfType<Button>();
+        if (button?.Tag is not SeatCellViewModel seat) return null;
+        return ReferenceEquals(seat, _dragSource) ? null : seat;
+    }
+
+    private void EndDragVisuals()
+    {
+        _dropTarget?.SetDropTarget(false);
+        _dropTarget = null;
+        DragLayer.Children.Clear();
+        _dragGhost = null;
+    }
+
+    private void CancelDrag()
+    {
+        if (!_dragStarted) return;
+        EndDragVisuals();
+        _dragSource = null;
+        _dragStarted = false;
     }
 
     private void OnAssign(object? sender, RoutedEventArgs e) => ViewModel.AssignSelectedStudent();

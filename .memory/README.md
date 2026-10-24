@@ -16,13 +16,14 @@
 | `08-待办与后续.md` | 已知边界与下一步 |
 | `09-归位座位表.md` | 座位表应用：名单识别、排座、导出 |
 | `10-时序课程表.md` | 课程表应用：总表识别、班级提取、行序与渲染 |
+| `11-成绩导入兼容性调研.md` | 智学网导出表格的导入支持度实测与缺陷清单 |
 
 ## 关键事实
 
 - 产品名：**知微 · TeachCraft**；常备应用：**分晓 · GradeStrip**、**归位 · SeatGrid** 与 **时序 · ClassBlock**。
 - 技术栈：C# / .NET 10 + Avalonia 12.1.4，图片 SkiaSharp，PDF PdfSharpCore + PDFium，排版 QuestPDF，文档 OpenXml，名单 / 总表 ClosedXML / ExcelDataReader。
 - 工具数：10 件小工具（图片 4 + 格式 6）+ 3 件常备应用（分晓、归位、时序）。
-- 版本基线：`1.2.1`，唯一版本源为 `Directory.Build.props`。
+- 版本基线：`1.3.0`，唯一版本源为 `Directory.Build.props`。
 - 测试：19 项 xUnit（工具 9 + 归位 7 + 时序 3）。
 - 仓库：`https://github.com/Evan0148/TeachCraft`。
 - 隐私：100% 本机处理，文件不上传、不留存。

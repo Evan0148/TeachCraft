@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ClosedXML.Excel;
 using GradeStrip.Core.Layout;
 using GradeStrip.Core.Model;
@@ -60,38 +61,41 @@ public sealed class ScoreStripExporter
             throw new InvalidOperationException("没有识别到任何科目。");
 
         var groups = StripGrouping.Split(data.Students, options.FirstGroupSize, options.GroupSize);
-
-        using var workbook = new XLWorkbook();
         var sheets = new List<StripSheetInfo>();
 
-        for (var g = 0; g < groups.Count; g++)
+        using (var workbook = new XLWorkbook())
         {
-            var group = groups[g];
-            var isFirst = g == 0;
-            var ws = workbook.Worksheets.Add(SafeSheetName(group[0].No, group[^1].No));
-
-            var row = 1;
-            if (isFirst && options.IncludeTitle)
-                row = RenderHeader(ws, data, options, subjectCount);
-
-            for (var i = 0; i < group.Count; i++)
+            for (var g = 0; g < groups.Count; g++)
             {
-                RenderStrip(ws, row, group[i], data.Subjects, options);
-                row += 3;
-                if (i < group.Count - 1)
+                var group = groups[g];
+                var isFirst = g == 0;
+                var ws = workbook.Worksheets.Add(SafeSheetName(group[0].No, group[^1].No));
+
+                var row = 1;
+                if (isFirst && options.IncludeTitle)
+                    row = RenderHeader(ws, data, options, subjectCount);
+
+                for (var i = 0; i < group.Count; i++)
                 {
-                    ws.Row(row).Height = options.SpacerRowHeight;
-                    row++;
+                    RenderStrip(ws, row, group[i], data.Subjects, options);
+                    row += 3;
+                    if (i < group.Count - 1)
+                    {
+                        ws.Row(row).Height = options.SpacerRowHeight;
+                        row++;
+                    }
                 }
+
+                var lastRow = row - 1;
+                ConfigurePage(ws, lastRow, subjectCount, options, freezeRows: isFirst && options.IncludeTitle ? 4 : 0);
+
+                sheets.Add(new StripSheetInfo(ws.Name, group[0].No, group[^1].No, group.Count));
             }
 
-            var lastRow = row - 1;
-            ConfigurePage(ws, lastRow, subjectCount, options, freezeRows: isFirst && options.IncludeTitle ? 4 : 0);
-
-            sheets.Add(new StripSheetInfo(ws.Name, group[0].No, group[^1].No, group.Count));
+            workbook.SaveAs(outputPath);
         }
 
-        workbook.SaveAs(outputPath);
+        // SaveAs 后先释放整本工作簿，再让 OpenXML 后处理打开同一文件，避免两份工作簿同时驻留
         WorkbookPostProcessor.Apply(outputPath, 4 + subjectCount);
         return new StripExportResult { Sheets = sheets, StudentCount = data.Students.Count };
     }
@@ -129,8 +133,8 @@ public sealed class ScoreStripExporter
                 run.SetFontSize(9);
                 run.SetFontName(Strips.FontName);
                 run.SetFontColor(segment.Color is null
-                    ? XLColor.FromHtml("#" + Strips.HeaderText)
-                    : XLColor.FromHtml("#" + segment.Color));
+                    ? Color(Strips.HeaderText)
+                    : Color(segment.Color));
             }
 
             legend.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -179,11 +183,11 @@ public sealed class ScoreStripExporter
         {
             var top = ws.Cell(row, c).Style.Border;
             top.TopBorder = XLBorderStyleValues.Medium;
-            top.TopBorderColor = XLColor.FromHtml("#" + Strips.StripEdge);
+            top.TopBorderColor = Color(Strips.StripEdge);
 
             var bottom = ws.Cell(row + 2, c).Style.Border;
             bottom.BottomBorder = XLBorderStyleValues.Medium;
-            bottom.BottomBorderColor = XLColor.FromHtml("#" + Strips.StripEdge);
+            bottom.BottomBorderColor = Color(Strips.StripEdge);
         }
 
         // A 列：序号 + 姓名 + 准考证号（纵向合并 3 行，合并后再套边框）
@@ -202,13 +206,13 @@ public sealed class ScoreStripExporter
         {
             var border = ws.Cell(r, 1).Style.Border;
             border.LeftBorder = XLBorderStyleValues.Thin;
-            border.LeftBorderColor = XLColor.FromHtml("#" + Strips.GridLine);
+            border.LeftBorderColor = Color(Strips.GridLine);
             border.RightBorder = XLBorderStyleValues.Thin;
-            border.RightBorderColor = XLColor.FromHtml("#" + Strips.GridLine);
+            border.RightBorderColor = Color(Strips.GridLine);
             border.BottomBorder = XLBorderStyleValues.Thin;
-            border.BottomBorderColor = XLColor.FromHtml("#" + Strips.GridLine);
+            border.BottomBorderColor = Color(Strips.GridLine);
             border.TopBorder = r == row ? XLBorderStyleValues.Medium : XLBorderStyleValues.Thin;
-            border.TopBorderColor = XLColor.FromHtml("#" + (r == row ? Strips.StripEdge : Strips.GridLine));
+            border.TopBorderColor = Color(r == row ? Strips.StripEdge : Strips.GridLine);
 
             // 合并区域内的从属单元格需要显式继承样式，否则会退回默认黑色细线
             if (r > row) ws.Cell(r, 1).Style = ws.Cell(row, 1).Style;
@@ -329,23 +333,32 @@ public sealed class ScoreStripExporter
         if (freezeRows > 0) ws.SheetView.FreezeRows(freezeRows);
     }
 
+    /// <summary>按色值缓存 ClosedXML 颜色，避免逐格重复解析 HTML 色值。</summary>
+    private static readonly ConcurrentDictionary<string, XLColor> ColorCache = new(StringComparer.Ordinal);
+
+    private static XLColor Color(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return XLColor.NoColor;
+        return ColorCache.GetOrAdd(hex, static key => XLColor.FromHtml("#" + key));
+    }
+
     private static void ApplyFont(IXLCell cell, double size, bool bold, string colorHex)
     {
         cell.Style.Font.FontName = Strips.FontName;
         cell.Style.Font.FontSize = size;
         cell.Style.Font.Bold = bold;
-        cell.Style.Font.FontColor = XLColor.FromHtml("#" + colorHex);
+        cell.Style.Font.FontColor = Color(colorHex);
     }
 
     private static void Fill(IXLCell cell, string colorHex)
     {
         cell.Style.Fill.PatternType = XLFillPatternValues.Solid;
-        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#" + colorHex);
+        cell.Style.Fill.BackgroundColor = Color(colorHex);
     }
 
     private static void SetBorder(IXLBorder border, XLBorderStyleValues style, string colorHex)
     {
-        var color = XLColor.FromHtml("#" + colorHex);
+        var color = Color(colorHex);
         border.LeftBorder = style;
         border.LeftBorderColor = color;
         border.RightBorder = style;

@@ -58,6 +58,9 @@ sealed class Program
 
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()
+#if DEBUG
+            .WithDeveloperTools()
+#endif
             .With(new FontManagerOptions
             {
                 DefaultFamilyName = defaultFont,

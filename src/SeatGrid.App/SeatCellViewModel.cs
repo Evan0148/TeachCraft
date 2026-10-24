@@ -33,6 +33,11 @@ public partial class SeatCellViewModel : ObservableObject
     [ObservableProperty] private string _automationName = string.Empty;
 
     private bool _emptyFrameWhenIdle;
+    private bool _isDropTarget;
+    private IBrush _strokeBeforeDrop = Brushes.Gray;
+    private Thickness _borderBeforeDrop = new(1);
+
+    private static readonly IBrush DropStrokeBrush = new SolidColorBrush(Color.Parse("#D97757"));
 
     public void Update(
         string displayName,
@@ -63,6 +68,7 @@ public partial class SeatCellViewModel : ObservableObject
         BorderThickness = isEmpty ? new Thickness(0) : new Thickness(1);
         _emptyFrameWhenIdle = isEmpty && !hideEmptySeats;
         ShowEmptyFrame = _emptyFrameWhenIdle && !isSelected;
+        _isDropTarget = false;
         AutomationName = isEmpty
             ? $"空座位 {PositionLabel}"
             : $"{PositionLabel} {displayName}";
@@ -72,5 +78,24 @@ public partial class SeatCellViewModel : ObservableObject
     {
         IsSelected = selected;
         ShowEmptyFrame = _emptyFrameWhenIdle && !selected;
+    }
+
+    /// <summary>拖拽悬停时临时换上强调色边框，松手或移走后由下一次 Update 还原。</summary>
+    public void SetDropTarget(bool on)
+    {
+        if (on == _isDropTarget) return;
+        _isDropTarget = on;
+        if (on)
+        {
+            _strokeBeforeDrop = Stroke;
+            _borderBeforeDrop = BorderThickness;
+            Stroke = DropStrokeBrush;
+            BorderThickness = new Thickness(2.2);
+        }
+        else
+        {
+            Stroke = _strokeBeforeDrop;
+            BorderThickness = _borderBeforeDrop;
+        }
     }
 }

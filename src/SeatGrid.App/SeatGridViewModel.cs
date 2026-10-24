@@ -289,6 +289,8 @@ public partial class SeatGridViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(CanAssign));
+        OnPropertyChanged(nameof(HasSelectedStudent));
+        OnPropertyChanged(nameof(EditPanelTitle));
     }
 
     partial void OnSelectedSeatChanged(SeatCellViewModel? value)
@@ -562,6 +564,28 @@ public partial class SeatGridViewModel : ObservableObject
         SetStatus($"已把 {student.Name} 放到 {target.PositionLabel}。");
     }
 
+    /// <summary>拖拽落座：目标有人则交换，目标为空则移动。</summary>
+    public void MoveSeatStudent(SeatCellViewModel source, SeatCellViewModel target)
+    {
+        if (source == target) return;
+        if (!_assignments.TryGetValue(source.Position, out var moving)) return;
+
+        if (_assignments.TryGetValue(target.Position, out var occupying))
+        {
+            _assignments[target.Position] = moving;
+            _assignments[source.Position] = occupying;
+            RefreshSeatVisuals();
+            SetStatus($"已把 {moving.Name} 与 {occupying.Name} 交换座位。");
+        }
+        else
+        {
+            _assignments.Remove(source.Position);
+            _assignments[target.Position] = moving;
+            RefreshSeatVisuals();
+            SetStatus($"已把 {moving.Name} 移到 {target.PositionLabel}。");
+        }
+    }
+
     public void ClearSelectedSeat()
     {
         if (SelectedSeat is null) return;
@@ -571,6 +595,9 @@ public partial class SeatGridViewModel : ObservableObject
         RefreshSeatVisuals();
         SetStatus($"已清空 {label}。");
     }
+
+    public bool HasSelectedStudent => SelectedStudent is not null;
+    public string EditPanelTitle => SelectedStudent is null ? "新增学生" : $"编辑学生 · {SelectedStudent.Name}";
 
     public void ApplyStudentEdit()
     {
@@ -608,11 +635,31 @@ public partial class SeatGridViewModel : ObservableObject
 
     public void AddStudent()
     {
-        var student = new StudentViewModel(new Student { Name = "新同学" });
+        var name = EditName.Trim();
+        if (name.Length == 0)
+        {
+            SetStatus("先填写姓名，再点「新增学生」。", true);
+            return;
+        }
+
+        var student = new StudentViewModel(new Student
+        {
+            Name = name,
+            Number = EditNumber.Trim(),
+            Gender = EditGenderIndex switch
+            {
+                1 => Gender.Male,
+                2 => Gender.Female,
+                _ => Gender.Unknown,
+            },
+            Height = ParseOptional(EditHeight),
+            Vision = ParseOptional(EditVision),
+            Notes = EditNotes.Trim(),
+        });
         _students.Add(student);
         RefreshStudents();
         SelectedStudent = student;
-        SetStatus("已新增一名学生，请在下方填写姓名。");
+        SetStatus($"已把 {name} 加入名单。");
     }
 
     public void DeleteSelectedStudent()

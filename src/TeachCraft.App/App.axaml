@@ -63,6 +63,40 @@
             <Setter Property="Padding" Value="20" />
         </Style>
 
+        <!-- 分晓忙碌遮罩：卡片从 0.96 轻微放大淡入（0.22s，克制动效） -->
+        <Style Selector="Border.busy-in">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Forward">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="0.96" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="0.96" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- 分晓忙碌指示弧：恒定角速度旋转（linear），仅在忙碌时转动 -->
+        <Style Selector="Canvas.busy-spin">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:0.9" IterationCount="INFINITE">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
         <Style Selector="TextBlock.display">
             <Setter Property="FontFamily" Value="{StaticResource SerifFont}" />
             <Setter Property="FontWeight" Value="Medium" />
@@ -172,6 +206,63 @@
         </Style>
         <Style Selector="Button.nav.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#EDE9DE" />
+        </Style>
+
+        <!-- 分晓概览报表 chip：未选中为细边纸面，选中用陶土色描边与文字 -->
+        <Style Selector="Button.report-chip">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        <Style Selector="Button.report-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FBF9F3" />
+            <Setter Property="BorderBrush" Value="#CFC8B6" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.report-chip.active">
+            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="Button.report-chip.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F8EDE4" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+        </Style>
+
+        <!-- 分晓分析报表的班级选择：与纸面卡片同色，细边 -->
+        <Style Selector="ComboBox.report-class">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="118" />
+        </Style>
+        <Style Selector="ComboBox.report-class:pointerover /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="#CFC8B6" />
+        </Style>
+
+        <!-- 分晓学生排行姓名旁的微型班级角标：纸面小胶垫，细边无阴影 -->
+        <Style Selector="Border.class-badge">
+            <Setter Property="Background" Value="{StaticResource PaperBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.class-badge TextBlock">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
         </Style>
 
         <Style Selector="Button.link">
@@ -389,8 +480,59 @@
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="MinHeight" Value="32" />
         </Style>
+        <!-- 纸墨滑块：2px 细轨 + 强调色填充 + 墨边纸面圆钮 -->
         <Style Selector="Slider">
-            <Setter Property="Height" Value="24" />
+            <Setter Property="MinHeight" Value="26" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid Background="{TemplateBinding Background}">
+                        <Border Height="2" CornerRadius="1"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource LineBrush}" />
+                        <Track Name="PART_Track"
+                               Minimum="{TemplateBinding Minimum}"
+                               Maximum="{TemplateBinding Maximum}"
+                               Value="{Binding Value, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                               Orientation="{TemplateBinding Orientation}"
+                               IsDirectionReversed="{TemplateBinding IsDirectionReversed}">
+                            <Track.DecreaseButton>
+                                <RepeatButton Focusable="False" IsTabStop="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate>
+                                            <Border Height="2" CornerRadius="1"
+                                                    VerticalAlignment="Center"
+                                                    Background="{StaticResource AccentBrush}" />
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseButton>
+                            <Track.IncreaseButton>
+                                <RepeatButton Focusable="False" IsTabStop="False" Background="Transparent" />
+                            </Track.IncreaseButton>
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate>
+                                            <Ellipse x:Name="PART_ThumbFace" Width="15" Height="15"
+                                                     Fill="{StaticResource CardBrush}"
+                                                     Stroke="{StaticResource InkBrush}"
+                                                     StrokeThickness="1.5" />
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Slider:pointerover /template/ Ellipse#PART_ThumbFace">
+            <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+            <Setter Property="StrokeThickness" Value="2" />
+        </Style>
+        <Style Selector="Slider:disabled /template/ Ellipse#PART_ThumbFace">
+            <Setter Property="Stroke" Value="{StaticResource MutedBrush}" />
         </Style>
         <Style Selector="ProgressBar">
             <Setter Property="Height" Value="3" />

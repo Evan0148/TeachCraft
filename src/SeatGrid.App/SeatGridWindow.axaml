@@ -329,7 +329,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Expander Grid.Row="5" Header="编辑学生 / 新增" HorizontalAlignment="Stretch"
+                    <Expander Grid.Row="5" Header="{Binding EditPanelTitle}" HorizontalAlignment="Stretch"
                               FontSize="11" IsExpanded="False">
                         <StackPanel Spacing="7" Margin="0,8,0,0">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
@@ -349,12 +349,14 @@
                             </Grid>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button Classes="primary" Content="保存修改" Padding="10,5" FontSize="10.5"
-                                        Click="OnApplyStudent" />
+                                        Click="OnApplyStudent" IsVisible="{Binding HasSelectedStudent}" />
                                 <Button Classes="ghost" Content="删除" Padding="10,5" FontSize="10.5"
-                                        Click="OnDeleteStudent" />
-                                <Button Classes="link" Content="+ 新增学生" FontSize="10.5"
-                                        Click="OnAddStudent" />
+                                        Click="OnDeleteStudent" IsVisible="{Binding HasSelectedStudent}" />
+                                <Button Classes="primary" Content="+ 新增学生" Padding="10,5" FontSize="10.5"
+                                        Click="OnAddStudent" IsVisible="{Binding !HasSelectedStudent}" />
                             </StackPanel>
+                            <TextBlock Text="未选中学生时，这里填好后点「新增学生」直接加入名单；选中名单里的学生后可以修改或删除。"
+                                       Classes="helper" IsVisible="{Binding !HasSelectedStudent}" />
                         </StackPanel>
                     </Expander>
                 </Grid>
@@ -369,7 +371,7 @@
                         <Button Classes="mode" Classes.active="{Binding IsStudentView}"
                                 Content="学生视角" Click="OnStudentView" />
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="点击座位选中，再从左侧名单放人；打印与导出会保留同一套配色。"
+                    <TextBlock Grid.Column="1" Text="按住学生拖到另一座位即可交换（空位则移动）；也可点座位选中后从左侧名单放人。"
                                FontSize="9.5" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
@@ -442,6 +444,10 @@
                                                                                     Foreground="{Binding NameBrush}"
                                                                                     Tag="{Binding}"
                                                                                     Click="OnSeatClick"
+                                                                                    PointerPressed="OnSeatPointerPressed"
+                                                                                    PointerMoved="OnSeatPointerMoved"
+                                                                                    PointerReleased="OnSeatPointerReleased"
+                                                                                    PointerCaptureLost="OnSeatPointerCaptureLost"
                                                                                     ToolTip.Tip="{Binding PositionLabel}"
                                                                                     AutomationProperties.Name="{Binding AutomationName}">
                                                                                 <TextBlock Text="{Binding DisplayName}"
@@ -474,20 +480,17 @@
                             </StackPanel>
                         </ScrollViewer>
 
-                        <Border IsVisible="{Binding IsChartEmpty}"
-                                Background="#F7F4EC"
+                        <Border IsVisible="{Binding IsChartEmpty}" Background="#F2FAF9F5"
                                 BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
-                                CornerRadius="12" Padding="26,20"
-                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                                MaxWidth="420">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="还没有名单" FontFamily="{StaticResource SerifFont}" FontSize="22"
+                                CornerRadius="10">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                                <TextBlock Text="还没有名单" FontFamily="{StaticResource SerifFont}" FontSize="26"
                                            Foreground="{StaticResource InkBrush}" HorizontalAlignment="Center" />
                                 <TextBlock Text="导入 Excel / CSV 名单，软件会自动识别姓名、性别、身高与视力。"
-                                           FontSize="11" Foreground="{StaticResource MutedBrush}"
-                                           TextWrapping="Wrap" TextAlignment="Center" MaxWidth="340" />
+                                           FontSize="11.5" Foreground="{StaticResource MutedBrush}"
+                                           HorizontalAlignment="Center" />
                                 <Button Classes="primary" Content="导入名单" Click="OnImportRoster"
-                                        HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                        HorizontalAlignment="Center" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -712,6 +715,9 @@
                            VerticalAlignment="Center" />
             </Grid>
         </Border>
+
+        <!-- 拖拽浮层：跟手的学生名卡 -->
+        <Canvas Name="DragLayer" Grid.RowSpan="3" IsHitTestVisible="False" ZIndex="99" />
     </Grid>
 </Window>
 

@@ -22,12 +22,17 @@ public sealed class ColorSwatchButton : Button
     public static readonly StyledProperty<Color> ColorProperty =
         AvaloniaProperty.Register<ColorSwatchButton, Color>(nameof(Color), Colors.White);
 
+    private static readonly IBrush HoverRingBrush = new SolidColorBrush(Color.Parse("#D97757"));
+
     private readonly Border _swatch;
+    private readonly Border _ring;
 
     public ColorSwatchButton()
     {
-        Width = 34;
-        Height = 26;
+        Height = 28;
+        MinWidth = 0;
+        MinHeight = 0;
+        HorizontalAlignment = HorizontalAlignment.Stretch;
         Padding = new Thickness(0);
         Background = Brushes.Transparent;
         BorderThickness = new Thickness(0);
@@ -36,17 +41,29 @@ public sealed class ColorSwatchButton : Button
         _swatch = new Border
         {
             CornerRadius = new CornerRadius(4),
-            BorderBrush = new SolidColorBrush(Color.Parse("#D6D1C4")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#B7AF9C")),
             BorderThickness = new Thickness(1),
         };
 
-        Content = _swatch;
+        // 外侧 hover 描边环，避免白底色块在白卡上看不清边界
+        _ring = new Border
+        {
+            CornerRadius = new CornerRadius(6),
+            BorderBrush = Brushes.Transparent,
+            BorderThickness = new Thickness(1.5),
+            Padding = new Thickness(2),
+            Child = _swatch,
+        };
+
+        Content = _ring;
         UpdateSwatch();
         PropertyChanged += (_, args) =>
         {
             if (args.Property == ColorProperty) UpdateSwatch();
         };
         Click += (_, _) => ShowPalette();
+        PointerEntered += (_, _) => _ring.BorderBrush = HoverRingBrush;
+        PointerExited += (_, _) => _ring.BorderBrush = Brushes.Transparent;
     }
 
     public Color Color
@@ -55,7 +72,11 @@ public sealed class ColorSwatchButton : Button
         set => SetValue(ColorProperty, value);
     }
 
-    private void UpdateSwatch() => _swatch.Background = new SolidColorBrush(Color);
+    private void UpdateSwatch()
+    {
+        _swatch.Background = new SolidColorBrush(Color);
+        ToolTip.SetTip(this, $"#{Color.R:X2}{Color.G:X2}{Color.B:X2}");
+    }
 
     private void ShowPalette()
     {

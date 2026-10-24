@@ -9,4 +9,10 @@
   <Project Path="src/SeatGrid.Core/SeatGrid.Core.csproj" />
   <Project Path="src/TeachCraft.App/TeachCraft.App.csproj" />
   <Project Path="src/TeachCraft.Core/TeachCraft.Core.csproj" />
+
+  <!-- vendor 分晓列入清单：sln 配置映射决定其编译配置，避免传递引用按默认 Debug 编译（配合 DiagnosticsSupport 条件元数据在 Release restore 下会冻结 None 而丢包）。 -->
+  <Folder Name="/vendor/">
+    <Project Path="vendor/gradestrip/src/GradeStrip.Core/GradeStrip.Core.csproj" />
+    <Project Path="vendor/gradestrip/src/GradeStrip.App/GradeStrip.App.csproj" />
+  </Folder>
 </Solution>

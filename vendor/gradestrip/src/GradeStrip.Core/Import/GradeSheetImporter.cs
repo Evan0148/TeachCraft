@@ -34,11 +34,36 @@ public static class GradeSheetImporter
 
     private static readonly string[] SubHeaderNames = { "得分", "校次", "校次进退步", "班次", "班次进退步" };
 
+    /// <summary>智学网「所有单科成绩报告」会把每个科目拆成一张工作表，表名即科目名。</summary>
+    private static readonly string[] SubjectSheetNames =
+    {
+        "语文", "数学", "英语", "物理", "化学", "生物学", "生物",
+        "政治", "道德与法治", "道法", "历史", "地理", "体育",
+    };
+
+    /// <summary>明细表里逐题/分项拆分的列，不是科目列；单科模式下必须跳过。</summary>
+    private static readonly string[] DetailColumnKeywords =
+    {
+        "客观分", "主观分", "单选题", "多选题", "判断题", "填空题", "解答题", "简答题",
+        "计算题", "实验题", "材料题", "论述题", "写作", "作文", "听力", "语法填空",
+        "完形填空", "阅读", "任务型阅读",
+    };
+
     /// <summary>不是科目、而是排名字段的表头关键字，宽表模式下要跳过。</summary>
     private static readonly string[] RankKeyword =
     {
         "名次", "排名", "校次", "班次", "等第", "等级", "分数段", "年级", "班级", "平均", "最高", "最低",
+        "类别", "说明", "缺考科目", "原因", "备注", "A等", "B等", "C等", "D等", "E等",
     };
+
+    /// <summary>P1 防误判：这些纯报表/名单文件混进成绩条通道会生成只有名字没有成绩的假会话。</summary>
+    private static readonly string[] RosterReportKeywords =
+    {
+        "临界生", "优秀生与学困生", "优秀生学困生", "缺考学生汇总", "需关注学生", "学业等级分布",
+    };
+
+    /// <summary>「0，不计排名」这类文本总分的前导数字。</summary>
+    private static readonly Regex LeadingScoreRegex = new(@"^[-+]?\d+(?:\.\d+)?", RegexOptions.Compiled);
 
     static GradeSheetImporter()
     {
@@ -50,9 +75,13 @@ public static class GradeSheetImporter
         options ??= new ImportOptions();
         path = path.Normalize(System.Text.NormalizationForm.FormC);
 
+        // P1 防误判：纯报表/名单文件直接拒绝，避免生成只有名字没有成绩的假会话
+        RejectRosterReportFile(path);
+
         // 优先尝试读取智学网「全科个人成绩单」导出格式（支持 .xls 与 .xlsx，兼容用户勾选任意选项组合）
         if (TryLoadPersonalScoreReport(path, options, out var personalData))
         {
+            EnsureValidScores(personalData.Students);
             return personalData;
         }
 
@@ -61,12 +90,20 @@ public static class GradeSheetImporter
         {
             if (TryLoadTabularXls(path, options, out var xlsData))
             {
+                EnsureValidScores(xlsData.Students);
                 return xlsData;
             }
 
             throw new InvalidDataException(
                 "检测到该文件为旧版 Excel 二进制格式（.xls），且未能识别为智学网成绩表。" +
                 "请确认表格包含学生姓名及有效成绩，或在 Excel 中另存为 .xlsx 后再导入。");
+        }
+
+        // 智学网「所有单科成绩报告」会把语文…体育拆成多张工作表，先尝试合并这些科目分表
+        if (TryLoadMergedSubjectSheets(path, options, out var mergedData))
+        {
+            EnsureValidScores(mergedData.Students);
+            return mergedData;
         }
 
         using var workbook = new XLWorkbook(path);
@@ -111,6 +148,92 @@ public static class GradeSheetImporter
         throw firstError ?? new InvalidDataException("未能从任何工作表中识别到有效学生成绩数据。");
     }
 
+    /// <summary>
+    /// P1 防误判：临界生/优困生/缺考/需关注/等级分布这类纯报表文件混进成绩条通道时，
+    /// 会生成只有名字没有成绩的假会话。命中报表关键字、且工作簿里找不到
+    /// 「姓名 + 至少两个学科列」的常规成绩页时，明确拒绝并引导使用「导入分析报表」。
+    /// </summary>
+    private static void RejectRosterReportFile(string path)
+    {
+        string fileName;
+        try
+        {
+            fileName = Path.GetFileNameWithoutExtension(path);
+        }
+        catch
+        {
+            return;
+        }
+
+        var sheetNames = new List<string>();
+        var hasRegularScoreSheet = false;
+
+        try
+        {
+            using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+
+            do
+            {
+                sheetNames.Add((reader.Name ?? string.Empty).Trim());
+
+                // 逃生门：任何一张表的前 10 行里同时出现「姓名」行和「至少两个学科列」行，
+                // 就认为工作簿带有常规成绩页（如混合工作簿），交回正常导入流程
+                var hasNameRow = false;
+                var hasMultiSubjectRow = false;
+                var row = 0;
+                while (row < 10 && reader.Read())
+                {
+                    var hasName = false;
+                    var subjectCells = 0;
+                    for (var c = 0; c < reader.FieldCount; c++)
+                    {
+                        var value = CellStr(reader.GetValue(c));
+                        if (value.Length == 0) continue;
+                        if (value == "姓名") hasName = true;
+                        else if (KnownSubjects.Contains(value, StringComparer.Ordinal)) subjectCells++;
+                    }
+
+                    if (hasName) hasNameRow = true;
+                    if (subjectCells >= 2) hasMultiSubjectRow = true;
+
+                    if (hasNameRow && hasMultiSubjectRow)
+                    {
+                        hasRegularScoreSheet = true;
+                        break;
+                    }
+
+                    row++;
+                }
+
+                if (hasRegularScoreSheet) break;
+            } while (reader.NextResult());
+        }
+        catch
+        {
+            // 打不开的文件交给后续流程按原有方式报错
+            return;
+        }
+
+        var haystack = string.Join('\n', fileName, string.Join('\n', sheetNames));
+        if (!RosterReportKeywords.Any(k => haystack.Contains(k, StringComparison.Ordinal))) return;
+        if (hasRegularScoreSheet) return;
+
+        throw new InvalidOperationException("该文件属于分析报表/名单，请使用「导入分析报表」功能导入。");
+    }
+
+    /// <summary>空成绩拦截：识别出学生但所有科目与总分均为空（如缺考名单）时明确报错。</summary>
+    private static void EnsureValidScores(IReadOnlyList<StudentRecord> students)
+    {
+        if (students.Count == 0) return;
+
+        var hasAnyScore = students.Any(s =>
+            s.Total.Score.HasValue || s.Subjects.Values.Any(v => v.Score.HasValue));
+
+        if (!hasAnyScore)
+            throw new InvalidOperationException("表格中未找到有效的学生成绩数据。");
+    }
+
     private static ExamData ReadSheet(
         XLWorkbook workbook, IXLWorksheet sheet, string path, ImportOptions options, string? fallbackFromSheet)
     {
@@ -130,6 +253,9 @@ public static class GradeSheetImporter
         if (data.Subjects.Count == 0)
             throw new InvalidDataException($"工作表「{sheet.Name}」中找不到任何科目列。");
 
+        // 空成绩拦截：识别出学生但所有科目与总分均为空（如缺考名单）时明确报错
+        EnsureValidScores(data.Students);
+
         // 尝试从同簿内其他表（如包含进退步的汇总表）补齐总分进退步
         TryEnrichTotalDeltas(workbook, sheet, data.Students);
 
@@ -140,10 +266,24 @@ public static class GradeSheetImporter
 
         var notice = BuildImportNotice(sheet, fallbackFromSheet, data);
 
+        // 跨班汇总表不再把第一个学生的班级当成全班班级名
+        var finalClass = data.HasMultipleClasses
+            ? string.Empty
+            : data.ClassName.Length > 0 ? data.ClassName : ClassFromTitle(sourceTitle);
+
+        // 单班表格学生行没有班级列时，把识别出的班级补到每个学生，供按班筛选使用
+        if (finalClass.Length > 0)
+        {
+            foreach (var student in data.Students)
+            {
+                if (string.IsNullOrEmpty(student.ClassName)) student.ClassName = finalClass;
+            }
+        }
+
         return new ExamData
         {
             SourceTitle = sourceTitle,
-            ClassName = data.ClassName.Length > 0 ? data.ClassName : ClassFromTitle(sourceTitle),
+            ClassName = finalClass,
             ExamName = examName,
             Subjects = data.Subjects,
             Students = data.Students,
@@ -251,19 +391,26 @@ public static class GradeSheetImporter
         }
 
         var hasSubjectDeltas = data.Students.Any(s => s.Subjects.Values.Any(sc => sc.ClassDelta.HasValue || sc.SchoolDelta.HasValue));
-        var isSimpleSheet = sheet.Name.Contains("简表") || !hasSubjectDeltas;
+        var hasDeltaValues = hasSubjectDeltas
+                             || data.Students.Any(s => s.Total.ClassDelta.HasValue || s.Total.SchoolDelta.HasValue);
 
         if (!string.IsNullOrEmpty(fallbackFromSheet))
         {
             return $"提示：工作表「{fallbackFromSheet}」缺少各科成绩，已自动读取「{sheet.Name}」。当前表格缺少单科进退步等数据，如需完整对比分析，请前往智学网下载详细的成绩单（全学科成绩汇总表）。";
         }
 
-        if (isSimpleSheet && !hasSubjectDeltas)
+        if (hasDeltaValues)
         {
-            return $"提示：当前表格「{sheet.Name}」缺少各科进退步等对比数据。如需查看完整单科进退步与分析，请前往智学网下载详细的成绩单（全学科成绩汇总表）。";
+            return null;
         }
 
-        return null;
+        // 表里明明有进退步列、只是源数据全是「-」：不能再劝老师去下载别的文件
+        if (data.HasDeltaColumns)
+        {
+            return "提示：本次考试没有进退步数据（源表相应列为空），不影响成绩条生成。";
+        }
+
+        return $"提示：当前表格「{sheet.Name}」缺少各科进退步等对比数据。如需查看完整单科进退步与分析，请前往智学网下载详细的成绩单（全学科成绩汇总表）。";
     }
 
     // ---------------------------------------------------------------- 两级表头
@@ -303,7 +450,8 @@ public static class GradeSheetImporter
         var classCol = baseColumns.GetValueOrDefault("班级");
 
         var students = new List<StudentRecord>();
-        var className = string.Empty;
+        var classNames = new HashSet<string>(StringComparer.Ordinal);
+        var classOf = new Dictionary<StudentRecord, string>();
 
         for (var r = headerRow + 1; r <= lastRow; r++)
         {
@@ -313,28 +461,37 @@ public static class GradeSheetImporter
             var name = Text(sheet.Cell(r, nameCol));
             if (!IsStudentName(name)) continue;
 
-            if (className.Length == 0 && classCol > 0)
-                className = Text(sheet.Cell(r, classCol));
+            var rowClass = classCol > 0 ? Text(sheet.Cell(r, classCol)) : string.Empty;
+            if (IsMeaningfulClassName(rowClass)) classNames.Add(rowClass);
 
             var scores = new Dictionary<string, SubjectScore>(StringComparer.Ordinal);
             foreach (var block in subjects)
                 scores[block.Subject] = ReadScore(sheet, r, block);
 
-            students.Add(new StudentRecord
+            var student = new StudentRecord
             {
                 No = noCol > 0 ? Int(sheet.Cell(r, noCol)) ?? students.Count + 1 : students.Count + 1,
                 Name = name,
-                ExamNo = ExamNumber(sheet.Cell(r, examNoCol > 0 ? examNoCol : 0)),
+                // 没有考号列时不能再访问第 0 列
+                ExamNo = ExamNumber(examNoCol > 0 ? sheet.Cell(r, examNoCol) : null),
+                ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                 Subjects = scores,
                 Total = total is null ? SumSubjects(scores, subjects) : ReadScore(sheet, r, total),
-            });
+            };
+            students.Add(student);
+            if (IsMeaningfulClassName(rowClass)) classOf[student] = rowClass;
         }
+
+        var subjectNames = subjects.Select(s => s.Subject).ToList();
+        PopulateMissingClassRanksForTable(students, classOf, subjectNames);
 
         return new ParsedTable
         {
             SourceTitle = headerRow >= 2 ? Text(sheet.Cell(1, 1)) : string.Empty,
-            ClassName = className,
-            Subjects = subjects.Select(s => s.Subject).ToList(),
+            ClassName = classNames.Count == 1 ? classNames.First() : string.Empty,
+            HasMultipleClasses = classNames.Count > 1,
+            HasDeltaColumns = blocks.Any(b => b.SchoolDeltaColumn > 0 || b.ClassDeltaColumn > 0),
+            Subjects = subjectNames,
             Students = students,
         };
     }
@@ -450,6 +607,11 @@ public static class GradeSheetImporter
 
         if (examNoCol == 0) examNoCol = headers.FirstOrDefault(h => h.Value == "自定义考号").Key;
 
+        // 客观题填涂 / 答题卡明细：准考证号 | 姓名 | 科目 | 客观分 | 1 | 2 | …
+        // 逐题得分与客观分不是科目，整张表没有可用于成绩条的总分，明确拒绝而不是把题号当成科目。
+        if (nameCol > 0 && headers.ContainsValue("科目") && headers.ContainsValue("客观分"))
+            throw new InvalidDataException(
+                $"工作表「{sheet.Name}」是客观题填涂明细，不包含科目总分，无法生成成绩条。");
         var totalCol = headers.FirstOrDefault(h => TotalNames.Contains(h.Value)).Key;
 
         var subjectColumns = headers
@@ -473,9 +635,9 @@ public static class GradeSheetImporter
         {
             isSingleSubject = true;
         }
-        else if (subjectColumns.Count > 1 &&
-                 subjectColumns.All(s => s.Value is "得分" or "客观分" or "主观分" or "单选题" or "填空题" or "解答题" || int.TryParse(s.Value, out _)))
+        else if (subjectColumns.Count > 0 && subjectColumns.All(s => IsDetailColumn(s.Value)))
         {
+            // 明细表：总分 + 客观分/主观分/单选题/语文作文/题号列，后几列不是科目
             isSingleSubject = true;
         }
 
@@ -488,7 +650,8 @@ public static class GradeSheetImporter
 
             var scoreCol = headers.FirstOrDefault(h => h.Value is "得分" or "实得分" or "成绩").Key;
             if (scoreCol == 0) scoreCol = totalCol;
-            if (scoreCol == 0 && subjectColumns.Count > 0) scoreCol = subjectColumns[0].Key;
+            if (scoreCol == 0)
+                throw new InvalidDataException("该表只有客观分或逐题得分，缺少科目总分，无法生成成绩条。");
 
             var schoolRankCol = headers.FirstOrDefault(h => h.Value is "校次" or "年级名次" or "年名次" or "校排名").Key;
             var schoolDeltaCol = headers.FirstOrDefault(h => h.Value is "校次进退步" or "校进退步" or "年级进退步").Key;
@@ -496,7 +659,8 @@ public static class GradeSheetImporter
             var classDeltaCol = headers.FirstOrDefault(h => h.Value is "班次进退步" or "班进退步" or "班级进退步").Key;
 
             var singleStudents = new List<StudentRecord>();
-            var detectedClass = string.Empty;
+            var singleClassNames = new HashSet<string>(StringComparer.Ordinal);
+            var singleClassOf = new Dictionary<StudentRecord, string>();
 
             for (var r = headerRow + 1; r <= lastRow; r++)
             {
@@ -505,8 +669,8 @@ public static class GradeSheetImporter
                 var name = Text(sheet.Cell(r, nameCol));
                 if (!IsStudentName(name)) continue;
 
-                if (detectedClass.Length == 0 && classCol > 0)
-                    detectedClass = Text(sheet.Cell(r, classCol));
+                var rowClass = classCol > 0 ? Text(sheet.Cell(r, classCol)) : string.Empty;
+                if (IsMeaningfulClassName(rowClass)) singleClassNames.Add(rowClass);
 
                 var score = scoreCol > 0 ? Number(sheet.Cell(r, scoreCol)) : null;
                 var classRank = classRankCol > 0 ? Int(sheet.Cell(r, classRankCol)) : null;
@@ -528,22 +692,29 @@ public static class GradeSheetImporter
                     [singleSubjectName] = subjScore
                 };
 
-                singleStudents.Add(new StudentRecord
+                var singleStudent = new StudentRecord
                 {
                     No = noCol > 0 ? Int(sheet.Cell(r, noCol)) ?? singleStudents.Count + 1 : singleStudents.Count + 1,
                     Name = name,
-                    ExamNo = ExamNumber(sheet.Cell(r, examNoCol > 0 ? examNoCol : 0)),
+                    // 没有考号列时不能再访问第 0 列
+                    ExamNo = ExamNumber(examNoCol > 0 ? sheet.Cell(r, examNoCol) : null),
+                    ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                     Subjects = scores,
                     Total = subjScore,
-                });
+                };
+                singleStudents.Add(singleStudent);
+                if (IsMeaningfulClassName(rowClass)) singleClassOf[singleStudent] = rowClass;
             }
 
-            PopulateMissingClassRanks(singleStudents, new[] { singleSubjectName });
+            PopulateMissingClassRanksForTable(singleStudents, singleClassOf, new[] { singleSubjectName });
 
             return new ParsedTable
             {
                 SourceTitle = rawTitle,
-                ClassName = detectedClass.Length > 0 ? detectedClass : ClassFromTitle(rawTitle),
+                ClassName = singleClassNames.Count == 1
+                    ? singleClassNames.First()
+                    : singleClassNames.Count == 0 ? ClassFromTitle(rawTitle) : string.Empty,
+                HasMultipleClasses = singleClassNames.Count > 1,
                 Subjects = new[] { singleSubjectName },
                 Students = singleStudents,
             };
@@ -553,7 +724,8 @@ public static class GradeSheetImporter
             throw new InvalidDataException($"工作表「{sheet.Name}」中找不到任何科目列。");
 
         var students = new List<StudentRecord>();
-        var className = string.Empty;
+        var classNames = new HashSet<string>(StringComparer.Ordinal);
+        var classOf = new Dictionary<StudentRecord, string>();
 
         for (var r = headerRow + 1; r <= lastRow; r++)
         {
@@ -562,8 +734,8 @@ public static class GradeSheetImporter
             var name = Text(sheet.Cell(r, nameCol));
             if (!IsStudentName(name)) continue;
 
-            if (className.Length == 0 && classCol > 0)
-                className = Text(sheet.Cell(r, classCol));
+            var rowClass = classCol > 0 ? Text(sheet.Cell(r, classCol)) : string.Empty;
+            if (IsMeaningfulClassName(rowClass)) classNames.Add(rowClass);
 
             var scores = new Dictionary<string, SubjectScore>(StringComparer.Ordinal);
             foreach (var (col, subject) in subjectColumns)
@@ -573,21 +745,29 @@ public static class GradeSheetImporter
                 ? new SubjectScore { Score = Number(sheet.Cell(r, totalCol)) }
                 : new SubjectScore { Score = SumScores(scores) };
 
-            students.Add(new StudentRecord
+            var student = new StudentRecord
             {
                 No = noCol > 0 ? Int(sheet.Cell(r, noCol)) ?? students.Count + 1 : students.Count + 1,
                 Name = name,
-                ExamNo = ExamNumber(sheet.Cell(r, examNoCol > 0 ? examNoCol : 0)),
+                // 没有考号列时不能再访问第 0 列
+                ExamNo = ExamNumber(examNoCol > 0 ? sheet.Cell(r, examNoCol) : null),
+                ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                 Subjects = scores,
                 Total = totalScore,
-            });
+            };
+            students.Add(student);
+            if (IsMeaningfulClassName(rowClass)) classOf[student] = rowClass;
         }
+
+        var subjectNames = subjectColumns.Select(h => h.Value).ToList();
+        PopulateMissingClassRanksForTable(students, classOf, subjectNames);
 
         return new ParsedTable
         {
             SourceTitle = headerRow >= 2 ? Text(sheet.Cell(1, 1)) : string.Empty,
-            ClassName = className,
-            Subjects = subjectColumns.Select(h => h.Value).ToList(),
+            ClassName = classNames.Count == 1 ? classNames.First() : string.Empty,
+            HasMultipleClasses = classNames.Count > 1,
+            Subjects = subjectNames,
             Students = students,
         };
     }
@@ -603,6 +783,18 @@ public static class GradeSheetImporter
         if (name.StartsWith("注", StringComparison.Ordinal)) return false;
         return name.Any(ch => char.IsLetter(ch));
     }
+
+    /// <summary>明细列：客观分/主观分/各题型分项，以及纯数字题号。</summary>
+    private static bool IsDetailColumn(string label)
+    {
+        if (string.IsNullOrEmpty(label)) return false;
+        if (int.TryParse(label, out _)) return true;
+        return DetailColumnKeywords.Any(k => label.Contains(k, StringComparison.Ordinal));
+    }
+
+    /// <summary>「-」「/」这类占位符不能当作班级名参与唯一性判断。</summary>
+    private static bool IsMeaningfulClassName(string className) =>
+        !string.IsNullOrWhiteSpace(className) && !className.Trim().All(ch => ch is '-' or '—' or '–' or '/' or '／');
 
     /// <summary>判断单元格是否为合并区域中非左上角的从属单元格。</summary>
     private static bool IsMergedSubCell(IXLCell cell)
@@ -623,6 +815,14 @@ public static class GradeSheetImporter
         if (cell.Value.IsNumber) return cell.Value.GetNumber();
         var text = Text(cell);
         if (text is "" or "-" or "—" or "–" or "/" or "／") return null;
+        // 「0，不计排名」：有分但不参与排名，取前导数字，名次留空
+        if (text.Contains("不计排名", StringComparison.Ordinal))
+        {
+            var match = LeadingScoreRegex.Match(text);
+            if (match.Success && double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var scoreVal))
+                return scoreVal;
+        }
+
         return double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
             ? value
             : null;
@@ -630,6 +830,9 @@ public static class GradeSheetImporter
 
     private static int? Int(IXLCell cell)
     {
+        // 名次列里的「不计排名」文本不能解析成数字名次
+        if (Text(cell).Contains("不计排名", StringComparison.Ordinal)) return null;
+
         var value = Number(cell);
         return value is null ? null : (int)Math.Round(value.Value, MidpointRounding.AwayFromZero);
     }
@@ -650,6 +853,10 @@ public static class GradeSheetImporter
 
     private static string ExtractExamName(string sourceTitle)
     {
+        // 「【…段考】所有班级语文学生小题得分明细」先去掉「】」之后的后缀，避免带进考试名
+        var bracketEnd = sourceTitle.IndexOf('】');
+        if (bracketEnd > 0) sourceTitle = sourceTitle[..bracketEnd];
+
         var match = Regex.Match(sourceTitle, @"\d{4}\s*[-－]\s*\d{4}\s*学年.*$");
         return match.Success ? match.Value.Trim() : sourceTitle;
     }
@@ -844,6 +1051,7 @@ public static class GradeSheetImporter
                     No = no,
                     Name = name,
                     ExamNo = examNo,
+                    ClassName = className,
                     Subjects = scores,
                     Total = total,
                 });
@@ -1017,6 +1225,50 @@ public static class GradeSheetImporter
         return null;
     }
 
+    /// <summary>
+    /// 补排名入口：多班单表按班级分组排名，避免把年级名次当成班级名次；
+    /// 单班或根本没有班级列时保持原有整体排名逻辑。
+    /// </summary>
+    private static void PopulateMissingClassRanksForTable(
+        List<StudentRecord> students,
+        IReadOnlyDictionary<StudentRecord, string> classOf,
+        IReadOnlyList<string> subjects)
+    {
+        var distinctClasses = classOf.Values
+            .Where(IsMeaningfulClassName)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        // 没有班级列（或全班同一班）时结果与原有逻辑完全一致
+        if (distinctClasses.Count == 0)
+        {
+            PopulateMissingClassRanks(students, subjects);
+            return;
+        }
+
+        var hasUnknownClass = students.Any(s => !classOf.TryGetValue(s, out var cls) || !IsMeaningfulClassName(cls));
+        if (distinctClasses.Count == 1 && !hasUnknownClass)
+        {
+            PopulateMissingClassRanks(students, subjects);
+            return;
+        }
+
+        PopulateMissingClassRanksByClass(students, classOf, subjects);
+    }
+
+    /// <summary>同一班级内分别补单科班次与总分班次（并列同名次）；班级为空的学生保持 null。</summary>
+    private static void PopulateMissingClassRanksByClass(
+        List<StudentRecord> students,
+        IReadOnlyDictionary<StudentRecord, string> classOf,
+        IReadOnlyList<string> subjects)
+    {
+        foreach (var group in students.GroupBy(s => classOf.TryGetValue(s, out var cls) ? cls : string.Empty))
+        {
+            if (!IsMeaningfulClassName(group.Key)) continue;
+            PopulateMissingClassRanks(group.ToList(), subjects);
+        }
+    }
+
     private static void PopulateMissingClassRanks(List<StudentRecord> students, IReadOnlyList<string> subjects)
     {
         foreach (var subject in subjects)
@@ -1102,6 +1354,9 @@ public static class GradeSheetImporter
     {
         public string SourceTitle { get; init; } = string.Empty;
         public string ClassName { get; init; } = string.Empty;
+        public bool HasMultipleClasses { get; init; }
+        /// <summary>两级表头里是否命中了「校次进退步 / 班次进退步」列。</summary>
+        public bool HasDeltaColumns { get; init; }
         public IReadOnlyList<string> Subjects { get; init; } = Array.Empty<string>();
         public IReadOnlyList<StudentRecord> Students { get; init; } = Array.Empty<StudentRecord>();
     }
@@ -1114,6 +1369,293 @@ public static class GradeSheetImporter
         public int SchoolDeltaColumn { get; set; }
         public int ClassRankColumn { get; set; }
         public int ClassDeltaColumn { get; set; }
+    }
+
+    // ---------------------------------------------------------------- 科目分表合并（所有单科成绩报告）
+
+    private sealed class SubjectTableRow
+    {
+        public StudentRecord Student { get; init; } = new();
+        /// <summary>准考证号，合并时的第一优先级。</summary>
+        public string ExamNo { get; init; } = string.Empty;
+        /// <summary>自定义考号（或考号/学号），第二优先级。</summary>
+        public string CustomNo { get; init; } = string.Empty;
+        public string ClassName { get; init; } = string.Empty;
+    }
+
+    private sealed class SubjectTableResult
+    {
+        public string SourceTitle { get; init; } = string.Empty;
+        public List<SubjectTableRow> Rows { get; } = new();
+    }
+
+    /// <summary>工作表名去掉空格后是否属于已知科目（含生物/道德与法治/道法别名）。</summary>
+    private static string NormalizeSheetName(string name) =>
+        name.Replace(" ", string.Empty).Replace("　", string.Empty).Trim();
+
+    private static bool IsSubjectSheetName(string name) =>
+        SubjectSheetNames.Contains(name, StringComparer.Ordinal);
+
+    private static bool TryLoadMergedSubjectSheets(
+        string path, ImportOptions options, [NotNullWhen(true)] out ExamData? examData)
+    {
+        examData = null;
+        if (!string.IsNullOrWhiteSpace(options.SheetName)) return false;
+
+        try
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            var dataSet = reader.AsDataSet();
+            return TryMergeSubjectTables(dataSet, path, options, out examData);
+        }
+        catch (Exception ex) when (ex is not InvalidDataException)
+        {
+            examData = null;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 把「语文/数学/…/体育」各科目分表按学生合并成一次考试。
+    /// 失败（不足 2 科、不足 2 人）时返回 false，交回原有单表逻辑。
+    /// </summary>
+    private static bool TryMergeSubjectTables(
+        DataSet dataSet, string path, ImportOptions options, [NotNullWhen(true)] out ExamData? examData)
+    {
+        examData = null;
+        if (!string.IsNullOrWhiteSpace(options.SheetName)) return false;
+
+        var subjectTables = new List<(string Subject, DataTable Table)>();
+        foreach (DataTable table in dataSet.Tables)
+        {
+            var name = NormalizeSheetName(table.TableName);
+            if (IsSubjectSheetName(name)) subjectTables.Add((name, table));
+        }
+
+        if (subjectTables.Count < 2) return false;
+
+        var students = new List<StudentRecord>();
+        var studentIndex = new Dictionary<string, StudentRecord>(StringComparer.Ordinal);
+        var subjects = new List<string>();
+        var classNames = new HashSet<string>(StringComparer.Ordinal);
+        var sourceTitle = string.Empty;
+
+        foreach (var (subject, table) in subjectTables)
+        {
+            if (!TryReadSubjectTable(table, subject, options.HeaderSearchDepth, out var part)) continue;
+
+            if (sourceTitle.Length == 0) sourceTitle = part.SourceTitle;
+            if (!subjects.Contains(subject)) subjects.Add(subject);
+
+            foreach (var row in part.Rows)
+            {
+                var key = BuildMergeKey(row);
+                if (!studentIndex.TryGetValue(key, out var student))
+                {
+                    student = new StudentRecord
+                    {
+                        No = students.Count + 1,
+                        Name = row.Student.Name,
+                        ExamNo = row.Student.ExamNo,
+                        ClassName = IsMeaningfulClassName(row.ClassName) ? row.ClassName : string.Empty,
+                        Subjects = new Dictionary<string, SubjectScore>(StringComparer.Ordinal),
+                    };
+                    studentIndex[key] = student;
+                    students.Add(student);
+                }
+
+                student.Subjects[subject] = row.Student[subject];
+                // 后续科目分表补上班级（首表可能没有班级列）
+                if (IsMeaningfulClassName(row.ClassName) && string.IsNullOrEmpty(student.ClassName))
+                    student.ClassName = row.ClassName;
+                if (IsMeaningfulClassName(row.ClassName)) classNames.Add(row.ClassName);
+            }
+        }
+
+        if (subjects.Count < 2 || students.Count < 2) return false;
+
+        // 合并后总分 = 各科得分之和；跨班会算错年级名次，因此不补任何名次
+        foreach (var student in students)
+        {
+            var values = student.Subjects.Values
+                .Where(v => v.Score.HasValue)
+                .Select(v => v.Score!.Value)
+                .ToList();
+
+            student.Total = new SubjectScore
+            {
+                Score = values.Count == 0 ? null : Math.Round(values.Sum(), 2, MidpointRounding.AwayFromZero),
+            };
+        }
+
+        var examName = ExtractExamName(sourceTitle);
+        if (examName.Length == 0) examName = Path.GetFileNameWithoutExtension(path);
+
+        var notice = $"提示：已合并{string.Join("、", subjects)} {subjects.Count} 个科目表。";
+        if (classNames.Count > 1) notice += "本表包含多个班级，未标注班级。";
+
+        examData = new ExamData
+        {
+            SourceTitle = sourceTitle.Length > 0 ? sourceTitle : Path.GetFileNameWithoutExtension(path),
+            ClassName = classNames.Count == 1 ? classNames.First() : string.Empty,
+            ExamName = examName,
+            Subjects = subjects,
+            Students = students,
+            ImportNotice = notice,
+        };
+        return true;
+    }
+
+    private static string BuildMergeKey(SubjectTableRow row)
+    {
+        if (IsUsableKeyValue(row.ExamNo)) return "E:" + row.ExamNo;
+        if (IsUsableKeyValue(row.CustomNo)) return "C:" + row.CustomNo;
+        if (IsMeaningfulClassName(row.ClassName)) return "NC:" + row.ClassName + "|" + row.Student.Name;
+        return "N:" + row.Student.Name;
+    }
+
+    /// <summary>考号单元格里的「-」「/」是占位符，不能当作合并键。</summary>
+    private static bool IsUsableKeyValue(string value) => IsMeaningfulClassName(value);
+
+    /// <summary>
+    /// 读取一张科目分表（xls/xlsx 共用）。得分列优先级：总分 &gt; 得分 &gt; 成绩 &gt; 实得分；
+    /// 明细列（客观分、题号…）一律忽略。
+    /// </summary>
+    private static bool TryReadSubjectTable(
+        DataTable table, string subject, int headerSearchDepth, [NotNullWhen(true)] out SubjectTableResult? result)
+    {
+        result = null;
+        if (table.Rows.Count < 2 || table.Columns.Count < 2) return false;
+
+        var headerRow = -1;
+        for (var r = 0; r < Math.Min(headerSearchDepth, table.Rows.Count); r++)
+        {
+            for (var c = 0; c < table.Columns.Count; c++)
+            {
+                if (CellStr(table.Rows[r][c]) == "姓名")
+                {
+                    headerRow = r;
+                    break;
+                }
+            }
+            if (headerRow >= 0) break;
+        }
+
+        if (headerRow < 0) return false;
+
+        var headers = new Dictionary<int, string>();
+        for (var c = 0; c < table.Columns.Count; c++)
+        {
+            var label = CellStr(table.Rows[headerRow][c]);
+            if (!string.IsNullOrEmpty(label)) headers[c] = label;
+        }
+
+        var nameCol = FirstColumn(headers, v => v == "姓名");
+        if (nameCol < 0) return false;
+
+        var examNoCol = FirstColumn(headers, v => v == "准考证号");
+        var customNoCol = FirstColumn(headers, v => v == "自定义考号");
+        if (customNoCol < 0) customNoCol = FirstColumn(headers, v => v == "考号");
+        if (customNoCol < 0) customNoCol = FirstColumn(headers, v => v == "学号");
+        var classCol = FirstColumn(headers, v => v == "班级");
+
+        // 同一张科目分表并列多个「总分」列时（如生物/地理的「总分，不计排名」+ 数值总分），逐列回退
+        var totalScoreCols = headers
+            .Where(h => h.Value == "总分")
+            .Select(h => h.Key)
+            .OrderBy(c => c)
+            .ToList();
+
+        var scoreCol = totalScoreCols.Count > 0 ? totalScoreCols[0] : FirstColumn(headers, v => v == "得分");
+        if (scoreCol < 0) scoreCol = FirstColumn(headers, v => v == "成绩");
+        if (scoreCol < 0) scoreCol = FirstColumn(headers, v => v == "实得分");
+        if (scoreCol < 0) return false;
+
+        var schoolRankCol = FirstColumn(headers, v => v == "校次");
+        var schoolDeltaCol = FirstColumn(headers, v => v == "校次进退步");
+        var classRankCol = FirstColumn(headers, v => v == "班次");
+        var classDeltaCol = FirstColumn(headers, v => v == "班次进退步");
+
+        var parsed = new SubjectTableResult { SourceTitle = ReadTableTitle(table, headerRow) };
+
+        for (var r = headerRow + 1; r < table.Rows.Count; r++)
+        {
+            var name = CellStr(table.Rows[r][nameCol]);
+            if (!IsStudentName(name)) continue;
+
+            // 第一列「总分」为空或「，不计排名」文本时，回退读取后面的「总分」列
+            double? scoreValue;
+            if (totalScoreCols.Count > 1)
+            {
+                scoreValue = totalScoreCols.Select(c => CellDouble(table.Rows[r][c])).FirstOrDefault(v => v.HasValue);
+            }
+            else
+            {
+                scoreValue = CellDouble(table.Rows[r][scoreCol]);
+            }
+
+            var rowClassName = classCol >= 0 ? CellStr(table.Rows[r][classCol]) : string.Empty;
+
+            var score = new SubjectScore
+            {
+                Score = scoreValue,
+                SchoolRank = schoolRankCol >= 0 ? CellInt(table.Rows[r][schoolRankCol]) : null,
+                SchoolDelta = schoolDeltaCol >= 0 ? CellInt(table.Rows[r][schoolDeltaCol]) : null,
+                ClassRank = classRankCol >= 0 ? CellInt(table.Rows[r][classRankCol]) : null,
+                ClassDelta = classDeltaCol >= 0 ? CellInt(table.Rows[r][classDeltaCol]) : null,
+            };
+
+            var examNoText = examNoCol >= 0 ? CellExamNumber(table.Rows[r][examNoCol]) : string.Empty;
+            var customNoText = customNoCol >= 0 ? CellExamNumber(table.Rows[r][customNoCol]) : string.Empty;
+
+            parsed.Rows.Add(new SubjectTableRow
+            {
+                Student = new StudentRecord
+                {
+                    No = parsed.Rows.Count + 1,
+                    Name = name,
+                    ExamNo = IsUsableKeyValue(examNoText) ? examNoText : string.Empty,
+                    ClassName = IsMeaningfulClassName(rowClassName) ? rowClassName : string.Empty,
+                    Subjects = new Dictionary<string, SubjectScore>(StringComparer.Ordinal) { [subject] = score },
+                    Total = score,
+                },
+                ExamNo = examNoText,
+                CustomNo = customNoText,
+                ClassName = rowClassName,
+            });
+        }
+
+        if (parsed.Rows.Count == 0) return false;
+
+        result = parsed;
+        return true;
+    }
+
+    private static int FirstColumn(Dictionary<int, string> headers, Func<string, bool> predicate)
+    {
+        // 同一表头出现多次（如明细表里并列两个「总分」）时取最左一列
+        foreach (var col in headers.Keys.OrderBy(c => c))
+        {
+            if (predicate(headers[col])) return col;
+        }
+        return -1;
+    }
+
+    /// <summary>标题行通常位于表头之上，取表头之前第一段非空文字（A07/A15 的标题在 B 列）。</summary>
+    private static string ReadTableTitle(DataTable table, int headerRow)
+    {
+        for (var r = 0; r < Math.Min(headerRow, table.Rows.Count); r++)
+        {
+            for (var c = 0; c < table.Columns.Count; c++)
+            {
+                var text = CellStr(table.Rows[r][c]);
+                if (text.Length > 0) return text;
+            }
+        }
+        return string.Empty;
     }
 
     // ---------------------------------------------------------------- 全科个人成绩单（智学网导出格式）
@@ -1494,6 +2036,7 @@ public static class GradeSheetImporter
                 No = students.Count + 1,
                 Name = sName,
                 ExamNo = string.Empty,
+                ClassName = className,
                 Subjects = scores,
                 Total = totalScore,
             });
@@ -1530,11 +2073,22 @@ public static class GradeSheetImporter
         if (cell is decimal dec) return (double)dec;
         var str = cell.ToString()?.Trim();
         if (string.IsNullOrEmpty(str) || str is "/" or "-" or "—" or "–" or "缺考" or "无") return null;
+        // 「0，不计排名」：有分但不参与排名，取前导数字，名次留空
+        if (str.Contains("不计排名", StringComparison.Ordinal))
+        {
+            var match = LeadingScoreRegex.Match(str);
+            if (match.Success && double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var scoreVal))
+                return scoreVal;
+        }
+
         return double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
     }
 
     private static int? CellInt(object? cell)
     {
+        // 「2，不计排名」是名次占位文本，不能解析成名次 2
+        if (cell is string s && s.Contains("不计排名", StringComparison.Ordinal)) return null;
+
         var d = CellDouble(cell);
         return d.HasValue ? (int)Math.Round(d.Value, MidpointRounding.AwayFromZero) : null;
     }
@@ -1773,6 +2327,7 @@ public static class GradeSheetImporter
                 No = students.Count + 1,
                 Name = sName,
                 ExamNo = sExamNo,
+                ClassName = className,
                 Subjects = scores,
                 Total = subjScore,
                 QuestionScores = questions is { Count: > 0 } ? questions : null,
@@ -1822,6 +2377,13 @@ public static class GradeSheetImporter
             using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var reader = ExcelReaderFactory.CreateReader(stream);
             var dataSet = reader.AsDataSet();
+
+            // 智学网「所有单科成绩报告」会把语文…体育拆成多张工作表，先尝试合并
+            if (TryMergeSubjectTables(dataSet, path, options, out var mergedData))
+            {
+                examData = mergedData;
+                return true;
+            }
 
             var candidateTables = new List<DataTable>();
             if (!string.IsNullOrWhiteSpace(options.SheetName))
@@ -1960,15 +2522,16 @@ public static class GradeSheetImporter
         if (subjects.Count == 0) return false;
 
         var students = new List<StudentRecord>();
-        var className = string.Empty;
+        var classNames = new HashSet<string>(StringComparer.Ordinal);
+        var classOf = new Dictionary<StudentRecord, string>();
 
         for (var r = headerRow + 1; r < table.Rows.Count; r++)
         {
             var name = CellStr(table.Rows[r][nameCol]);
             if (!IsStudentName(name)) continue;
 
-            if (className.Length == 0 && classCol >= 0)
-                className = CellStr(table.Rows[r][classCol]);
+            var rowClass = classCol >= 0 ? CellStr(table.Rows[r][classCol]) : string.Empty;
+            if (IsMeaningfulClassName(rowClass)) classNames.Add(rowClass);
 
             var scores = new Dictionary<string, SubjectScore>(StringComparer.Ordinal);
             foreach (var block in subjects)
@@ -2004,31 +2567,52 @@ public static class GradeSheetImporter
                 };
             }
 
-            students.Add(new StudentRecord
+            var student = new StudentRecord
             {
                 No = noCol >= 0 ? CellInt(table.Rows[r][noCol]) ?? students.Count + 1 : students.Count + 1,
                 Name = name,
                 ExamNo = examNoCol >= 0 ? CellExamNumber(table.Rows[r][examNoCol]) : string.Empty,
+                ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                 Subjects = scores,
                 Total = totalScore,
-            });
+            };
+            students.Add(student);
+            if (IsMeaningfulClassName(rowClass)) classOf[student] = rowClass;
         }
 
         if (students.Count == 0) return false;
 
         var subjectNames = subjects.Select(s => s.Subject).ToList();
-        PopulateMissingClassRanks(students, subjectNames);
+        PopulateMissingClassRanksForTable(students, classOf, subjectNames);
 
         var rawTitle = headerRow >= 1 ? CellStr(table.Rows[0][0]) : string.Empty;
-        var finalClass = className.Length > 0 ? className : ClassFromTitle(rawTitle);
+        // 跨班汇总表不标注班级，避免把第一个学生的班级当成全班
+        var finalClass = classNames.Count == 1
+            ? classNames.First()
+            : classNames.Count == 0 ? ClassFromTitle(rawTitle) : string.Empty;
+
+        // 单班表格学生行没有班级列时，把识别出的班级补到每个学生，供按班筛选使用
+        if (finalClass.Length > 0)
+        {
+            foreach (var student in students)
+            {
+                if (string.IsNullOrEmpty(student.ClassName)) student.ClassName = finalClass;
+            }
+        }
+
         var examName = ExtractExamName(rawTitle);
         if (string.IsNullOrEmpty(examName)) examName = Path.GetFileNameWithoutExtension(path);
 
-        var hasDeltas = students.Any(s => s.Total.ClassDelta.HasValue || s.Total.SchoolDelta.HasValue);
+        var hasDeltaColumns = blocks.Any(b => b.SchoolDeltaColumn > 0 || b.ClassDeltaColumn > 0);
+        var hasDeltas = students.Any(s => s.Total.ClassDelta.HasValue || s.Total.SchoolDelta.HasValue
+                                          || s.Subjects.Values.Any(sc => sc.ClassDelta.HasValue || sc.SchoolDelta.HasValue));
         string? notice = null;
-        if (table.TableName.Contains("简表") || !hasDeltas)
+        if (!hasDeltas)
         {
-            notice = $"提示：当前表格「{table.TableName}」未包含单科进退步数据。如需查看完整对比分析，请前往智学网下载详细的成绩单（全学科成绩汇总表）。";
+            // 有进退步列但源表全是「-」时，只说明没有数据，不再劝老师重新下载
+            notice = hasDeltaColumns
+                ? "提示：本次考试没有进退步数据（源表相应列为空），不影响成绩条生成。"
+                : $"提示：当前表格「{table.TableName}」未包含单科进退步数据。如需查看完整对比分析，请前往智学网下载详细的成绩单（全学科成绩汇总表）。";
         }
 
         examData = new ExamData
@@ -2099,9 +2683,9 @@ public static class GradeSheetImporter
         {
             isSingleSubject = true;
         }
-        else if (subjectColumns.Count > 1 &&
-                 subjectColumns.All(s => s.Value is "得分" or "客观分" or "主观分" or "单选题" or "填空题" or "解答题" || int.TryParse(s.Value, out _)))
+        else if (subjectColumns.Count > 0 && subjectColumns.All(s => IsDetailColumn(s.Value)))
         {
+            // 明细表：总分 + 客观分/主观分/单选题/语文作文/题号列，后几列不是科目
             isSingleSubject = true;
         }
 
@@ -2113,7 +2697,8 @@ public static class GradeSheetImporter
 
             var scoreCol = headers.FirstOrDefault(h => h.Value is "得分" or "实得分" or "成绩").Key;
             if (scoreCol == 0 && totalCol > 0) scoreCol = totalCol;
-            if (scoreCol == 0 && subjectColumns.Count > 0) scoreCol = subjectColumns[0].Key;
+            if (scoreCol == 0)
+                throw new InvalidDataException("该表只有客观分或逐题得分，缺少科目总分，无法生成成绩条。");
 
             var schoolRankCol = headers.FirstOrDefault(h => h.Value is "校次" or "年级名次" or "年名次" or "校排名").Key;
             var schoolDeltaCol = headers.FirstOrDefault(h => h.Value is "校次进退步" or "校进退步" or "年级进退步").Key;
@@ -2121,15 +2706,16 @@ public static class GradeSheetImporter
             var classDeltaCol = headers.FirstOrDefault(h => h.Value is "班次进退步" or "班进退步" or "班级进退步").Key;
 
             var students = new List<StudentRecord>();
-            var detectedClass = string.Empty;
+            var classNames = new HashSet<string>(StringComparer.Ordinal);
+            var classOf = new Dictionary<StudentRecord, string>();
 
             for (var r = headerRow + 1; r < table.Rows.Count; r++)
             {
                 var name = CellStr(table.Rows[r][nameCol]);
                 if (!IsStudentName(name)) continue;
 
-                if (detectedClass.Length == 0 && classCol > 0)
-                    detectedClass = CellStr(table.Rows[r][classCol]);
+                var rowClass = classCol > 0 ? CellStr(table.Rows[r][classCol]) : string.Empty;
+                if (IsMeaningfulClassName(rowClass)) classNames.Add(rowClass);
 
                 var score = scoreCol > 0 ? CellDouble(table.Rows[r][scoreCol]) : null;
                 var classRank = classRankCol > 0 ? CellInt(table.Rows[r][classRankCol]) : null;
@@ -2151,21 +2737,36 @@ public static class GradeSheetImporter
                     [singleSubjectName] = subjScore
                 };
 
-                students.Add(new StudentRecord
+                var student = new StudentRecord
                 {
                     No = noCol > 0 ? CellInt(table.Rows[r][noCol]) ?? students.Count + 1 : students.Count + 1,
                     Name = name,
                     ExamNo = examNoCol > 0 ? CellExamNumber(table.Rows[r][examNoCol]) : string.Empty,
+                    ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                     Subjects = scores,
                     Total = subjScore,
-                });
+                };
+                students.Add(student);
+                if (IsMeaningfulClassName(rowClass)) classOf[student] = rowClass;
             }
 
             if (students.Count == 0) return false;
 
-            PopulateMissingClassRanks(students, new[] { singleSubjectName });
+            PopulateMissingClassRanksForTable(students, classOf, new[] { singleSubjectName });
 
-            var finalClass = detectedClass.Length > 0 ? detectedClass : ClassFromTitle(rawTitle);
+            var finalClass = classNames.Count == 1
+                ? classNames.First()
+                : classNames.Count == 0 ? ClassFromTitle(rawTitle) : string.Empty;
+
+            // 单班表格学生行没有班级列时，把识别出的班级补到每个学生，供按班筛选使用
+            if (finalClass.Length > 0)
+            {
+                foreach (var student in students)
+                {
+                    if (string.IsNullOrEmpty(student.ClassName)) student.ClassName = finalClass;
+                }
+            }
+
             var examName = ExtractExamName(rawTitle);
             if (string.IsNullOrEmpty(examName)) examName = Path.GetFileNameWithoutExtension(path);
 
@@ -2186,7 +2787,8 @@ public static class GradeSheetImporter
         {
             var subjectsList = subjectColumns.Select(s => s.Value).Distinct().ToList();
             var students = new List<StudentRecord>();
-            var detectedClass = string.Empty;
+            var classNames = new HashSet<string>(StringComparer.Ordinal);
+            var classOf = new Dictionary<StudentRecord, string>();
 
             var totalClassRankCol = headers.FirstOrDefault(h => h.Value is "总分班次" or "班次" or "班级名次" or "班排名").Key;
             var totalSchoolRankCol = headers.FirstOrDefault(h => h.Value is "总分校次" or "校次" or "年级名次" or "校排名").Key;
@@ -2196,8 +2798,8 @@ public static class GradeSheetImporter
                 var name = CellStr(table.Rows[r][nameCol]);
                 if (!IsStudentName(name)) continue;
 
-                if (detectedClass.Length == 0 && classCol > 0)
-                    detectedClass = CellStr(table.Rows[r][classCol]);
+                var rowClass = classCol > 0 ? CellStr(table.Rows[r][classCol]) : string.Empty;
+                if (IsMeaningfulClassName(rowClass)) classNames.Add(rowClass);
 
                 var scores = new Dictionary<string, SubjectScore>(StringComparer.Ordinal);
                 foreach (var col in subjectColumns)
@@ -2215,11 +2817,12 @@ public static class GradeSheetImporter
                     totalScoreVal = scored.Count == 0 ? null : Math.Round(scored.Sum(), 2, MidpointRounding.AwayFromZero);
                 }
 
-                students.Add(new StudentRecord
+                var student = new StudentRecord
                 {
                     No = noCol > 0 ? CellInt(table.Rows[r][noCol]) ?? students.Count + 1 : students.Count + 1,
                     Name = name,
                     ExamNo = examNoCol > 0 ? CellExamNumber(table.Rows[r][examNoCol]) : string.Empty,
+                    ClassName = IsMeaningfulClassName(rowClass) ? rowClass : string.Empty,
                     Subjects = scores,
                     Total = new SubjectScore
                     {
@@ -2227,14 +2830,28 @@ public static class GradeSheetImporter
                         ClassRank = totalClassRankCol > 0 ? CellInt(table.Rows[r][totalClassRankCol]) : null,
                         SchoolRank = totalSchoolRankCol > 0 ? CellInt(table.Rows[r][totalSchoolRankCol]) : null,
                     }
-                });
+                };
+                students.Add(student);
+                if (IsMeaningfulClassName(rowClass)) classOf[student] = rowClass;
             }
 
             if (students.Count == 0) return false;
 
-            PopulateMissingClassRanks(students, subjectsList);
+            PopulateMissingClassRanksForTable(students, classOf, subjectsList);
 
-            var finalClass = detectedClass.Length > 0 ? detectedClass : ClassFromTitle(rawTitle);
+            var finalClass = classNames.Count == 1
+                ? classNames.First()
+                : classNames.Count == 0 ? ClassFromTitle(rawTitle) : string.Empty;
+
+            // 单班表格学生行没有班级列时，把识别出的班级补到每个学生，供按班筛选使用
+            if (finalClass.Length > 0)
+            {
+                foreach (var student in students)
+                {
+                    if (string.IsNullOrEmpty(student.ClassName)) student.ClassName = finalClass;
+                }
+            }
+
             var examName = ExtractExamName(rawTitle);
             if (string.IsNullOrEmpty(examName)) examName = Path.GetFileNameWithoutExtension(path);
 

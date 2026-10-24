@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -134,17 +135,50 @@ public partial class App : Application
         if (index < 0 || index + 1 >= args.Length) return false;
 
         var target = args[index + 1];
+
+        // 截图参数之后的路径按顺序收集，遇到下一个 -- 参数即停止。
+        var paths = new System.Collections.Generic.List<string>();
+        for (var i = index + 2; i < args.Length && !args[i].StartsWith("--", StringComparison.Ordinal); i++)
+        {
+            if (File.Exists(args[i])) paths.Add(args[i]);
+        }
+
         Dispatcher.UIThread.Post(async () =>
         {
             try
             {
                 await Task.Delay(500);
-                var window = new GradeStrip.App.Views.MainWindow
-                {
-                    DataContext = new GradeStrip.App.ViewModels.MainViewModel(),
-                };
+                var viewModel = new GradeStrip.App.ViewModels.MainViewModel();
+                var window = new GradeStrip.App.Views.MainWindow { DataContext = viewModel };
+                if (paths.Count > 0) window.Height = 860;
                 window.Show();
+
+                if (paths.Count > 0)
+                {
+                    // 与拖拽一致：成绩表建立会话，分析报表挂到当前会话
+                    await viewModel.ImportDroppedFilesAsync(paths);
+
+                    viewModel.Section = 0;
+                    window.UpdateLayout();
+                    if (window.FindControl<ScrollViewer>("OverviewScrollViewer") is { } overview)
+                    {
+                        overview.UpdateLayout();
+                        overview.Offset = new Vector(0, overview.Extent.Height);
+                    }
+
+                    await Task.Delay(600);
+                }
+
                 await Task.Delay(1200);
+
+                // 截图走查：--busy-preview 强制显示分晓的忙碌遮罩，检查加载动画
+                if (args.Contains("--busy-preview"))
+                {
+                    viewModel.BusyText = "正在解析成绩总表…";
+                    viewModel.IsBusy = true;
+                    await Task.Delay(500);
+                }
+
                 window.CaptureTo(target);
                 window.Close();
             }

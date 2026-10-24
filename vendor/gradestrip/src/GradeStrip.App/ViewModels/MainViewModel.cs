@@ -7,8 +7,11 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using GradeStrip.Core.Export;
 using GradeStrip.Core.Import;
 using GradeStrip.Core.Layout;
@@ -50,7 +53,22 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     public partial IBrush StatusBrush { get; set; } = Palette.Muted;
+
+    /// <summary>导入、导出、会话切换等耗时操作期间为 true，用于禁用入口并显示进度文案。</summary>
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
+
+    /// <summary>忙碌态文案；与状态栏共用同一段文字。</summary>
+    [ObservableProperty]
+    public partial string BusyText { get; set; } = string.Empty;
+
     private readonly List<ExamSession> _sessions = new();
+
+    /// <summary>尚未导入成绩总表时独立查看的分析报表；一旦建立会话就并进去。</summary>
+    private readonly List<OverviewReport> _standaloneReports = new();
+    private bool _overviewDirty = true;
+    private bool _stripsDirty = true;
+    private bool _reportsDirty = true;
     public ObservableCollection<ExamSessionItem> ExamSessions { get; } = new();
 
     [ObservableProperty]
@@ -140,8 +158,172 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<SubjectStat> SubjectStats { get; } = new();
     public ObservableCollection<TierStat> TierStats { get; } = new();
     public ObservableCollection<TrendStat> TrendStats { get; } = new();
-    public ObservableCollection<StudentRow> Students { get; } = new();
-    public ObservableCollection<PreviewItem> StripItems { get; } = new();
+    public RangeObservableCollection<StudentRow> Students { get; } = new();
+    public RangeObservableCollection<PreviewItem> StripItems { get; } = new();
+
+    /// <summary>排行列表折叠阈值：超过 50 人时默认只显示前 50 名。</summary>
+    public const int RankListCollapseThreshold = 50;
+
+    /// <summary>学生排行实际展示的行（Students 的前 N 项，展开后为全部）。</summary>
+    public RangeObservableCollection<StudentRow> VisibleStudents { get; } = new();
+
+    public bool HasMoreStudents => Students.Count > RankListCollapseThreshold;
+
+    [ObservableProperty]
+    public partial bool StudentsExpanded { get; set; }
+
+    [ObservableProperty]
+    public partial string StudentsToggleText { get; set; } = string.Empty;
+
+    // ---------------------------------------------------------------- 成绩条班级筛选
+    /// <summary>成绩条页的班级下拉：首项固定「全年级」，其后为总表中的有效班级（跨班总表才有）。</summary>
+    public ObservableCollection<string> StripClasses { get; } = new();
+
+    private bool _syncingStripClasses;
+
+    /// <summary>成绩条页的班级筛选：默认「全年级」，选中具体班级时预览与导出都只用该班学生。</summary>
+    [ObservableProperty]
+    public partial string? SelectedStripClass { get; set; } = OverviewReportFilter.AllClasses;
+
+    /// <summary>
+    /// 单班成绩表保持原样（不显示下拉）；跨班总表显示；
+    /// 已选中具体班级时保持可见，方便切回「全年级」。
+    /// </summary>
+    public bool HasStripClasses =>
+        StripClasses.Count > 2 ||
+        (StripClasses.Count == 2 && SelectedStripClass != OverviewReportFilter.AllClasses);
+
+    /// <summary>成绩条页当前的数据源：按班级切片后的考试数据（「全年级」时即原数据）。</summary>
+    private ExamData? StripSourceData => _data is null ? null : _data.FilterByClass(SelectedStripClass);
+
+    partial void OnSelectedStripClassChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasStripClasses));
+        if (_syncingStripClasses || _data is null) return;
+        if (Section == 1) BuildStrips(StripSourceData!);
+        else _stripsDirty = true;
+    }
+
+    // ---------------------------------------------------------------- 分析报表
+    public ObservableCollection<ReportCardItem> ReportCards { get; } = new();
+    public ObservableCollection<ReportSheetItem> ReportSheetTabs { get; } = new();
+    public ObservableCollection<ReportColumnItem> ReportColumns { get; } = new();
+    public RangeObservableCollection<ReportRowItem> ReportRows { get; } = new();
+    public ObservableCollection<string> ReportClasses { get; } = new();
+
+    private int _activeReportIndex;
+    private int _activeReportSheetIndex;
+    private bool _syncingReportClasses;
+    private string? _reportClassAutoKey;
+
+    [ObservableProperty]
+    public partial string ActiveReportTitle { get; set; } = string.Empty;
+
+    /// <summary>当前报表的来源文件名与工作表数量，显示在 chip 行下方。</summary>
+    [ObservableProperty]
+    public partial string ActiveReportSourceText { get; set; } = string.Empty;
+
+    /// <summary>班级筛选：默认「全年级」，仅在报表含多个班级时显示。</summary>
+    [ObservableProperty]
+    public partial string SelectedReportClass { get; set; } = OverviewReportFilter.AllClasses;
+
+    public bool HasReportClasses => ReportClasses.Count > 1;
+
+    partial void OnSelectedReportClassChanged(string value)
+    {
+        if (_syncingReportClasses) return;
+        BuildReports();
+    }
+
+    /// <summary>
+    /// 拖拽 / 多参数启动的统一分流：成绩表建立或新增考试会话，分析报表挂到当前会话。
+    /// 混拖时先处理成绩表，保证报表有会话可挂。
+    /// </summary>
+    public async Task ImportDroppedFilesAsync(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 0 || IsBusy) return;
+
+        await RunBusyAsync("正在识别拖入的文件…", async () =>
+        {
+            var (gradeSheets, reports, zipCount) = await Task.Run(() => ClassifyDroppedFiles(paths));
+
+            for (var i = 0; i < gradeSheets.Count; i++)
+            {
+                if (gradeSheets.Count > 1)
+                    BusyText = $"正在导入成绩总表 {i + 1}/{gradeSheets.Count}…";
+                await AddSessionCoreAsync(gradeSheets[i]);
+            }
+
+            if (reports.Count > 0)
+            {
+                if (gradeSheets.Count > 0) BusyText = "正在解析分析报表…";
+                // 有会话直接挂载；无会话时 ImportReports 会先尝试从混合工作簿提取成绩数据建立会话
+                await ImportReportsCoreAsync(reports);
+            }
+            else if (zipCount > 0 && gradeSheets.Count == 0)
+            {
+                ImportNotice = "压缩包不能直接导入。请先解压后选择其中的 .xlsx / .xls 表格导入；若解压后文件名出现乱码，推荐使用 Windows 自带解压或 Bandizip。";
+                Status = ImportNotice;
+                StatusBrush = Palette.Clay;
+            }
+        });
+    }
+
+    /// <summary>拖入文件的分类在后台完成，避免入口分流时卡住界面。</summary>
+    private static (List<string> GradeSheets, List<string> Reports, int ZipCount) ClassifyDroppedFiles(
+        IReadOnlyList<string> paths)
+    {
+        var gradeSheets = new List<string>();
+        var reports = new List<string>();
+        var zipCount = 0;
+
+        foreach (var path in paths)
+        {
+            if (path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                zipCount++;
+                continue;
+            }
+
+            if (!path.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) &&
+                !path.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) &&
+                !path.EndsWith(".xlsm", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (OverviewReportImporter.IsReportFile(path))
+                reports.Add(path);
+            else
+                gradeSheets.Add(path);
+        }
+
+        return (gradeSheets, reports, zipCount);
+    }
+
+    /// <summary>当前显示会话挂载的报表集合；没有成绩会话时用独立报表。</summary>
+    private IReadOnlyList<OverviewReport> CurrentReports =>
+        _sessions.Count > 0 && ActiveExamIndex >= 0 && ActiveExamIndex < _sessions.Count
+            ? _sessions[ActiveExamIndex].Reports
+            : _standaloneReports;
+
+    public bool HasReports => CurrentReports.Count > 0;
+    public bool HasNoReports => !HasReports;
+    public bool HasReportRows => ReportRows.Count > 0;
+    public bool HasNoReportRows => !HasReportRows;
+    public double ReportTableWidth => ReportColumns.Sum(c => c.Width);
+
+    /// <summary>当前报表有多张工作表时才显示表名 chip。</summary>
+    public bool HasMultipleReportSheets
+    {
+        get
+        {
+            var reports = CurrentReports;
+            if (reports.Count == 0) return false;
+            var index = Math.Clamp(_activeReportIndex, 0, reports.Count - 1);
+            return reports[index].Sheets.Count > 1;
+        }
+    }
 
     [ObservableProperty]
     public partial StudentDetail? Detail { get; set; }
@@ -149,13 +331,13 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public partial SubjectDetail? SubjectDetail { get; set; }
 
-    public bool IsEmptyVisible => !HasData;
-    public bool IsOverviewVisible => HasData && Section == 0;
+    public bool IsEmptyVisible => !HasData && !HasReports;
+    public bool IsOverviewVisible => (HasData || HasReports) && Section == 0;
     public bool IsStripsVisible => HasData && Section == 1;
     public bool IsDetailVisible => HasData && Section == 2 && Detail is not null;
     public bool IsSubjectDetailVisible => HasData && Section == 3 && SubjectDetail is not null;
     public bool IsOverviewNavActive => Section is 0 or 2 or 3;
-    public bool CanExport => HasData;
+    public bool CanExport => HasData && !IsBusy;
     public bool HasDataMeta => HasData;
     public string HeaderTitle => HasData ? ExamName : "分晓 · 成绩条生成器";
 
@@ -178,6 +360,8 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HeaderTitle));
     }
 
+    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(CanExport));
+
     partial void OnSectionChanged(int value)
     {
         OnPropertyChanged(nameof(IsOverviewVisible));
@@ -186,6 +370,58 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsSubjectDetailVisible));
         OnPropertyChanged(nameof(IsOverviewNavActive));
         OnPropertyChanged(nameof(HeaderEyebrow));
+
+        // 切走页签时释放其集合，切回时按需重建；不靠 IsVisible 隐藏整棵对象图。
+        if (value == 0)
+        {
+            if (StripItems.Count > 0)
+            {
+                StripItems.ReplaceAll(Array.Empty<PreviewItem>());
+                _stripsDirty = true;
+            }
+            EnsureOverviewBuilt();
+        }
+        else if (value == 1)
+        {
+            ReleaseOverviewCollections();
+            EnsureStripsBuilt();
+        }
+        else
+        {
+            ReleaseOverviewCollections();
+            if (StripItems.Count > 0)
+            {
+                StripItems.ReplaceAll(Array.Empty<PreviewItem>());
+                _stripsDirty = true;
+            }
+        }
+    }
+
+    private void EnsureOverviewBuilt()
+    {
+        if (_data is not null && _overviewDirty) BuildOverview(_data);
+        if (_reportsDirty) BuildReports();
+    }
+
+    private void EnsureStripsBuilt()
+    {
+        if (StripSourceData is not null && _stripsDirty) BuildStrips(StripSourceData);
+    }
+
+    private void ReleaseOverviewCollections()
+    {
+        if (Students.Count > 0)
+        {
+            Students.ReplaceAll(Array.Empty<StudentRow>());
+            _overviewDirty = true;
+        }
+        if (VisibleStudents.Count > 0)
+            VisibleStudents.ReplaceAll(Array.Empty<StudentRow>());
+        if (ReportRows.Count > 0)
+        {
+            ReportRows.ReplaceAll(Array.Empty<ReportRowItem>());
+            _reportsDirty = true;
+        }
     }
 
     partial void OnDetailChanged(StudentDetail? value)
@@ -201,10 +437,24 @@ public partial class MainViewModel : ViewModelBase
     {
         if (_data is null || !_data.Subjects.Contains(subjectName)) return;
 
-        SubjectDetail = BuildSubjectDetail(_data, subjectName, _gradeInfo);
+        var detail = BuildSubjectDetail(_data, subjectName, _gradeInfo);
+        ApplySubjectStudentVisibility(detail);
+        SubjectDetail = detail;
         Section = 3;
         Status = $"正在查看【{subjectName}】的学科表现与学生排名";
         StatusBrush = Palette.Muted;
+    }
+
+    /// <summary>按折叠状态同步「单科学生排名」的可见行与按钮文案。</summary>
+    private void ApplySubjectStudentVisibility(SubjectDetail detail)
+    {
+        var total = detail.Students.Count;
+        detail.HasMoreStudents = total > RankListCollapseThreshold;
+        detail.ListToggleText = detail.HasMoreStudents
+            ? (StudentsExpanded ? "收起列表" : $"展开全部 {total} 名学生")
+            : string.Empty;
+        var take = StudentsExpanded ? total : Math.Min(total, RankListCollapseThreshold);
+        detail.VisibleStudents = detail.Students.Take(take).ToList();
     }
 
     /// <summary>根据学生姓名打开其画像页（用于单科排名向学生画像穿透跳转）。</summary>
@@ -281,42 +531,259 @@ public partial class MainViewModel : ViewModelBase
 
     private void RefreshOverview()
     {
-        if (_data is not null) BuildOverview(_data);
+        if (_data is null) return;
+        if (Section == 0) BuildOverview(_data);
+        else _overviewDirty = true;
     }
 
     private void RefreshStrips()
     {
-        if (_data is not null) BuildStrips(_data);
+        if (_data is null) return;
+        if (Section == 1) BuildStrips(StripSourceData!);
+        else _stripsDirty = true;
     }
 
 
     public void OpenExamManager() => IsExamManagerOpen = true;
     public void CloseExamManager() => IsExamManagerOpen = false;
 
-    public void AddSession(string path)
+    /// <summary>
+    /// 导入智学网分析报表，挂到当前考试会话下。
+    /// 单份失败不阻断其余文件，最后统一汇报成功与失败数量。
+    /// </summary>
+    public async Task ImportReportsAsync(IReadOnlyList<string> paths)
+    {
+        if (IsBusy) return;
+        await RunBusyAsync("正在解析分析报表…", () => ImportReportsCoreAsync(paths));
+    }
+
+    private async Task ImportReportsCoreAsync(IReadOnlyList<string> paths)
+    {
+        // 无会话时，允许从混合工作簿（成绩数据 + 报表页）中先提取成绩数据建立会话
+        if (!HasData || _sessions.Count == 0)
+        {
+            string? seedPath = null;
+            ExamData? seedData = null;
+            IReadOnlyList<OverviewReport> seedReports = Array.Empty<OverviewReport>();
+
+            foreach (var path in paths)
+            {
+                try
+                {
+                    var pathCopy = path;
+                    var loaded = await Task.Run(() =>
+                    {
+                        var data = GradeSheetImporter.Load(pathCopy);
+                        var reports = LoadInlineReports(pathCopy);
+                        return (data, reports);
+                    });
+                    seedPath = path;
+                    seedData = loaded.data;
+                    seedReports = loaded.reports;
+                    break;
+                }
+                catch
+                {
+                    // 该文件不含可识别的成绩数据，继续尝试下一份
+                }
+            }
+
+            if (seedPath is not null && seedData is not null)
+            {
+                var created = CreateSession(seedPath, seedData);
+                MergeReports(created, seedReports);
+                ApplyActiveExamAndComparison();
+                ImportNotice = "已从文件内同时导入成绩总表与分析报表。";
+            }
+        }
+
+        // 没有成绩会话也照样能看报表：挂到独立报表区，不要求先导入成绩总表
+        var target = _sessions.Count > 0
+            ? _sessions[Math.Clamp(ActiveExamIndex, 0, _sessions.Count - 1)].Reports
+            : _standaloneReports;
+
+        // 后台一次性解析全部报表，UI 线程只做集合应用与重建
+        var loadedReports = await Task.Run(() =>
+        {
+            var list = new List<(OverviewReportKind Kind, IReadOnlyList<OverviewReport> Reports)>(paths.Count);
+            foreach (var path in paths)
+            {
+                var reports = OverviewReportImporter.Load(path, out var kind);
+                list.Add((kind, reports));
+            }
+            return list;
+        });
+
+        var imported = 0;
+        var failed = 0;
+        var sawGradeSheet = false;
+        var lastIndex = -1;
+
+        foreach (var (kind, reports) in loadedReports)
+        {
+            if (kind == OverviewReportKind.Generic)
+            {
+                failed++;
+                sawGradeSheet = true;
+                continue;
+            }
+
+            if (reports.Count == 0)
+            {
+                failed++;
+                continue;
+            }
+
+            foreach (var report in reports)
+            {
+                // 以源文件名为去重键：同一份报表重复导入时用新数据替换旧数据
+                var existing = target.FindIndex(r =>
+                    string.Equals(r.SourceFile, report.SourceFile, StringComparison.OrdinalIgnoreCase));
+                if (existing >= 0)
+                {
+                    target[existing] = report;
+                    lastIndex = existing;
+                }
+                else
+                {
+                    target.Add(report);
+                    lastIndex = target.Count - 1;
+                }
+                imported++;
+            }
+        }
+
+        if (sawGradeSheet)
+            ImportNotice = "该文件是成绩总表，请使用『选择成绩总表』导入";
+
+        if (imported > 0)
+        {
+            _activeReportIndex = Math.Max(0, lastIndex);
+            _activeReportSheetIndex = 0;
+            if (!HasData) ImportNotice = string.Empty;
+        }
+        if (Section == 0) BuildReports();
+        else _reportsDirty = true;
+
+        if (!HasReports) _activeReportIndex = 0;
+
+        Status = $"已导入 {imported} 份报表 · {failed} 份未识别";
+        StatusBrush = failed > 0 ? Palette.Clay : Palette.Moss;
+    }
+
+    /// <summary>文件内附带的分析报表只做轻量探测，命中后才整份解析；普通成绩总表不再多读一遍。</summary>
+    private static IReadOnlyList<OverviewReport> LoadInlineReports(string path)
+        => OverviewReportImporter.IsReportFile(path)
+            ? OverviewReportImporter.Load(path)
+            : Array.Empty<OverviewReport>();
+
+    private static void MergeReports(ExamSession session, IReadOnlyList<OverviewReport> reports)
+    {
+        foreach (var report in reports)
+        {
+            var existing = session.Reports.FindIndex(r =>
+                string.Equals(r.SourceFile, report.SourceFile, StringComparison.OrdinalIgnoreCase));
+            if (existing >= 0) session.Reports[existing] = report;
+            else session.Reports.Add(report);
+        }
+    }
+
+    /// <summary>把一场考试加入会话列表并激活首场。</summary>
+    private ExamSession CreateSession(string path, ExamData data)
+    {
+        var order = _sessions.Count + 1;
+        var session = new ExamSession
+        {
+            Order = order,
+            Label = $"第 {order} 次考试",
+            SourcePath = path,
+            SourceFileName = Path.GetFileName(path),
+            Data = data
+        };
+
+        // 之前独立查看的报表并入新会话，切过去不会丢
+        if (_standaloneReports.Count > 0)
+        {
+            MergeReports(session, _standaloneReports);
+            _standaloneReports.Clear();
+        }
+
+        _sessions.Add(session);
+        SyncExamSessions();
+        if (_sessions.Count == 1) ActiveExamIndex = 0;
+        return session;
+    }
+
+    /// <summary>统一的忙碌态包装：耗时操作全部在后台完成，UI 线程只更新状态与集合。</summary>
+    private async Task RunBusyAsync(string text, Func<Task> action)
+    {
+        IsBusy = true;
+        BusyText = text;
+        Status = text;
+        StatusBrush = Palette.Muted;
+
+        // 先把忙碌遮罩绘制出来再开始干活：低优先级会让出一次调度，避免第一帧就被耗时任务占住。
+        await Dispatcher.UIThread.InvokeAsync(static () => { }, DispatcherPriority.Background);
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            Status = FriendlyError(ex, "操作失败");
+            StatusBrush = Palette.Seal;
+        }
+        finally
+        {
+            IsBusy = false;
+            BusyText = string.Empty;
+        }
+    }
+
+    public Task LoadAsync(string path) => AddSessionAsync(path);
+
+    public async Task AddSessionAsync(string path)
+    {
+        if (IsBusy) return;
+        await RunBusyAsync("正在导入成绩总表…", () => AddSessionCoreAsync(path));
+    }
+
+    private async Task AddSessionCoreAsync(string path)
     {
         try
         {
-            var data = GradeSheetImporter.Load(path);
-            var order = _sessions.Count + 1;
-            var session = new ExamSession
-            {
-                Order = order,
-                Label = $"第 {order} 次考试",
-                SourcePath = path,
-                SourceFileName = Path.GetFileName(path),
-                Data = data
-            };
-            _sessions.Add(session);
-            SyncExamSessions();
+            // 报表探测同样要打开工作簿，一并放到后台，避免遮罩还没画出来就先卡住
+            var (data, inline, isReport) =
+                await Task.Run<(ExamData? Data, IReadOnlyList<OverviewReport> Reports, bool IsReport)>(() =>
+                {
+                    if (OverviewReportImporter.IsReportFile(path))
+                        return (null, Array.Empty<OverviewReport>(), true);
 
-            if (_sessions.Count == 1)
+                    var loaded = GradeSheetImporter.Load(path);
+                    return (loaded, LoadInlineReports(path), false);
+                });
+
+            if (isReport)
             {
-                ActiveExamIndex = 0;
+                // 走错入口也不再拒绝：直接按分析报表导入，界面马上能看
+                await ImportReportsCoreAsync(new[] { path });
+                return;
             }
+
+            var session = CreateSession(path, data!);
+            MergeReports(session, inline);
             ApplyActiveExamAndComparison();
 
-            Status = $"已导入【第 {order} 次考试】· 共 {_sessions.Count} 场考试";
+            if (inline.Count > 0)
+            {
+                ImportNotice = $"已同时导入文件内的 {inline.Count} 份分析报表。";
+                Status = $"已导入【第 {session.Order} 次考试】· 含 {inline.Count} 份分析报表";
+            }
+            else
+            {
+                Status = $"已导入【第 {session.Order} 次考试】· 共 {_sessions.Count} 场考试";
+            }
             StatusBrush = Palette.Moss;
         }
         catch (Exception ex)
@@ -326,26 +793,53 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    public void ReplaceSession(int order, string path)
+    public async Task ReplaceSessionAsync(int order, string path)
+    {
+        if (IsBusy) return;
+        await RunBusyAsync("正在替换考试数据…", () => ReplaceSessionCoreAsync(order, path));
+    }
+
+    private async Task ReplaceSessionCoreAsync(int order, string path)
     {
         var idx = _sessions.FindIndex(s => s.Order == order);
         if (idx < 0) return;
 
         try
         {
-            var data = GradeSheetImporter.Load(path);
-            _sessions[idx] = new ExamSession
+            var (data, inline, isReport) =
+                await Task.Run<(ExamData? Data, IReadOnlyList<OverviewReport> Reports, bool IsReport)>(() =>
+                {
+                    if (OverviewReportImporter.IsReportFile(path))
+                        return (null, Array.Empty<OverviewReport>(), true);
+
+                    var loaded = GradeSheetImporter.Load(path);
+                    return (loaded, LoadInlineReports(path), false);
+                });
+
+            if (isReport)
+            {
+                // 替换入口选到报表时不覆盖原成绩，改为把报表挂上
+                await ImportReportsCoreAsync(new[] { path });
+                return;
+            }
+
+            var session = new ExamSession
             {
                 Order = order,
                 Label = $"第 {order} 次考试",
                 SourcePath = path,
                 SourceFileName = Path.GetFileName(path),
-                Data = data
+                Data = data!
             };
+            session.Reports.AddRange(_sessions[idx].Reports);
+            MergeReports(session, inline);
+            _sessions[idx] = session;
             SyncExamSessions();
             ApplyActiveExamAndComparison();
 
-            Status = $"已替换【第 {order} 次考试】数据";
+            Status = inline.Count > 0
+                ? $"已替换【第 {order} 次考试】数据 · 含 {inline.Count} 份分析报表"
+                : "已替换【第 {order} 次考试】数据";
             StatusBrush = Palette.Moss;
         }
         catch (Exception ex)
@@ -364,7 +858,7 @@ public partial class MainViewModel : ViewModelBase
         for (var i = 0; i < _sessions.Count; i++)
         {
             var s = _sessions[i];
-            _sessions[i] = new ExamSession
+            var reordered = new ExamSession
             {
                 Order = i + 1,
                 Label = $"第 {i + 1} 次考试",
@@ -372,6 +866,8 @@ public partial class MainViewModel : ViewModelBase
                 SourceFileName = s.SourceFileName,
                 Data = s.Data
             };
+            reordered.Reports.AddRange(s.Reports);
+            _sessions[i] = reordered;
         }
 
         if (ActiveExamIndex >= _sessions.Count)
@@ -415,7 +911,7 @@ public partial class MainViewModel : ViewModelBase
         for (var i = 0; i < _sessions.Count; i++)
         {
             var s = _sessions[i];
-            _sessions[i] = new ExamSession
+            var reordered = new ExamSession
             {
                 Order = i + 1,
                 Label = $"第 {i + 1} 次考试",
@@ -423,6 +919,8 @@ public partial class MainViewModel : ViewModelBase
                 SourceFileName = s.SourceFileName,
                 Data = s.Data
             };
+            reordered.Reports.AddRange(s.Reports);
+            _sessions[i] = reordered;
         }
         SyncExamSessions();
         ApplyActiveExamAndComparison();
@@ -471,6 +969,13 @@ public partial class MainViewModel : ViewModelBase
         {
             _data = null;
             HasData = false;
+            ReleaseOverviewCollections();
+            if (StripItems.Count > 0)
+            {
+                StripItems.ReplaceAll(Array.Empty<PreviewItem>());
+                _stripsDirty = true;
+            }
+            BuildReports();
             return;
         }
 
@@ -492,6 +997,17 @@ public partial class MainViewModel : ViewModelBase
         }
 
         var displayData = ExamComparisonEngine.CreateComparedExam(activeSession.Data, baseline);
+
+        // 多考对比会重建 StudentRecord，班级信息不会自动带过来；按序号补回，班级筛选才有数据
+        if (baseline is not null)
+        {
+            var classByNo = new Dictionary<int, string>(activeSession.Data.Students.Count);
+            foreach (var s in activeSession.Data.Students)
+                classByNo[s.No] = s.ClassName;
+            foreach (var s in displayData.Students)
+                s.ClassName = classByNo.TryGetValue(s.No, out var studentClass) ? studentClass : string.Empty;
+        }
+
         _data = displayData;
         _gradeInfo = GradeDetector.Detect(displayData.ExamName, displayData.ClassName, displayData.SourceTitle, activeSession.SourceFileName);
 
@@ -510,8 +1026,18 @@ public partial class MainViewModel : ViewModelBase
         }
 
         HasData = true;
-        BuildOverview(displayData);
-        BuildStrips(displayData);
+        SyncStripClasses(displayData);
+
+        // 只重建当前页签需要的集合，其余页签切过去时再按需构建。
+        _overviewDirty = true;
+        _stripsDirty = true;
+        _reportsDirty = true;
+        ReleaseOverviewCollections();
+        if (StripItems.Count > 0)
+            StripItems.ReplaceAll(Array.Empty<PreviewItem>());
+
+        if (Section == 0) EnsureOverviewBuilt();
+        else if (Section == 1) EnsureStripsBuilt();
 
         if (Detail is not null)
         {
@@ -523,43 +1049,45 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    public void Load(string path)
+    public async Task ExportAsync(string path)
     {
-        AddSession(path);
-    }
+        if (_data is null || IsBusy) return;
 
-    public void Export(string path)
-    {
-        if (_data is null) return;
-
-        try
+        await RunBusyAsync("正在导出成绩条…", async () =>
         {
-            string? compNote = null;
-            if (ComparisonMode == ComparisonBaseline.PreviousExam && ActiveExamIndex > 0)
-                compNote = $"对比第 {ActiveExamIndex} 次考试";
-            else if (ComparisonMode == ComparisonBaseline.FirstExam && ActiveExamIndex > 0)
-                compNote = "对比第 1 次基准考";
-            else if (ComparisonMode == ComparisonBaseline.OriginalFile)
-                compNote = "表格自带";
-
-            var result = ScoreStripExporter.Export(_data, path, new StripExportOptions
+            try
             {
-                FirstGroupSize = Math.Max(1, (int)FirstGroupSize),
-                GroupSize = Math.Max(1, (int)GroupSize),
-                IncludeLegend = IncludeLegend,
-                UseSchoolRank = UseSchoolRank,
-                ComparisonNote = compNote,
-                Title = string.IsNullOrWhiteSpace(TitleOverride) ? null : TitleOverride.Trim(),
-            });
+                string? compNote = null;
+                if (ComparisonMode == ComparisonBaseline.PreviousExam && ActiveExamIndex > 0)
+                    compNote = $"对比第 {ActiveExamIndex} 次考试";
+                else if (ComparisonMode == ComparisonBaseline.FirstExam && ActiveExamIndex > 0)
+                    compNote = "对比第 1 次基准考";
+                else if (ComparisonMode == ComparisonBaseline.OriginalFile)
+                    compNote = "表格自带";
 
-            Status = $"已导出 {result.StudentCount} 人 · {result.Sheets.Count} 张表 → {Path.GetFileName(path)}";
-            StatusBrush = Palette.Moss;
-        }
-        catch (Exception ex)
-        {
-            Status = FriendlyError(ex, "导出失败");
-            StatusBrush = Palette.Seal;
-        }
+                // 与预览共用同一份班级切片：界面看哪个班，就导出哪个班
+                var data = _data.FilterByClass(SelectedStripClass);
+                var options = new StripExportOptions
+                {
+                    FirstGroupSize = Math.Max(1, (int)FirstGroupSize),
+                    GroupSize = Math.Max(1, (int)GroupSize),
+                    IncludeLegend = IncludeLegend,
+                    UseSchoolRank = UseSchoolRank,
+                    ComparisonNote = compNote,
+                    Title = string.IsNullOrWhiteSpace(TitleOverride) ? null : TitleOverride.Trim(),
+                };
+
+                var result = await Task.Run(() => ScoreStripExporter.Export(data, path, options));
+
+                Status = $"已导出 {result.StudentCount} 人 · {result.Sheets.Count} 张表 → {Path.GetFileName(path)}";
+                StatusBrush = Palette.Moss;
+            }
+            catch (Exception ex)
+            {
+                Status = FriendlyError(ex, "导出失败");
+                StatusBrush = Palette.Seal;
+            }
+        });
     }
 
     /// <summary>把底层异常翻译成中文提示，避免状态栏出现英文堆栈信息。</summary>
@@ -586,7 +1114,11 @@ public partial class MainViewModel : ViewModelBase
 
     public string SuggestedFileName()
     {
-        var name = $"{ClassName}-{ExamName}-成绩条".Replace("/", "-").Replace("\\", "-");
+        // 选中具体班级时文件名带上班级（如「九2班-…-成绩条.xlsx」）；「全年级」沿用原命名
+        var scope = string.IsNullOrWhiteSpace(SelectedStripClass) || SelectedStripClass == OverviewReportFilter.AllClasses
+            ? ClassName
+            : SelectedStripClass;
+        var name = $"{scope}-{ExamName}-成绩条".Replace("/", "-").Replace("\\", "-");
         return string.IsNullOrWhiteSpace(name) ? "成绩条.xlsx" : $"{name}.xlsx";
     }
 
@@ -596,7 +1128,6 @@ public partial class MainViewModel : ViewModelBase
         SubjectStats.Clear();
         TierStats.Clear();
         TrendStats.Clear();
-        Students.Clear();
 
         // 缺考口径：剔除时只统计有总分的学生，含入时把缺考按 0 分计
         var totals = ExcludeAbsent
@@ -736,13 +1267,16 @@ public partial class MainViewModel : ViewModelBase
             .ToList();
 
         var bestTotal = ordered.FirstOrDefault()?.Total.Score ?? 1;
+        // 方案 A：跨班考试时在学生姓名后展示班级角标；单班考试角标没有信息量，保持原样
+        var crossClass = data.AvailableClasses.Count > 1;
+        var studentRows = new List<StudentRow>(ordered.Count);
         for (var i = 0; i < ordered.Count; i++)
         {
             var student = ordered[i];
             var delta = student.Total.ClassDelta;
             var score = student.Total.Score ?? 0;
             var ratio = score / Math.Max(1, bestTotal);
-            Students.Add(new StudentRow
+            studentRows.Add(new StudentRow
             {
                 Index = (i + 1).ToString(CultureInfo.InvariantCulture),
                 Name = student.Name,
@@ -755,12 +1289,284 @@ public partial class MainViewModel : ViewModelBase
                 RestWeight = Math.Max(0, 1 - ratio),
                 BarBrush = Brush(Strips.TierFill(student.Total.ClassRank)),
                 No = student.No,
+                ClassBadgeText = crossClass ? student.ClassName : string.Empty,
             });
         }
+        Students.ReplaceAll(studentRows);
 
         SheetSummary = data.HasImportNotice
             ? $"{data.Students.Count} 人 · {data.Subjects.Count} 科 · 简表"
             : $"{data.Students.Count} 人 · {data.Subjects.Count} 科";
+
+        RefreshVisibleStudents();
+        _overviewDirty = false;
+    }
+
+    /// <summary>按折叠状态同步「学生排行」的可见行与展开按钮文案。</summary>
+    private void RefreshVisibleStudents()
+    {
+        var take = StudentsExpanded ? Students.Count : Math.Min(Students.Count, RankListCollapseThreshold);
+        VisibleStudents.ReplaceAll(Students.Take(take));
+
+        OnPropertyChanged(nameof(HasMoreStudents));
+        StudentsToggleText = HasMoreStudents
+            ? (StudentsExpanded ? "收起列表" : $"展开全部 {Students.Count} 名学生")
+            : string.Empty;
+    }
+
+    /// <summary>展开 / 收起首页学生排行与单科学生排名。</summary>
+    public void ToggleStudentsExpanded()
+    {
+        StudentsExpanded = !StudentsExpanded;
+        RefreshVisibleStudents();
+
+        if (SubjectDetail is not null) ApplySubjectStudentVisibility(SubjectDetail);
+    }
+
+    /// <summary>重建「分析报表」区块：切换 chip、表名 chip、表头与数据行。</summary>
+    private void BuildReports()
+    {
+        var reports = CurrentReports;
+
+        ReportCards.Clear();
+        ReportSheetTabs.Clear();
+        ReportColumns.Clear();
+        ReportRows.ReplaceAll(Array.Empty<ReportRowItem>());
+        OnPropertyChanged(nameof(ReportTableWidth));
+
+        if (reports.Count == 0)
+        {
+            _activeReportIndex = 0;
+            _activeReportSheetIndex = 0;
+            ActiveReportTitle = string.Empty;
+            ActiveReportSourceText = string.Empty;
+            SyncReportClasses(null);
+            NotifyReportState();
+            _reportsDirty = false;
+            return;
+        }
+
+        _activeReportIndex = Math.Clamp(_activeReportIndex, 0, reports.Count - 1);
+
+        for (var i = 0; i < reports.Count; i++)
+        {
+            var index = i;
+            var report = reports[i];
+            ReportCards.Add(new ReportCardItem
+            {
+                Report = report,
+                IsActive = i == _activeReportIndex,
+                Activate = new RelayCommand(() => ActivateReport(index)),
+            });
+        }
+
+        var active = reports[_activeReportIndex];
+        SyncReportClasses(active);
+        ActiveReportTitle = active.Title;
+        ActiveReportSourceText = $"来源：{active.SourceFile} · {active.Sheets.Count} 张表";
+
+        var view = OverviewReportFilter.Filter(active, SelectedReportClass);
+        var sheets = view.Sheets;
+        _activeReportSheetIndex = sheets.Count == 0
+            ? 0
+            : Math.Clamp(_activeReportSheetIndex, 0, sheets.Count - 1);
+
+        for (var i = 0; i < sheets.Count; i++)
+        {
+            var index = i;
+            ReportSheetTabs.Add(new ReportSheetItem
+            {
+                Name = sheets[i].Name,
+                IsActive = i == _activeReportSheetIndex,
+                Activate = new RelayCommand(() => ActivateReportSheet(index)),
+            });
+        }
+
+        if (sheets.Count > 0)
+        {
+            var sheet = sheets[_activeReportSheetIndex];
+            var widths = ReportColumnWidths(sheet);
+
+            for (var c = 0; c < sheet.Columns.Count; c++)
+            {
+                var column = sheet.Columns[c];
+                ReportColumns.Add(new ReportColumnItem
+                {
+                    Header = column.Header,
+                    Width = widths[c],
+                    IsNumeric = column.IsNumeric,
+                    Alignment = column.IsNumeric ? TextAlignment.Right : TextAlignment.Left,
+                });
+            }
+            OnPropertyChanged(nameof(ReportTableWidth));
+
+            var rowItems = new List<ReportRowItem>(sheet.Rows.Count);
+            foreach (var row in sheet.Rows)
+            {
+                var cells = new List<ReportCellItem>(sheet.Columns.Count);
+                for (var c = 0; c < sheet.Columns.Count; c++)
+                {
+                    var column = sheet.Columns[c];
+                    cells.Add(new ReportCellItem
+                    {
+                        Text = c < row.Count ? row[c] : string.Empty,
+                        Width = widths[c],
+                        IsNumeric = column.IsNumeric,
+                        Alignment = column.IsNumeric ? TextAlignment.Right : TextAlignment.Left,
+                    });
+                }
+                rowItems.Add(new ReportRowItem { Cells = cells });
+            }
+            ReportRows.ReplaceAll(rowItems);
+        }
+
+        NotifyReportState();
+        _reportsDirty = false;
+    }
+
+    /// <summary>
+    /// 列宽按内容推算：首列（题号 / 序号）可以很窄；长文本列（如答错学生名单）
+    /// 往右延伸到放得下整段内容，超过上限才交给单元格换行，不再用省略号吞掉学生姓名。
+    /// </summary>
+    private static double[] ReportColumnWidths(OverviewSheet sheet)
+    {
+        var widths = new double[sheet.Columns.Count];
+        for (var c = 0; c < sheet.Columns.Count; c++)
+        {
+            var column = sheet.Columns[c];
+
+            // 数值列宽度固定，避免分组表头被挤成两行抬高整个表头
+            if (c > 0 && column.IsNumeric)
+            {
+                widths[c] = ReportLayout.NumericColumnWidth;
+                continue;
+            }
+
+            var units = DisplayUnits(column.Header);
+            foreach (var row in sheet.Rows)
+            {
+                if (c < row.Count) units = Math.Max(units, DisplayUnits(row[c]));
+            }
+
+            var fitted = 22 + units * 7.2;
+            widths[c] = c == 0
+                ? Math.Clamp(fitted, 48, ReportLayout.FirstColumnWidth)
+                : Math.Clamp(fitted, ReportLayout.ColumnWidth, ReportLayout.WideColumnWidth);
+        }
+
+        return widths;
+    }
+
+    /// <summary>按显示宽度折算：中文算两个字宽，西文与数字算一个；只量到列宽上限就够。</summary>
+    private static int DisplayUnits(string text)
+    {
+        const int cap = 122;
+        var units = 0;
+        foreach (var ch in text)
+        {
+            units += ch > 0x2E80 ? 2 : 1;
+            if (units >= cap) return cap;
+        }
+        return units;
+    }
+
+    /// <summary>同步班级下拉：始终包含「全年级」；当前选择在新报表中不存在时回到全年级。</summary>
+    private void SyncReportClasses(OverviewReport? report)
+    {
+        var classes = report is null
+            ? Array.Empty<string>()
+            : OverviewReportFilter.GetClasses(report);
+
+        _syncingReportClasses = true;
+        try
+        {
+            var desired = new List<string> { OverviewReportFilter.AllClasses };
+            desired.AddRange(classes);
+
+            // 列表没变就不重建，避免 ComboBox 在清空/重填时把 SelectedItem 写成 null 触发递归刷新
+            if (!ReportClasses.SequenceEqual(desired))
+            {
+                ReportClasses.Clear();
+                foreach (var className in desired) ReportClasses.Add(className);
+            }
+
+            // 单班成绩表（如「九A1」）导入全年级报表时，默认定位到该班；
+            // 每场考试只自动匹配一次，之后尊重用户手动选择。
+            var autoKey = $"{_data?.SourceTitle}|{_data?.ClassName}";
+            if (!HasReportClasses)
+            {
+                _reportClassAutoKey = null;
+                SelectedReportClass = OverviewReportFilter.AllClasses;
+            }
+            else if (_reportClassAutoKey != autoKey)
+            {
+                _reportClassAutoKey = autoKey;
+                SelectedReportClass = MatchExamClass(classes);
+            }
+            else if (!ReportClasses.Contains(SelectedReportClass))
+            {
+                SelectedReportClass = OverviewReportFilter.AllClasses;
+            }
+        }
+        finally
+        {
+            _syncingReportClasses = false;
+        }
+
+        OnPropertyChanged(nameof(HasReportClasses));
+    }
+
+    /// <summary>在报表班级里找与当前成绩表班级同班的一项（忽略「年级」字样差异）。</summary>
+    private string MatchExamClass(IReadOnlyList<string> classes)
+    {
+        var examClass = _data?.ClassName;
+        if (string.IsNullOrWhiteSpace(examClass)) return OverviewReportFilter.AllClasses;
+
+        var examKey = OverviewReportFilter.NormalizeClassName(examClass);
+        foreach (var className in classes)
+        {
+            if (OverviewReportFilter.NormalizeClassName(className) == examKey)
+                return className;
+        }
+
+        return OverviewReportFilter.AllClasses;
+    }
+
+    /// <summary>切换当前查看的报表。</summary>
+    public void ActivateReport(int index)
+    {
+        var reports = CurrentReports;
+        if (index < 0 || index >= reports.Count) return;
+
+        _activeReportIndex = index;
+        _activeReportSheetIndex = 0;
+        BuildReports();
+    }
+
+    /// <summary>切换当前报表内的工作表。</summary>
+    public void ActivateReportSheet(int index)
+    {
+        var reports = CurrentReports;
+        if (reports.Count == 0) return;
+
+        var sheets = reports[Math.Clamp(_activeReportIndex, 0, reports.Count - 1)].Sheets;
+        if (index < 0 || index >= sheets.Count) return;
+
+        _activeReportSheetIndex = index;
+        BuildReports();
+    }
+
+    private void NotifyReportState()
+    {
+        OnPropertyChanged(nameof(HasReports));
+        OnPropertyChanged(nameof(HasNoReports));
+        OnPropertyChanged(nameof(HasMultipleReportSheets));
+        OnPropertyChanged(nameof(HasReportRows));
+        OnPropertyChanged(nameof(HasNoReportRows));
+
+        // 只有报表、没有成绩数据时也要能把概览页（报表区块）显示出来
+        OnPropertyChanged(nameof(IsEmptyVisible));
+        OnPropertyChanged(nameof(IsOverviewVisible));
     }
 
     /// <summary>构建学生画像：个人得分率与班级均分刻度逐科对照。</summary>
@@ -910,16 +1716,48 @@ public partial class MainViewModel : ViewModelBase
         return rows;
     }
 
+    /// <summary>
+    /// 同步成绩条页的班级下拉：首项固定「全年级」，其后为总表中的有效班级。
+    /// 会话加载或切换时重置回「全年级」。
+    /// </summary>
+    private void SyncStripClasses(ExamData data)
+    {
+        _syncingStripClasses = true;
+        try
+        {
+            var classes = data.AvailableClasses;
+            var desired = new List<string>(classes.Count + 1) { OverviewReportFilter.AllClasses };
+            desired.AddRange(classes);
+
+            // 列表没变就不重建，避免 ComboBox 在清空/重填时把 SelectedItem 写成 null 触发递归刷新
+            if (!StripClasses.SequenceEqual(desired))
+            {
+                // 绑定初始化时列表为空，ComboBox 已把 SelectedItem 记成「全年级」但无选中容器；
+                // 同值重设不会重建容器（显示空框），先清成 null 再回设，强制一次真实选中变更。
+                SelectedStripClass = null;
+                StripClasses.Clear();
+                foreach (var className in desired) StripClasses.Add(className);
+            }
+
+            SelectedStripClass = OverviewReportFilter.AllClasses;
+        }
+        finally
+        {
+            _syncingStripClasses = false;
+        }
+
+        OnPropertyChanged(nameof(HasStripClasses));
+    }
+
     private void BuildStrips(ExamData data)
     {
-        StripItems.Clear();
-
+        var items = new List<PreviewItem>(data.Students.Count + 16);
         var groups = StripGrouping.Split(data.Students, Math.Max(1, (int)FirstGroupSize), Math.Max(1, (int)GroupSize));
         for (var g = 0; g < groups.Count; g++)
         {
             var group = groups[g];
 
-            StripItems.Add(new PreviewItem
+            items.Add(new PreviewItem
             {
                 IsHeader = true,
                 HeaderText = $"第 {g + 1} 张表",
@@ -930,7 +1768,7 @@ public partial class MainViewModel : ViewModelBase
 
             if (g == 0)
             {
-                StripItems.Add(new PreviewItem
+                items.Add(new PreviewItem
                 {
                     IsTitleBlock = true,
                     TitleText = string.IsNullOrWhiteSpace(TitleOverride) ? data.DefaultTitle : TitleOverride.Trim(),
@@ -940,8 +1778,11 @@ public partial class MainViewModel : ViewModelBase
             }
 
             foreach (var student in group)
-                StripItems.Add(new PreviewItem { Strip = StripRow.From(student, data.Subjects, UseSchoolRank) });
+                items.Add(new PreviewItem { Strip = StripRow.From(student, data.Subjects, UseSchoolRank) });
         }
+
+        StripItems.ReplaceAll(items);
+        _stripsDirty = false;
     }
 
     private static string TopStudentName(ExamData data, bool highest)
@@ -955,7 +1796,7 @@ public partial class MainViewModel : ViewModelBase
     private static string Fmt(double? value) =>
         value is null ? "—" : value.Value.ToString("0.##", CultureInfo.InvariantCulture);
 
-    private static IBrush Brush(string hex) => new SolidColorBrush(Color.Parse("#" + hex));
+    private static IBrush Brush(string hex) => Palette.Brush(hex);
 
 
     private static MultiExamProfile? BuildMultiExamProfile(string studentName, IReadOnlyList<ExamSession>? sessions)

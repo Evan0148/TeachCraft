@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -41,18 +42,62 @@ public partial class MainWindow : Window
             {
                 new FilePickerFileType("Excel 工作簿")
                 {
-                    Patterns = new[] { "*.xlsx", "*.xls", "*.xlsm" },
+                    Patterns = new[] { "*.xlsx", "*.xls", "*.xlsm", "*.zip" },
                 },
             },
         });
 
         if (files.Count > 0)
         {
+            var path = GetSafeLocalPath(files[0])!;
+            if (path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                ViewModel.Status = "压缩包不能直接导入。请先解压后选择其中的 .xlsx / .xls 表格导入；若解压后文件名出现乱码，推荐使用 Windows 自带解压或 Bandizip。";
+                ViewModel.StatusBrush = Palette.Clay;
+                return;
+            }
+
             if (!ViewModel.HasData)
-                ViewModel.Load(GetSafeLocalPath(files[0])!);
+                await ViewModel.LoadAsync(path);
             else
-                ViewModel.AddSession(GetSafeLocalPath(files[0])!);
+                await ViewModel.AddSessionAsync(path);
         }
+    }
+
+    /// <summary>导入智学网分析报表（统计表 / 试卷分析），支持一次多选。</summary>
+    private async void OnImportReports(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "导入分析报表",
+            AllowMultiple = true,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("智学网分析报表")
+                {
+                    Patterns = new[] { "*.xlsx", "*.xls", "*.xlsm", "*.zip" },
+                },
+            },
+        });
+
+        if (files.Count == 0) return;
+
+        var paths = files
+            .Select(GetSafeLocalPath)
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Select(p => p!)
+            .ToList();
+
+        if (paths.Count == 0) return;
+
+        if (paths.Any(p => p.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)))
+        {
+            ViewModel.Status = "压缩包不能直接导入。请先解压后选择其中的 .xlsx / .xls 表格导入；若解压后文件名出现乱码，推荐使用 Windows 自带解压或 Bandizip。";
+            ViewModel.StatusBrush = Palette.Clay;
+            paths = paths.Where(p => !p.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+
+        if (paths.Count > 0) await ViewModel.ImportReportsAsync(paths);
     }
 
     private async void OnExport(object? sender, RoutedEventArgs e)
@@ -68,7 +113,7 @@ public partial class MainWindow : Window
             },
         });
 
-        if (file is not null) ViewModel.Export(GetSafeLocalPath(file)!);
+        if (file is not null) await ViewModel.ExportAsync(GetSafeLocalPath(file)!);
     }
 
     private void OnNavOverview(object? sender, RoutedEventArgs e)
@@ -80,6 +125,9 @@ public partial class MainWindow : Window
     }
 
     private void OnNavStrips(object? sender, RoutedEventArgs e) => ViewModel.Section = 1;
+
+    /// <summary>展开 / 收起学生排行与单科学生排名（超过 50 人折叠）。</summary>
+    private void OnToggleStudents(object? sender, RoutedEventArgs e) => ViewModel.ToggleStudentsExpanded();
 
     private void OnOpenStudent(object? sender, RoutedEventArgs e)
     {
@@ -198,7 +246,7 @@ public partial class MainWindow : Window
 
         if (files.Count > 0)
         {
-            ViewModel.AddSession(GetSafeLocalPath(files[0])!);
+            await ViewModel.AddSessionAsync(GetSafeLocalPath(files[0])!);
         }
     }
 
@@ -219,7 +267,7 @@ public partial class MainWindow : Window
 
         if (files.Count > 0)
         {
-            ViewModel.ReplaceSession(order.Value, GetSafeLocalPath(files[0])!);
+            await ViewModel.ReplaceSessionAsync(order.Value, GetSafeLocalPath(files[0])!);
         }
     }
 
@@ -244,16 +292,17 @@ public partial class MainWindow : Window
             : DragDropEffects.None;
     }
 
-    private void OnDrop(object? sender, DragEventArgs e)
+    private async void OnDrop(object? sender, DragEventArgs e)
     {
-        var file = e.DataTransfer.TryGetFile();
-        if (file is not null)
-        {
-            if (!ViewModel.HasData)
-                ViewModel.Load(GetSafeLocalPath(file)!);
-            else
-                ViewModel.AddSession(GetSafeLocalPath(file)!);
-        }
+        var files = e.DataTransfer.TryGetFiles();
+        var paths = files?
+            .Select(GetSafeLocalPath)
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Select(p => p!)
+            .ToList();
+
+        if (paths is { Count: > 0 })
+            await ViewModel.ImportDroppedFilesAsync(paths);
     }
 
     private static string? GetSafeLocalPath(Avalonia.Platform.Storage.IStorageItem? item)

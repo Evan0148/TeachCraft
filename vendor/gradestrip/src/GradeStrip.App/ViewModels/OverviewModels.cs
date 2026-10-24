@@ -1,30 +1,37 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GradeStrip.App.ViewModels;
 
 /// <summary>界面的配色常量，与导出成绩条共用同一套色值。</summary>
 public static class Palette
 {
-    public static readonly IBrush Ink = Build("141413");
-    public static readonly IBrush InkSoft = Build("3D3B36");
-    public static readonly IBrush Muted = Build("85806F");
-    public static readonly IBrush Paper = Build("FAF9F5");
-    public static readonly IBrush PaperDeep = Build("F4F2EC");
-    public static readonly IBrush Card = Build("FFFFFF");
-    public static readonly IBrush Line = Build("E7E3D8");
-    public static readonly IBrush Moss = Build("5A7A4B");
-    public static readonly IBrush Seal = Build("C6613F");
-    public static readonly IBrush Accent = Build("D97757");
-    public static readonly IBrush Clay = Build("D97757");
-    public static readonly IBrush AccentDeep = Build("C6613F");
+    /// <summary>按色值缓存画刷，避免 3000 人 × 多科目时产生十几万个 SolidColorBrush。</summary>
+    private static readonly ConcurrentDictionary<string, IBrush> Cache = new(StringComparer.Ordinal);
+
+    public static readonly IBrush Ink = Brush("141413");
+    public static readonly IBrush InkSoft = Brush("3D3B36");
+    public static readonly IBrush Muted = Brush("85806F");
+    public static readonly IBrush Paper = Brush("FAF9F5");
+    public static readonly IBrush PaperDeep = Brush("F4F2EC");
+    public static readonly IBrush Card = Brush("FFFFFF");
+    public static readonly IBrush Line = Brush("E7E3D8");
+    public static readonly IBrush Moss = Brush("5A7A4B");
+    public static readonly IBrush Seal = Brush("C6613F");
+    public static readonly IBrush Accent = Brush("D97757");
+    public static readonly IBrush Clay = Brush("D97757");
+    public static readonly IBrush AccentDeep = Brush("C6613F");
     public static readonly IBrush White = Brushes.White;
 
-    public static IBrush Brush(string hex) => Build(hex);
-
-    private static IBrush Build(string hex) => new SolidColorBrush(Color.Parse("#" + hex));
+    public static IBrush Brush(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return Brushes.White;
+        return Cache.GetOrAdd(hex, static key => new SolidColorBrush(Color.Parse("#" + key)));
+    }
 }
 
 public sealed class KpiCard
@@ -86,6 +93,10 @@ public sealed class StudentRow
     public double BarWeight { get; init; }
     public double RestWeight { get; init; }
     public IBrush BarBrush { get; init; } = Palette.Ink;
+
+    /// <summary>跨班考试时姓名后的微型班级角标；单班或该生无班级信息时为空。</summary>
+    public string ClassBadgeText { get; init; } = string.Empty;
+    public bool HasClassBadge => !string.IsNullOrWhiteSpace(ClassBadgeText);
 }
 
 /// <summary>学生画像：个人成绩与班级参照的对照。</summary>
@@ -172,7 +183,7 @@ public sealed class DetailSubjectRow
 }
 
 /// <summary>单科分析：某一科目的全班成绩表现与分布画像。</summary>
-public sealed class SubjectDetail
+public sealed class SubjectDetail : ObservableObject
 {
     public string SubjectName { get; init; } = string.Empty;
     public string FullMarkText { get; init; } = string.Empty;
@@ -205,6 +216,33 @@ public sealed class SubjectDetail
 
     public IReadOnlyList<TierStat> Tiers { get; init; } = Array.Empty<TierStat>();
     public IReadOnlyList<SubjectStudentRow> Students { get; init; } = Array.Empty<SubjectStudentRow>();
+
+    private IReadOnlyList<SubjectStudentRow> _visibleStudents = Array.Empty<SubjectStudentRow>();
+
+    /// <summary>单科学生排名实际展示的行（超过折叠阈值时是 Students 的前 N 项）。</summary>
+    public IReadOnlyList<SubjectStudentRow> VisibleStudents
+    {
+        get => _visibleStudents;
+        set => SetProperty(ref _visibleStudents, value);
+    }
+
+    private bool _hasMoreStudents;
+
+    /// <summary>排名人数超过折叠阈值，需要显示展开 / 收起按钮。</summary>
+    public bool HasMoreStudents
+    {
+        get => _hasMoreStudents;
+        set => SetProperty(ref _hasMoreStudents, value);
+    }
+
+    private string _listToggleText = string.Empty;
+
+    /// <summary>展开 / 收起按钮的文案；无折叠时为空。</summary>
+    public string ListToggleText
+    {
+        get => _listToggleText;
+        set => SetProperty(ref _listToggleText, value);
+    }
 }
 
 public sealed class SubjectStudentRow

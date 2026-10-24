@@ -33,7 +33,14 @@ internal static class WorkbookPostProcessor
         var mergeCells = worksheet.Descendants<MergeCells>().FirstOrDefault();
         if (mergeCells is null) return false;
 
-        var cells = worksheet.Descendants<Cell>().ToList();
+        // 先建 (行, 列) → Cell 索引，避免每个合并区域都对全表做线性查找
+        var cells = new Dictionary<(int Row, int Column), Cell>();
+        foreach (var cell in worksheet.Descendants<Cell>())
+        {
+            if (cell.CellReference?.Value is { } reference)
+                cells[Parse(reference)] = cell;
+        }
+
         var changed = false;
 
         foreach (var mergeCell in mergeCells.Elements<MergeCell>())
@@ -46,13 +53,12 @@ internal static class WorkbookPostProcessor
             var (bottomRow, bottomCol) = Parse(range[1]);
             if (topCol != bottomCol || bottomRow <= topRow) continue;
 
-            var topCell = Find(cells, topRow, topCol);
-            if (topCell?.StyleIndex?.Value is not { } styleIndex) continue;
+            if (!cells.TryGetValue((topRow, topCol), out var topCell)) continue;
+            if (topCell.StyleIndex?.Value is not { } styleIndex) continue;
 
             for (var row = topRow + 1; row <= bottomRow; row++)
             {
-                var cell = Find(cells, row, topCol);
-                if (cell is null) continue;
+                if (!cells.TryGetValue((row, topCol), out var cell)) continue;
                 cell.StyleIndex = styleIndex;
                 changed = true;
             }
@@ -87,12 +93,6 @@ internal static class WorkbookPostProcessor
         }
     }
 
-    private static Cell? Find(IEnumerable<Cell> cells, int row, int column)
-    {
-        var reference = $"{ColumnName(column)}{row}";
-        return cells.FirstOrDefault(c => c.CellReference?.Value == reference);
-    }
-
     private static (int Row, int Column) Parse(string reference)
     {
         var split = 0;
@@ -101,18 +101,5 @@ internal static class WorkbookPostProcessor
         foreach (var ch in reference[..split].ToUpperInvariant())
             column = column * 26 + (ch - 'A' + 1);
         return (int.Parse(reference[split..]), column);
-    }
-
-    private static string ColumnName(int column)
-    {
-        var name = string.Empty;
-        while (column > 0)
-        {
-            var remainder = (column - 1) % 26;
-            name = (char)('A' + remainder) + name;
-            column = (column - 1) / 26;
-        }
-
-        return name;
     }
 }

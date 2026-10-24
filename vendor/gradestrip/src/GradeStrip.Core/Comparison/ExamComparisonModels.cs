@@ -26,6 +26,9 @@ public sealed class ExamSession
     public required string SourceFileName { get; init; }
     public required ExamData Data { get; init; }
 
+    /// <summary>该场考试下挂的智学网分析报表（班级成绩对比、试题分析等），可为空。</summary>
+    public List<OverviewReport> Reports { get; } = new();
+
     public string DisplayName => string.IsNullOrWhiteSpace(Data.ExamName) ? SourceFileName : Data.ExamName;
 }
 

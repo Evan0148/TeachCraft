@@ -99,12 +99,25 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <Button Classes="nav nav-action" Click="OnAddExamSession"
+                                IsEnabled="{Binding !IsBusy}"
                                 ToolTip.Tip="导入另一场考试成绩进行对比">
                             <Grid ColumnDefinitions="20,*">
                                 <TextBlock Text="+" Classes="mono-label" FontSize="13"
                                            Foreground="{StaticResource MutedBrush}"
                                            VerticalAlignment="Center" HorizontalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="导入下一场..."
+                                           Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                        <Button Classes="nav nav-action" Click="OnImportReports"
+                                IsEnabled="{Binding !IsBusy}"
+                                ToolTip.Tip="导入智学网的统计与试卷分析报表">
+                            <Grid ColumnDefinitions="20,*">
+                                <TextBlock Text="+" Classes="mono-label" FontSize="13"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="导入分析报表…"
                                            Foreground="{StaticResource MutedBrush}"
                                            VerticalAlignment="Center" />
                             </Grid>
@@ -149,10 +162,11 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <Button Classes="ghost" Content="选择成绩表" Click="OnPickFile" IsVisible="{Binding !HasData}" />
+                    <Button Classes="ghost" Content="选择成绩表" Click="OnPickFile"
+                            IsVisible="{Binding !HasData}" IsEnabled="{Binding !IsBusy}" />
                     <Button Classes="ghost" Content="📚 考试管理" Click="OnOpenExamManager" IsVisible="{Binding HasData}" />
                     <Button Classes="primary" Content="导出成绩条"
-                            IsEnabled="{Binding HasData}" Click="OnExport" />
+                            IsEnabled="{Binding CanExport}" Click="OnExport" />
                 </StackPanel>
             </Grid>
 
@@ -195,10 +209,10 @@
                                    TextAlignment="Center" TextWrapping="Wrap" FontSize="12.5"
                                    Foreground="{StaticResource MutedBrush}" />
                         <Button Classes="primary" Content="选择成绩表" HorizontalAlignment="Center"
-                                Padding="24,9" Click="OnPickFile" />
+                                Padding="24,9" Click="OnPickFile" IsEnabled="{Binding !IsBusy}" />
                     </StackPanel>
                 </Grid>
-                <TextBlock Text="支持 .xlsx / .xlsm · 也可以把文件直接拖进窗口"
+                <TextBlock Text="支持 .xlsx / .xls / .xlsm · 成绩表与分析报表都可直接拖入"
                            Classes="mono-label" FontSize="10" HorizontalAlignment="Center" />
             </StackPanel>
 
@@ -221,7 +235,8 @@
                         </Grid>
                     </Border>
 
-                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12"
+                          IsVisible="{Binding HasData}">
                         <Border Grid.Column="0" Classes="card" Padding="16,13" DataContext="{Binding Kpis[0]}">
                             <StackPanel Spacing="5">
                                 <TextBlock Text="{Binding Label}" Classes="label" />
@@ -286,7 +301,7 @@
                         </Border>
                     </Grid>
 
-                    <Grid ColumnDefinitions="1.12*,*">
+                    <Grid ColumnDefinitions="1.12*,*" IsVisible="{Binding HasData}">
                         <Border Classes="card" Margin="0,0,14,0">
                             <StackPanel Spacing="14">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -387,7 +402,7 @@
                         </Border>
                     </Grid>
 
-                    <Border Classes="card">
+                    <Border Classes="card" IsVisible="{Binding HasData}">
                         <StackPanel Spacing="10">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Classes="display" Text="学生排行" FontSize="17" />
@@ -404,7 +419,7 @@
                                 <TextBlock Grid.Column="5" Text="进退步" Classes="label" FontSize="10" />
                             </Grid>
 
-                            <ItemsControl ItemsSource="{Binding Students}">
+                            <ItemsControl ItemsSource="{Binding VisibleStudents}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:StudentRow">
                                         <Border Classes="rank-row" BorderBrush="#F0EDE3"
@@ -413,13 +428,19 @@
                                                 <TextBlock Text="{Binding Index}" Classes="numeral" FontSize="12"
                                                            Foreground="{StaticResource MutedBrush}"
                                                            VerticalAlignment="Center" />
-                                                <Button Grid.Column="1" Classes="link" Click="OnOpenStudent"
-                                                        HorizontalAlignment="Stretch"
-                                                        HorizontalContentAlignment="Left"
-                                                        VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Name}" FontSize="13"
-                                                               Foreground="{Binding $parent[Button].Foreground}" />
-                                                </Button>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"
+                                                            VerticalAlignment="Center">
+                                                    <Button Classes="link" Click="OnOpenStudent"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" FontSize="13"
+                                                                   Foreground="{Binding $parent[Button].Foreground}" />
+                                                    </Button>
+                                                    <!-- 跨班考试的学生班级角标（方案 A）：纸面小胶囊，细边无阴影 -->
+                                                    <Border Classes="class-badge" IsVisible="{Binding HasClassBadge}"
+                                                            ToolTip.Tip="学生所在班级">
+                                                        <TextBlock Text="{Binding ClassBadgeText}" />
+                                                    </Border>
+                                                </StackPanel>
                                                 <TextBlock Grid.Column="2" Text="{Binding TotalText}"
                                                            Classes="numeral" FontSize="15"
                                                            VerticalAlignment="Center" />
@@ -444,6 +465,188 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <Button Classes="ghost" HorizontalAlignment="Left"
+                                    IsVisible="{Binding HasMoreStudents}"
+                                    Content="{Binding StudentsToggleText}"
+                                    Click="OnToggleStudents" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 分析报表：智学网统计表与试卷分析；没有成绩表也能单独查看，故不绑 HasData -->
+                    <Border Classes="card">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="display" Text="分析报表" FontSize="17" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <TextBlock Classes="label" Text="来自智学网的统计与试卷分析" VerticalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                                                IsVisible="{Binding HasReportClasses}">
+                                        <TextBlock Text="班级" Classes="label" FontSize="10" VerticalAlignment="Center" />
+                                        <ComboBox Classes="report-class"
+                                                  ItemsSource="{Binding ReportClasses}"
+                                                  SelectedItem="{Binding SelectedReportClass, Mode=TwoWay}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 空状态 -->
+                            <StackPanel Spacing="10" IsVisible="{Binding HasNoReports}">
+                                <TextBlock Text="导入班级成绩对比、学科成绩对比、试题分析等报表，可在这里直接查阅表格，无需切回 Excel。"
+                                           FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                <Button Classes="ghost" Content="导入分析报表…" HorizontalAlignment="Left"
+                                        Padding="14,7" FontSize="12" Click="OnImportReports"
+                                        IsEnabled="{Binding !IsBusy}" />
+                            </StackPanel>
+
+                            <!-- 有报表 -->
+                            <StackPanel Spacing="10" IsVisible="{Binding HasReports}">
+                                <ItemsControl ItemsSource="{Binding ReportCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReportCardItem">
+                                            <Button Classes="report-chip" Classes.active="{Binding IsActive}"
+                                                    Command="{Binding Activate}" Margin="0,0,6,6"
+                                                    MaxWidth="260" ToolTip.Tip="{Binding Title}">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding KindLabel}" Classes="mono-label"
+                                                               FontSize="9.5"
+                                                               Foreground="{Binding $parent[Button].Foreground}" />
+                                                    <TextBlock Text="{Binding Title}" FontSize="11.5"
+                                                               MaxWidth="150" TextTrimming="CharacterEllipsis"
+                                                               Foreground="{Binding $parent[Button].Foreground}" />
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="{Binding ActiveReportSourceText}" Classes="mono-label"
+                                           FontSize="10" TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding ActiveReportSourceText}"
+                                           IsVisible="{Binding HasReports}" />
+
+                                <ItemsControl ItemsSource="{Binding ReportSheetTabs}"
+                                              IsVisible="{Binding HasMultipleReportSheets}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReportSheetItem">
+                                            <Button Classes="report-chip" Classes.active="{Binding IsActive}"
+                                                    Command="{Binding Activate}" Margin="0,0,6,4"
+                                                    Padding="9,4" FontSize="10.5">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Foreground="{Binding $parent[Button].Foreground}" />
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                        CornerRadius="6" ClipToBounds="True">
+                                    <ScrollViewer x:Name="ReportTableScrollViewer"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  VerticalScrollBarVisibility="Disabled"
+                                                  Margin="0,0,0,6">
+                                        <StackPanel>
+                                            <!-- 表头 -->
+                                            <ItemsControl ItemsSource="{Binding ReportColumns}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:ReportColumnItem">
+                                                        <Border Width="{Binding Width}"
+                                                                Background="{StaticResource PaperDeepBrush}"
+                                                                Padding="8,4">
+                                                            <TextBlock Text="{Binding Header}" Classes="label"
+                                                                       FontSize="10"
+                                                                       VerticalAlignment="Center"
+                                                                       TextAlignment="{Binding Alignment}"
+                                                                       TextWrapping="Wrap" MaxLines="2"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       ToolTip.Tip="{Binding Header}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!-- 数据行：虚拟化列表，只实例化视口内的行 -->
+                                            <ListBox ItemsSource="{Binding ReportRows}"
+                                                     Width="{Binding ReportTableWidth}"
+                                                     MaxHeight="420"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     Padding="0"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                                <ListBox.Styles>
+                                                    <Style Selector="ListBoxItem">
+                                                        <Setter Property="Padding" Value="0" />
+                                                        <Setter Property="Margin" Value="0" />
+                                                        <Setter Property="MinHeight" Value="0" />
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                    </Style>
+                                                    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                    </Style>
+                                                    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Background" Value="Transparent" />
+                                                    </Style>
+                                                </ListBox.Styles>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:ReportRowItem">
+                                                        <Border BorderBrush="{StaticResource LineBrush}"
+                                                                BorderThickness="0,0,0,1">
+                                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <StackPanel Orientation="Horizontal" />
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="vm:ReportCellItem">
+                                                                        <Border Width="{Binding Width}" Padding="8,2">
+                                                                            <Panel VerticalAlignment="Center">
+                                                                                <TextBlock Text="{Binding Text}"
+                                                                                           Classes="numeral"
+                                                                                           FontSize="11"
+                                                                                           TextAlignment="{Binding Alignment}"
+                                                                                           TextTrimming="CharacterEllipsis"
+                                                                                           ToolTip.Tip="{Binding Text}"
+                                                                                           IsVisible="{Binding IsNumeric}" />
+                                                                                <TextBlock Text="{Binding Text}"
+                                                                                           FontSize="11"
+                                                                                           TextAlignment="{Binding Alignment}"
+                                                                                           TextWrapping="Wrap"
+                                                                                           ToolTip.Tip="{Binding Text}"
+                                                                                           IsVisible="{Binding !IsNumeric}" />
+                                                                            </Panel>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+
+                                            <TextBlock Text="该工作表没有可显示的数据" Classes="label"
+                                                       Margin="10,12" IsVisible="{Binding HasNoReportRows}" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -883,6 +1086,7 @@
                                                FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Button Grid.Column="2" Classes="ghost" Content="+ 导入下一场考试" Click="OnAddExamSession"
+                                        IsEnabled="{Binding !IsBusy}"
                                         VerticalAlignment="Center" Padding="14,7" FontSize="11.5" />
                             </Grid>
                         </Border>
@@ -1066,7 +1270,7 @@
                                         <TextBlock Grid.Column="4" Text="较均分" Classes="label" FontSize="10" HorizontalAlignment="Right" />
                                     </Grid>
 
-                                    <ItemsControl ItemsSource="{Binding Students}">
+                                    <ItemsControl ItemsSource="{Binding VisibleStudents}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:SubjectStudentRow">
                                                 <Border Classes="rank-row" CornerRadius="6" Padding="10,7" Margin="0,0,0,2">
@@ -1090,6 +1294,11 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+
+                                    <Button Classes="ghost" HorizontalAlignment="Left"
+                                            IsVisible="{Binding HasMoreStudents}"
+                                            Content="{Binding ListToggleText}"
+                                            Click="OnToggleStudents" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -1102,7 +1311,8 @@
                   Margin="34,18,34,0" RowDefinitions="Auto,*">
 
                 <Border Classes="card" Padding="16,14" Margin="0,0,0,14">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                    <Grid RowDefinitions="Auto,Auto">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
                         <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center">
                             <TextBlock Classes="display" Text="导出设置" FontSize="16" />
                             <TextBlock Text="A4 横向 · 一页宽" Classes="label" FontSize="9.5" />
@@ -1125,70 +1335,67 @@
 
                             <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                                 <TextBlock Text="排名维度" Classes="label" FontSize="10" />
-                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32" Width="92">
-                                    <Grid ColumnDefinitions="*,*">
+                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32">
+                                    <StackPanel Orientation="Horizontal">
                                         <Button Classes="rank-seg-btn"
                                                 Classes.active="{Binding !UseSchoolRank}"
                                                 Content="班排"
                                                 Click="OnSelectClassRank"
-                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
-                                                HorizontalContentAlignment="Center"
                                                 VerticalContentAlignment="Center"
+                                                MinWidth="42"
+                                                Padding="10,0"
                                                 FontSize="11" />
-                                        <Button Grid.Column="1"
-                                                Classes="rank-seg-btn"
+                                        <Button Classes="rank-seg-btn"
                                                 Classes.active="{Binding UseSchoolRank}"
                                                 Content="校排"
                                                 Click="OnSelectSchoolRank"
-                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
-                                                HorizontalContentAlignment="Center"
                                                 VerticalContentAlignment="Center"
+                                                MinWidth="42"
+                                                Padding="10,0"
                                                 FontSize="11" />
-                                    </Grid>
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
 
                             <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
                                 <TextBlock Text="对比基准" Classes="label" FontSize="10" />
-                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32" Width="142">
-                                    <Grid ColumnDefinitions="*,*,*">
+                                <Border Background="#EDE8DE" CornerRadius="6" Padding="2" Height="32">
+                                    <StackPanel Orientation="Horizontal">
                                         <Button Classes="rank-seg-btn"
                                                 Classes.active="{Binding IsComparisonPrevious}"
                                                 IsEnabled="{Binding HasActiveExamPrevious}"
                                                 Content="上一场"
                                                 Click="OnSelectCompPrevious"
                                                 ToolTip.Tip="与前一场统考对比进退步"
-                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
-                                                HorizontalContentAlignment="Center"
                                                 VerticalContentAlignment="Center"
+                                                MinWidth="42"
+                                                Padding="10,0"
                                                 FontSize="10.5" />
-                                        <Button Grid.Column="1"
-                                                Classes="rank-seg-btn"
+                                        <Button Classes="rank-seg-btn"
                                                 Classes.active="{Binding IsComparisonFirst}"
                                                 IsEnabled="{Binding HasMultipleExams}"
                                                 Content="首次"
                                                 Click="OnSelectCompFirst"
                                                 ToolTip.Tip="与第 1 次基准考对比进退步"
-                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
-                                                HorizontalContentAlignment="Center"
                                                 VerticalContentAlignment="Center"
+                                                MinWidth="42"
+                                                Padding="10,0"
                                                 FontSize="10.5" />
-                                        <Button Grid.Column="2"
-                                                Classes="rank-seg-btn"
+                                        <Button Classes="rank-seg-btn"
                                                 Classes.active="{Binding IsComparisonOriginal}"
                                                 Content="自带"
                                                 Click="OnSelectCompOriginal"
                                                 ToolTip.Tip="使用表格自带进退步"
-                                                HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
-                                                HorizontalContentAlignment="Center"
                                                 VerticalContentAlignment="Center"
+                                                MinWidth="42"
+                                                Padding="10,0"
                                                 FontSize="10.5" />
-                                    </Grid>
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
 
@@ -1204,19 +1411,48 @@
                                     VerticalAlignment="Center">
                             <CheckBox IsChecked="{Binding IncludeLegend, Mode=TwoWay}"
                                       FontSize="11.5" Content="首页图例" />
-                            <Button Classes="primary" Content="导出 xlsx" Click="OnExport" Padding="14,7" />
+                            <Button Classes="primary" Content="导出 xlsx" Click="OnExport"
+                                    IsEnabled="{Binding CanExport}" Padding="14,7" />
                         </StackPanel>
                     </Grid>
-                </Border>
 
-                <ScrollViewer Grid.Row="1" AllowAutoHide="True" HorizontalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding StripItems}" Margin="0,0,20,24">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Spacing="14" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
+                    <!-- 跨班总表的班级筛选：单班成绩表不显示，保持原样 -->
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6"
+                                    IsVisible="{Binding HasStripClasses}">
+                            <TextBlock Text="班级" Classes="label" FontSize="10" VerticalAlignment="Center" />
+                            <ComboBox Classes="report-class"
+                                      ItemsSource="{Binding StripClasses}"
+                                      SelectedItem="{Binding SelectedStripClass, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding StripItems}"
+                         Margin="0,0,20,24"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Padding="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,14" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                        <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                        </Style>
+                        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="Transparent" />
+                        </Style>
+                    </ListBox.Styles>
+                    <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:PreviewItem">
                                 <StackPanel>
                                     <Grid ColumnDefinitions="Auto,Auto,*" IsVisible="{Binding IsHeader}"
@@ -1427,9 +1663,8 @@
                                     </Border>
                                 </StackPanel>
                             </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
             </Grid>
 
             <!-- 状态栏 -->
@@ -1561,11 +1796,45 @@
                     <!-- 弹窗底栏 -->
                     <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
                         <Button Grid.Column="0" Classes="ghost" Content="+ 导入下一场考试" Click="OnAddExamSession"
+                                IsEnabled="{Binding !IsBusy}"
                                 Padding="16,8" FontSize="12.5" />
                         <Button Grid.Column="1" Classes="primary" Content="完成" Click="OnCloseExamManager"
                                 HorizontalAlignment="Right" Padding="24,8" FontSize="12.5" />
                     </Grid>
                 </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 忙碌遮罩：导入 / 解析 / 导出期间挡住重复操作，旋转弧线提示程序仍在工作 -->
+        <Grid Grid.ColumnSpan="2" Background="#66141413"
+              IsVisible="{Binding IsBusy}">
+            <Border Classes="card" Classes.busy-in="{Binding IsBusy}"
+                    Width="284" Padding="26,24"
+                    Background="{StaticResource PaperBrush}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Border.RenderTransform>
+                <StackPanel Spacing="18" HorizontalAlignment="Center">
+                    <Canvas Width="34" Height="34" HorizontalAlignment="Center"
+                            Classes.busy-spin="{Binding IsBusy}">
+                        <Canvas.RenderTransform>
+                            <RotateTransform Angle="0" />
+                        </Canvas.RenderTransform>
+                        <Ellipse Canvas.Left="1" Canvas.Top="1" Width="32" Height="32"
+                                 Stroke="{StaticResource LineBrush}" StrokeThickness="2.5" />
+                        <Path Canvas.Left="0" Canvas.Top="0"
+                              Data="M 17,1 A 16,16 0 0 1 32.03,22.47"
+                              Stroke="{StaticResource AccentBrush}"
+                              StrokeThickness="2.5" StrokeLineCap="Round" />
+                    </Canvas>
+                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding BusyText}" Classes="display" FontSize="15"
+                                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock Text="LOCAL ONLY · 本机解析 · 文件不上传" Classes="mono-label"
+                                   FontSize="9.5" LetterSpacing="1.2" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Grid>
     </Grid>

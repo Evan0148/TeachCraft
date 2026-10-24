@@ -28,6 +28,8 @@ preview-*.png
 
 # Trae / 编辑器缓存
 .trae-html-share-packages/
+.trae/
+.omo/
 
 # OS
 Thumbs.db

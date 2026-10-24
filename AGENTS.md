@@ -117,7 +117,7 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 ## 五、分晓（GradeStrip）集成约定
 
 - 分晓以 **项目引用 + 程序集内嵌** 的方式进入工具箱；点击「打开应用」在 **同一进程** 里创建 `GradeStrip.App.Views.MainWindow`，不要改成启动外部 exe。
-- `vendor/gradestrip` 是 **只读快照**，来源：`Evan0148/GradeStrip`，提交 `db0baeb`（2026-10-22）。唯一的结构性改动是把 `GradeStrip.App` 的 `OutputType` 改为 `Library`：它在本项目里只作为窗口模块使用；若保留 `WinExe`，framework-dependent 发布会报 `NETSDK1151`（自包含可执行文件不能被非自包含可执行文件引用）。
+- `vendor/gradestrip` 是 **只读快照**，来源：`Evan0148/GradeStrip`，当前同步至上游 2026-10-24 的 main（携带概览报表管线与成绩导入兼容修复的近期全部上游提交）。唯一的结构性改动是把 `GradeStrip.App` 的 `OutputType` 改为 `Library`：它在本项目里只作为窗口模块使用；若保留 `WinExe`，framework-dependent 发布会报 `NETSDK1151`（自包含可执行文件不能被非自包含可执行文件引用）。
 - 同步方式：从上游复制 `src/GradeStrip.App`、`src/GradeStrip.Core`（排除 `bin/obj` 与 `*.user`），保持相对目录结构；复制后把 `OutputType` 改为 `Library`，并删除 `ApplicationIcon` / `ApplicationManifest` 属性。若上游新增 App 级 `StaticResource`（笔刷、字体、样式），必须同步进 `src/TeachCraft.App/App.axaml`，否则 XAML 会在运行时找不到资源。
 - 发布目录里的 `GradeStrip.App.exe` / `GradeStrip.App.runtimeconfig.json` 由 `RemoveGradeStripAppHost` target 兜底删除，只保留 DLL。
 
@@ -173,3 +173,13 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 - 涉及归位的改动，必须额外验证：带表头 / 无表头名单识别、配置 xlsx 往返、PNG / PDF / Excel 三种导出。
 - 涉及时序的改动，必须额外验证：真实总表的年级/学期/月份/班级数识别、目标班级 7 节课与课服/午学/晚修提取、PNG 与 PDF 输出。
 - 发布前用 `--shot` / `--panel <tool-id>` / `--gradestrip-shot` / `--seatgrid-shot` / `--classblock-shot` 做一次视觉走查（详见 `.memory/07-验证与测试资产.md`）。
+
+---
+
+## 十、数据隐私红线（最高优先级）
+
+- **绝不能泄露参考数据**：真实学生姓名、考号、学校名、评语等可识别信息不得进入代码、测试、文档、演示数据、截图与提交信息；仓库公开托管，一经提交即永久公开。
+- **测试必须使用生成的假数据**：fixture 与演示数据一律使用合成克隆（真名→合成名、考号→合成考号、校名→合成校名，成绩/名次/结构保留）或内存构造数据；新增 fixture 必须按同一做法合成，禁止把用户提供过的真实文件内容直接入库。
+- **演示内容与截图同规则**：`StripPreview` 演示表、`Assets/Shots` 截图、`design-preview` 资产一律基于合成数据生成；数据更新后用上游分晓 `--shot` 重截。
+- **身份替换对照表不进仓库**：真名→假名映射表仅存本机 `temp/`（已 gitignore）。
+- **提交前自检**：diff 中出现真实姓名/考号/校名（含作为更长字符串的子串出现）即违规，立即停止提交并清理；合成名须选不含任何真实 token 的写法。
