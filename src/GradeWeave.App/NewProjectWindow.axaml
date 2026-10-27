@@ -1,0 +1,163 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:GradeWeave.App"
+        x:Class="GradeWeave.App.NewProjectWindow"
+        x:DataType="app:NewProjectViewModel"
+        Title="全新制作课表"
+        Width="520" Height="720"
+        MinWidth="460" MinHeight="600"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+    <Window.Styles>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.4" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="TextBox.cell">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+        <Style Selector="NumericUpDown.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="MinHeight" Value="24" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,14">
+            <StackPanel Spacing="3">
+                <TextBlock Text="全新制作" FontFamily="{StaticResource SerifFont}"
+                           FontSize="19" Foreground="{StaticResource InkBrush}" />
+                <TextBlock Text="不导入工作簿，从零开始建班级、学科与课时；任课教师稍后在「教师分工」里填。"
+                           FontSize="10" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,14">
+            <StackPanel Spacing="12" Margin="0,0,4,0">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="field-label" Text="学校名称（可选）" />
+                        <TextBox Classes="field" Text="{Binding SchoolName, Mode=TwoWay}"
+                                 PlaceholderText="例如：示例中学"
+                                 AutomationProperties.Name="学校名称" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Classes="field-label" Text="年级" />
+                        <TextBox Classes="field" Text="{Binding GradeName, Mode=TwoWay}"
+                                 PlaceholderText="例如：九年级"
+                                 AutomationProperties.Name="年级" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="field-label" Text="学期（可选）" />
+                        <TextBox Classes="field" Text="{Binding TermName, Mode=TwoWay}"
+                                 PlaceholderText="例如：2026 年秋季学期"
+                                 AutomationProperties.Name="学期" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Classes="field-label" Text="班级数" />
+                        <NumericUpDown Classes="field" Value="{Binding ClassCount, Mode=TwoWay}"
+                                       Minimum="1" Maximum="60" Increment="1"
+                                       AutomationProperties.Name="班级数" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Classes="helper"
+                           Text="班级名按年级自动生成（九年级 → 九（1）班…），之后可在「教师分工」里改名。" />
+
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                    <TextBlock Text="学科与周课时" FontSize="12.5" FontWeight="SemiBold"
+                               Foreground="{StaticResource InkBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding TotalHoursText}" FontFamily="{StaticResource MonoFont}"
+                               FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"
+                               ToolTip.Tip="每个班一周所有学科的课时合计；一周约 35 格正课，超出会排不下。" />
+                    <Button Grid.Column="2" Classes="link" Content="+ 添加学科"
+                            Command="{Binding AddSubjectCommand}" FontSize="10.5"
+                            AutomationProperties.Name="添加学科" />
+                </Grid>
+
+                <Border Background="#FCFBF7" BorderBrush="{StaticResource LineBrush}"
+                        BorderThickness="1" CornerRadius="7" Padding="8">
+                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                        <!-- 纵向滚动条覆盖在内容右缘上，右边距留出滚动条宽度，避免盖住行尾「删除」。 -->
+                        <ItemsControl ItemsSource="{Binding Subjects}" Margin="0,0,14,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="app:SubjectDraftViewModel">
+                                    <Grid ColumnDefinitions="*,96,Auto,Auto" ColumnSpacing="6" Margin="0,2">
+                                        <TextBox Classes="cell" Text="{Binding Name, Mode=TwoWay}"
+                                                 PlaceholderText="学科名"
+                                                 AutomationProperties.Name="{Binding AutomationName}" />
+                                        <NumericUpDown Grid.Column="1" Classes="cell"
+                                                       Value="{Binding WeeklyHours, Mode=TwoWay}"
+                                                       Minimum="0" Maximum="35" Increment="1"
+                                                       AutomationProperties.Name="{Binding AutomationName}" />
+                                        <CheckBox Grid.Column="2" Content="主课" IsChecked="{Binding IsMain, Mode=TwoWay}"
+                                                  VerticalAlignment="Center" Margin="2,0" />
+                                        <Button Grid.Column="3" Classes="link" Content="删除"
+                                                Command="{Binding $parent[ItemsControl].DataContext.RemoveSubjectCommand}"
+                                                CommandParameter="{Binding}" FontSize="10" VerticalAlignment="Center"
+                                                AutomationProperties.Name="{Binding AutomationName, StringFormat=删除学科 {0}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+
+                <TextBlock Text="{Binding ZeroHourHint}" IsVisible="{Binding HasZeroHour}"
+                           FontSize="10" Foreground="{StaticResource AccentDeepBrush}" TextWrapping="Wrap" />
+                <TextBlock Classes="helper"
+                           Text="周课时是每个班每周该学科的节数；勾「主课」的学科会优先排在上午。" />
+
+                <TextBlock Text="{Binding Error}" IsVisible="{Binding HasError}"
+                           FontSize="10.5" Foreground="{StaticResource AccentDeepBrush}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="ghost" Content="取消" Click="OnCancel" FontSize="11.5" Padding="14,7"
+                            IsCancel="True" AutomationProperties.Name="取消新建" />
+                    <Button Classes="primary" Content="创建工程" Click="OnCreate" FontSize="11.5" Padding="16,7"
+                            IsDefault="True" AutomationProperties.Name="创建工程" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

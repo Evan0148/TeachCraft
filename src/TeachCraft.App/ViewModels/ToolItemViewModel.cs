@@ -100,7 +100,14 @@ public partial class ToolItemViewModel : ObservableObject
 
     public bool IsMultiFile => Kind is ToolKind.ImagesToPdf or ToolKind.PdfMerge;
     public bool ShowFormat => Kind == ToolKind.ImageConvert;
-    public bool ShowQuality => Kind is ToolKind.ImageConvert or ToolKind.ImageCompress;
+
+    /// <summary>画质滑块只在有损编码下有意义：PNG 无损，转换到 JPG/WebP 或压缩时才显示。</summary>
+    public bool ShowQuality => Kind switch
+    {
+        ToolKind.ImageCompress => true,
+        ToolKind.ImageConvert => SelectedFormat is "JPG" or "WebP",
+        _ => false,
+    };
     public bool ShowResize => Kind == ToolKind.ImageResize;
     public bool ShowCompress => Kind == ToolKind.ImageCompress;
     public bool ShowWatermark => Kind == ToolKind.ImageWatermark;
@@ -220,6 +227,11 @@ public partial class ToolItemViewModel : ObservableObject
     partial void OnIsBusyChanged(bool value)
     {
         OnPropertyChanged(nameof(CanRun));
+    }
+
+    partial void OnSelectedFormatChanged(string value)
+    {
+        OnPropertyChanged(nameof(ShowQuality));
     }
 
     partial void OnLastOutputPathChanged(string? value)

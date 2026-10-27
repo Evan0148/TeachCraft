@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:app="using:ClassBlock.App"
+        xmlns:ct="using:ClassBlock.Core.Timetable"
         x:Class="ClassBlock.App.ClassBlockWindow"
         x:DataType="app:ClassBlockViewModel"
         Title="时序 · ClassBlock"
@@ -47,7 +48,7 @@
         <Style Selector="TextBlock.helper">
             <Setter Property="FontSize" Value="9.5" />
             <Setter Property="LineHeight" Value="16" />
-            <Setter Property="Foreground" Value="#9C9585" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBox.field">
@@ -58,6 +59,10 @@
             <Setter Property="Padding" Value="8,6" />
             <Setter Property="FontSize" Value="11.5" />
             <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <!-- 本窗口搜索框没有放大镜图标与快捷键徽章，覆盖全局样式恢复对称内边距 -->
+        <Style Selector="TextBox.search">
+            <Setter Property="Padding" Value="9,8" />
         </Style>
         <Style Selector="Button.top">
             <Setter Property="Padding" Value="11,6" />
@@ -149,7 +154,7 @@
                                Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"
                                MaxWidth="300" TextTrimming="CharacterEllipsis" />
                     <Border Classes="chip" VerticalAlignment="Center">
-                        <TextBlock Text="课堂应用" FontSize="9.5" Foreground="#6B6557" />
+                        <TextBlock Text="课堂应用" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
                     </Border>
                 </StackPanel>
 
@@ -157,9 +162,9 @@
                     <Button Classes="primary top" Content="导入总表" Click="OnImportMaster"
                             IsEnabled="{Binding IsIdle}" AutomationProperties.Name="导入总表" />
                     <Button Classes="ghost top" Content="打印" Click="OnPrint"
-                            IsEnabled="{Binding HasSelection}" AutomationProperties.Name="打印课程表" />
+                            IsEnabled="{Binding CanExport}" AutomationProperties.Name="打印课程表" />
                     <Button Classes="ghost top" Content="导出图片" Click="OnExportImage"
-                            IsEnabled="{Binding HasSelection}" AutomationProperties.Name="导出课程表图片" />
+                            IsEnabled="{Binding CanExport}" AutomationProperties.Name="导出课程表图片" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -175,7 +180,7 @@
                                        Foreground="{StaticResource InkBrush}" />
                             <Border Classes="chip" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding ClassCountLabel}" FontFamily="{StaticResource MonoFont}"
-                                           FontSize="9.5" Foreground="#6B6557" />
+                                           FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
                             </Border>
                         </StackPanel>
                         <TextBlock Grid.Column="1" Text="{Binding SourceName}" FontSize="9"
@@ -188,7 +193,7 @@
                         <TextBlock Text="{Binding MasterSummary}" FontFamily="{StaticResource MonoFont}"
                                    FontSize="9.5" LetterSpacing="0.5" Foreground="{StaticResource MutedBrush}" />
                         <TextBlock Text="选择下面任一班级，课程表会自动生成。" FontSize="9.5"
-                                   Foreground="#A29C8C" />
+                                   Foreground="{StaticResource MutedBrush}" />
                     </StackPanel>
 
                     <Border Grid.Row="2" IsVisible="{Binding HasWarnings}" Background="#FDF6F2"
@@ -211,7 +216,7 @@
                                           AutomationProperties.Name="{Binding AutomationName}">
                                         <Border Classes="class-badge" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Badge}" FontFamily="{StaticResource MonoFont}"
-                                                       FontSize="9.5" Foreground="#6B6557"
+                                                       FontSize="9.5" Foreground="{StaticResource MutedBrush}"
                                                        HorizontalAlignment="Center" />
                                         </Border>
                                         <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
@@ -233,7 +238,7 @@
                                        FontSize="15" Foreground="{StaticResource MutedBrush}"
                                        HorizontalAlignment="Center" />
                             <TextBlock Text="导入总表后，这里会出现各班。" FontSize="10"
-                                       Foreground="#A29C8C" HorizontalAlignment="Center" />
+                                       Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
                             <Button Classes="primary" Content="导入总表" Click="OnImportMaster"
                                     HorizontalAlignment="Center" />
                         </StackPanel>
@@ -281,6 +286,30 @@
             <Border Grid.Column="2" Classes="panel">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="14" Spacing="11">
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="8">
+                                <TextBlock Classes="section-title" Text="作息模板" />
+                                <ComboBox ItemsSource="{Binding Templates}"
+                                          SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="作息模板">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="ct:TimetableTemplate">
+                                            <TextBlock Text="{Binding Name}" FontSize="11.5" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock Text="模板决定课表的行序与时间，导入总表后按年级自动套用。"
+                                           Classes="helper" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button Classes="ghost" Content="编辑模板" Click="OnEditTemplate" FontSize="11"
+                                            AutomationProperties.Name="编辑作息模板" />
+                                    <Button Classes="ghost" Content="新建模板" Click="OnNewTemplate" FontSize="11"
+                                            AutomationProperties.Name="新建作息模板" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <Border Classes="settings-card">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="section-title" Text="课程表标题" />
@@ -361,7 +390,7 @@
                 </StackPanel>
                 <TextBlock Grid.Column="1" Text="{Binding MasterSummary}"
                            FontFamily="{StaticResource MonoFont}" FontSize="9"
-                           Foreground="#A29C8C" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="LOCAL ONLY · 总表不上传"
                            FontFamily="{StaticResource MonoFont}" FontSize="8.5"
                            LetterSpacing="1.2" Foreground="{StaticResource MossBrush}"

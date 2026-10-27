@@ -23,13 +23,21 @@ public partial class SeatGridWindow : Window
 {
     private string? _rosterPath;
 
-    // ----------------------------- 座位拖拽 -----------------------------
-    private SeatCellViewModel? _dragSource;
+    // ----------------------------- 座位 / 行列拖拽 -----------------------------
+    private enum DragMode { None, Seat, Row, Column }
+
+    private DragMode _dragMode;
+    private SeatCellViewModel? _dragSource;   // Seat 模式：被拖的学生卡
+    private int _dragRow;                     // Row 模式：源排（0 基）
+    private int _dragGroup;                   // Column 模式：源组（0 基）
+    private int _dragColumn;                  // Column 模式：源列（0 基组内列）
     private Border? _dragGhost;
     private SeatCellViewModel? _dropTarget;
+    private (int? Row, int? Group, int? Column) _hoverLine;
     private bool _dragStarted;
     private bool _suppressSeatClick;
     private Point _pressPoint;
+    private readonly List<SeatCellViewModel> _lineHighlight = new();
 
     public SeatGridWindow() : this(new SeatGridViewModel())
     {
@@ -39,6 +47,19 @@ public partial class SeatGridWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+
+        // 座位是 Button，Avalonia 的 Button 会把 PointerPressed / PointerReleased 标记为已处理，
+        // XAML 里默认挂的指针处理器收不到这两个事件，拖拽会永远停在按下状态。
+        // 统一在窗口层用 handledEventsToo 接管：按下/释放走隧道，保证在 Button 改状态之前处理。
+        AddHandler(PointerPressedEvent, OnSeatPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, OnSeatPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnSeatPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerCaptureLostEvent, OnSeatPointerCaptureLost, RoutingStrategies.Bubble, handledEventsToo: true);
+
+        // 布局滑块按下时先挂起重建，松手后一次性刷新，避免逐 tick 重建整张座位表。
+        AddHandler(PointerPressedEvent, OnLayoutSliderPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnLayoutSliderPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerCaptureLostEvent, OnLayoutSliderCaptureLost, RoutingStrategies.Bubble, handledEventsToo: true);
     }
 
     private SeatGridViewModel ViewModel => (SeatGridViewModel)DataContext!;
@@ -110,18 +131,37 @@ public partial class SeatGridWindow : Window
     private void OnSeatPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         _suppressSeatClick = false;
-        if (ViewModel.IsBusy || sender is not Button { Tag: SeatCellViewModel seat }) return;
-        if (seat.IsEmpty) return;
+        if (ViewModel.IsBusy) return;
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
 
-        _dragSource = seat;
+        // 座位卡片与行列把手都是 Button；在窗口层按 Tag 分流拖拽模式。
+        var button = (e.Source as Visual)?.FindAncestorOfType<Button>(true);
+        switch (button?.Tag)
+        {
+            case SeatCellViewModel seat when !seat.IsEmpty:
+                _dragMode = DragMode.Seat;
+                _dragSource = seat;
+                break;
+            case RowViewModel row when button.Classes.Contains("line-handle"):
+                _dragMode = DragMode.Row;
+                _dragRow = row.Number - 1;
+                break;
+            case ColumnHandleViewModel column:
+                _dragMode = DragMode.Column;
+                _dragGroup = column.Group;
+                _dragColumn = column.Column;
+                break;
+            default:
+                return;
+        }
+
         _dragStarted = false;
         _pressPoint = e.GetPosition(this);
     }
 
     private void OnSeatPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_dragSource is null || ViewModel.IsBusy) return;
+        if (_dragMode == DragMode.None || ViewModel.IsBusy) return;
 
         var position = e.GetPosition(this);
         if (!_dragStarted)
@@ -139,28 +179,82 @@ public partial class SeatGridWindow : Window
     {
         if (!_dragStarted)
         {
+            _dragMode = DragMode.None;
             _dragSource = null;
             return; // 普通点击，交给 Click 处理
         }
 
-        var source = _dragSource;
-        var target = _dropTarget;
+        var mode = _dragMode;
+        var sourceSeat = _dragSource;
+        var targetSeat = _dropTarget;
+        var sourceRow = _dragRow;
+        var sourceGroup = _dragGroup;
+        var sourceColumn = _dragColumn;
+        var hover = _hoverLine;
+
         EndDragVisuals();
+        _dragMode = DragMode.None;
         _dragSource = null;
         _dragStarted = false;
         _suppressSeatClick = true;
 
-        if (source is not null && target is not null)
-            ViewModel.MoveSeatStudent(source, target);
-        else
-            ViewModel.SetStatus("已取消移动。");
+        switch (mode)
+        {
+            case DragMode.Row when hover.Row is int targetRow && targetRow != sourceRow:
+                ViewModel.SwapRows(sourceRow, targetRow);
+                break;
+            case DragMode.Column when hover.Group is int group && hover.Column is int column:
+                ViewModel.SwapColumns(sourceGroup, sourceColumn, group, column);
+                break;
+            case DragMode.Seat:
+                if (sourceSeat is not null && targetSeat is not null)
+                    ViewModel.MoveSeatStudent(sourceSeat, targetSeat);
+                else
+                    ViewModel.SetStatus("已取消移动。");
+                break;
+            default:
+                ViewModel.SetStatus(mode switch
+                {
+                    DragMode.Row => "已取消整排调整。",
+                    DragMode.Column => "已取消整列调整。",
+                    _ => "已取消移动。",
+                });
+                break;
+        }
     }
 
     private void OnSeatPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e) => CancelDrag();
 
+    private void OnLayoutSliderPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (IsSliderSource(e.Source)) ViewModel.BeginInteractiveLayoutChange();
+    }
+
+    private void OnLayoutSliderPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (IsSliderSource(e.Source)) ViewModel.EndInteractiveLayoutChange();
+    }
+
+    private void OnLayoutSliderCaptureLost(object? sender, PointerCaptureLostEventArgs e) =>
+        ViewModel.EndInteractiveLayoutChange();
+
+    private static bool IsSliderSource(object? source)
+    {
+        var visual = source as Visual;
+        while (visual is not null)
+        {
+            if (visual is Slider) return true;
+            visual = visual.GetVisualParent();
+        }
+
+        return false;
+    }
+
     private void BeginDrag()
     {
         _dragStarted = true;
+        if (_dragMode != DragMode.Seat) return; // 行列拖拽不显示浮层，靠高亮目标线反馈
+
         var source = _dragSource!;
         _dragGhost = new Border
         {
@@ -187,40 +281,102 @@ public partial class SeatGridWindow : Window
 
     private void UpdateDrag(Point position)
     {
-        if (_dragGhost is { } ghost)
+        if (_dragMode == DragMode.Seat)
         {
-            Canvas.SetLeft(ghost, position.X - ghost.Width / 2);
-            Canvas.SetTop(ghost, position.Y - ghost.Height / 2);
+            if (_dragGhost is { } ghost)
+            {
+                Canvas.SetLeft(ghost, position.X - ghost.Width / 2);
+                Canvas.SetTop(ghost, position.Y - ghost.Height / 2);
+            }
+
+            var seat = FindSeatUnder(this.InputHitTest(position) as Visual);
+            if (!ReferenceEquals(seat, _dropTarget))
+            {
+                _dropTarget?.SetDropTarget(false);
+                _dropTarget = seat;
+                _dropTarget?.SetDropTarget(true);
+            }
+            return;
         }
 
-        var seat = FindSeatUnder(this.InputHitTest(position) as Visual);
-        if (!ReferenceEquals(seat, _dropTarget))
+        // 行列拖拽：高亮指针下的整排 / 整列
+        var button = (this.InputHitTest(position) as Visual)?.FindAncestorOfType<Button>(true);
+        int? hoverRow = null;
+        int? hoverGroup = null;
+        int? hoverColumn = null;
+
+        if (_dragMode == DragMode.Row)
         {
-            _dropTarget?.SetDropTarget(false);
-            _dropTarget = seat;
-            _dropTarget?.SetDropTarget(true);
+            if (button?.Tag is SeatCellViewModel seat) hoverRow = seat.Position.Row;
+            else if (button?.Tag is RowViewModel row) hoverRow = row.Number - 1;
         }
+        else if (_dragMode == DragMode.Column)
+        {
+            if (button?.Tag is SeatCellViewModel seatColumn)
+            {
+                hoverGroup = seatColumn.Position.Group;
+                hoverColumn = seatColumn.Position.Column;
+            }
+            else if (button?.Tag is ColumnHandleViewModel handle)
+            {
+                hoverGroup = handle.Group;
+                hoverColumn = handle.Column;
+            }
+        }
+
+        var hover = (hoverRow, hoverGroup, hoverColumn);
+        if (hover == _hoverLine) return;
+
+        ClearLineHighlight();
+        if (hoverRow is int targetRow)
+            HighlightSeats(seat => seat.Position.Row == targetRow);
+        else if (hoverGroup is int group && hoverColumn is int column)
+            HighlightSeats(seat => seat.Position.Group == group && seat.Position.Column == column);
+        _hoverLine = hover;
     }
 
     private SeatCellViewModel? FindSeatUnder(Visual? visual)
     {
-        var button = visual?.FindAncestorOfType<Button>();
-        if (button?.Tag is not SeatCellViewModel seat) return null;
+        var seat = FindSeatFromSource(visual);
         return ReferenceEquals(seat, _dragSource) ? null : seat;
     }
+
+    /// <summary>指针事件源可能落在座位卡片内的 TextBlock 上，向上找到座位 Button 再取 Tag。</summary>
+    private static SeatCellViewModel? FindSeatFromSource(object? source) =>
+        (source as Visual)?.FindAncestorOfType<Button>(true)?.Tag as SeatCellViewModel;
 
     private void EndDragVisuals()
     {
         _dropTarget?.SetDropTarget(false);
         _dropTarget = null;
+        ClearLineHighlight();
+        _hoverLine = (null, null, null);
         DragLayer.Children.Clear();
         _dragGhost = null;
+    }
+
+    private void ClearLineHighlight()
+    {
+        foreach (var seat in _lineHighlight)
+            seat.SetDropTarget(false);
+        _lineHighlight.Clear();
+    }
+
+    private void HighlightSeats(Func<SeatCellViewModel, bool> predicate)
+    {
+        foreach (var seat in ViewModel.Seats)
+        {
+            if (!predicate(seat)) continue;
+            seat.SetDropTarget(true);
+            _lineHighlight.Add(seat);
+        }
     }
 
     private void CancelDrag()
     {
         if (!_dragStarted) return;
         EndDragVisuals();
+        _dragMode = DragMode.None;
         _dragSource = null;
         _dragStarted = false;
     }
@@ -236,6 +392,14 @@ public partial class SeatGridWindow : Window
     private void OnDeleteStudent(object? sender, RoutedEventArgs e) => ViewModel.DeleteSelectedStudent();
 
     private void OnResetStyle(object? sender, RoutedEventArgs e) => ViewModel.ResetStyle();
+
+    private void OnShiftLeft(object? sender, RoutedEventArgs e) => ViewModel.ShiftAllSeats(-1, 0);
+
+    private void OnShiftRight(object? sender, RoutedEventArgs e) => ViewModel.ShiftAllSeats(1, 0);
+
+    private void OnShiftUp(object? sender, RoutedEventArgs e) => ViewModel.ShiftAllSeats(0, -1);
+
+    private void OnShiftDown(object? sender, RoutedEventArgs e) => ViewModel.ShiftAllSeats(0, 1);
 
     // ----------------------------- 预览 / 打印 / 导出 -----------------------------
 

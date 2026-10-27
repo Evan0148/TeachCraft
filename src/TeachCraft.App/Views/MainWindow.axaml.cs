@@ -22,8 +22,13 @@ namespace TeachCraft.App.Views;
 
 public partial class MainWindow : Window
 {
+    /// <summary>没有打开工具抽屉时拖入文件的提示，避免静默拒绝。</summary>
+    private const string NoPanelDragHint = "请先打开对应工具面板，再拖入文件";
+
     private SeatGridWindow? _seatGridWindow;
     private ClassBlockWindow? _classBlockWindow;
+    private GradeWeave.App.GradeWeaveWindow? _gradeWeaveWindow;
+    private GradeStrip.App.Views.MainWindow? _gradeStripWindow;
     public MainWindow()
     {
         InitializeComponent();
@@ -418,17 +423,49 @@ public partial class MainWindow : Window
         }
     }
 
+    // ----------------------------- 织序 · GradeWeave -----------------------------
+
+    private void OnLaunchGradeWeave(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_gradeWeaveWindow is { IsVisible: true })
+            {
+                _gradeWeaveWindow.Activate();
+                return;
+            }
+
+            _gradeWeaveWindow = new GradeWeave.App.GradeWeaveWindow();
+            _gradeWeaveWindow.Closed += (_, _) => _gradeWeaveWindow = null;
+            _gradeWeaveWindow.Show();
+            ViewModel.SetStatus("已打开 织序 · GradeWeave");
+        }
+        catch (Exception ex)
+        {
+            ViewModel.SetStatus("打开 织序 失败：" + ex.Message, true);
+        }
+    }
+
     // ----------------------------- 分晓 -----------------------------
 
     private void OnLaunchGradeStrip(object? sender, RoutedEventArgs e)
     {
         try
         {
-            var window = new GradeStrip.App.Views.MainWindow
+            // 单实例复用：分晓一次导入可能持有数千名学生的数据与报表视图模型，
+            // 重复打开窗口等于把这份内存翻倍。
+            if (_gradeStripWindow is { IsVisible: true })
+            {
+                _gradeStripWindow.Activate();
+                return;
+            }
+
+            _gradeStripWindow = new GradeStrip.App.Views.MainWindow
             {
                 DataContext = new GradeStrip.App.ViewModels.MainViewModel(),
             };
-            window.Show();
+            _gradeStripWindow.Closed += (_, _) => _gradeStripWindow = null;
+            _gradeStripWindow.Show();
             ViewModel.SetStatus("已打开 分晓 · GradeStrip");
         }
         catch (Exception ex)
@@ -468,14 +505,22 @@ public partial class MainWindow : Window
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.DataTransfer.Contains(DataFormat.File) && ViewModel.IsToolPanelOpen
+        var hasFiles = e.DataTransfer.Contains(DataFormat.File);
+        e.DragEffects = hasFiles && ViewModel.IsToolPanelOpen
             ? DragDropEffects.Copy
             : DragDropEffects.None;
+
+        if (hasFiles && !ViewModel.IsToolPanelOpen && ViewModel.StatusText != NoPanelDragHint)
+            ViewModel.SetStatus(NoPanelDragHint);
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
-        if (!ViewModel.IsToolPanelOpen || ViewModel.SelectedTool is null) return;
+        if (!ViewModel.IsToolPanelOpen || ViewModel.SelectedTool is null)
+        {
+            if (e.DataTransfer.Contains(DataFormat.File)) ViewModel.SetStatus(NoPanelDragHint);
+            return;
+        }
 
         var files = e.DataTransfer.TryGetFiles();
         if (files is null) return;

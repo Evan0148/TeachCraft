@@ -91,22 +91,28 @@
             <Setter Property="Background" Value="#F7F4EB" />
             <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
         </Style>
-        <Style Selector="Button.accent">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
-            <Setter Property="BorderThickness" Value="0" />
+        <Style Selector="Button.accent-outline">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="BorderBrush" Value="#E9C4B6" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
-        <Style Selector="Button.accent /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+        <Style Selector="Button.accent-outline /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
-        <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{StaticResource AccentDeepBrush}" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+        <Style Selector="Button.accent-outline:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FBEDE7" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
-        <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#E7C8BB" />
-            <Setter Property="Foreground" Value="#FFF8F4" />
+        <Style Selector="Button.accent-outline:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F7E0D6" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+        </Style>
+        <Style Selector="Button.accent-outline:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#BDB6A4" />
+            <Setter Property="BorderBrush" Value="#E7E3D8" />
         </Style>
         <Style Selector="ListBox.roster">
             <Setter Property="Background" Value="Transparent" />
@@ -169,6 +175,24 @@
             <Setter Property="BorderBrush" Value="{StaticResource AccentDeepBrush}" />
             <Setter Property="BorderThickness" Value="2" />
         </Style>
+        <Style Selector="Button.line-handle">
+            <Setter Property="Background" Value="#FBEDE7" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="BorderBrush" Value="#E9C4B6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.line-handle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F7E0D6" />
+        </Style>
+        <Style Selector="Button.line-handle:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F2D3C6" />
+        </Style>
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto">
@@ -223,27 +247,27 @@
                     <TextBlock Text="{Binding Title}" FontFamily="{StaticResource SerifFont}" FontSize="22"
                                Foreground="{StaticResource InkBrush}" VerticalAlignment="Center"
                                MaxWidth="280" TextTrimming="CharacterEllipsis" />
-                    <Border Classes="chip" VerticalAlignment="Center">
-                        <TextBlock Text="课堂应用" FontSize="9.5" Foreground="#6B6557" />
-                    </Border>
+                    <TextBlock Text="课堂应用" FontSize="9.5" LetterSpacing="1"
+                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Button Classes="primary top" Content="导入名单" Click="OnImportRoster"
                             IsEnabled="{Binding IsIdle}" AutomationProperties.Name="导入名单" />
+                    <TextBlock Text="排座方式" Classes="field-label" VerticalAlignment="Center" />
                     <ComboBox Classes="field" Width="104" ItemsSource="{Binding ArrangeModes}"
                               SelectedIndex="{Binding ArrangeModeIndex, Mode=TwoWay}"
                               ToolTip.Tip="自动排座方式" />
-                    <Button Classes="accent top" Content="自动排座" Click="OnAutoArrange"
-                            IsEnabled="{Binding IsIdle}" AutomationProperties.Name="自动排座" />
+                    <Button Classes="accent-outline top" Content="自动排座" Click="OnAutoArrange"
+                            IsEnabled="{Binding CanArrange}" AutomationProperties.Name="自动排座" />
                     <Button Classes="ghost top" Content="预览" Click="OnPreview"
-                            IsEnabled="{Binding HasStudents}" />
+                            IsEnabled="{Binding CanExport}" />
                     <Button Classes="ghost top" Content="打印" Click="OnPrint"
-                            IsEnabled="{Binding HasStudents}" />
+                            IsEnabled="{Binding CanExport}" />
                     <Button Classes="ghost top" Content="导出图片" Click="OnExportImage"
-                            IsEnabled="{Binding HasStudents}" />
+                            IsEnabled="{Binding CanExport}" />
                     <Button Classes="ghost top" Content="导出 Excel" Click="OnExportExcel"
-                            IsEnabled="{Binding HasStudents}" />
+                            IsEnabled="{Binding CanExport}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -371,14 +395,27 @@
                         <Button Classes="mode" Classes.active="{Binding IsStudentView}"
                                 Content="学生视角" Click="OnStudentView" />
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Text="按住学生拖到另一座位即可交换（空位则移动）；也可点座位选中后从左侧名单放人。"
+                    <TextBlock Grid.Column="1" Text="按住学生卡片拖到另一座位即交换（空位则移动）；行首、列尾把手可整排整列对调。"
                                FontSize="9.5" Foreground="{StaticResource MutedBrush}"
                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
-                    <Border Grid.Column="2" Classes="chip" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding SeatStats}" FontFamily="{StaticResource MonoFont}"
-                                   FontSize="9.5" Foreground="#6B6557" />
-                    </Border>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Border Classes="chip" IsVisible="{Binding ShowGenderLegend}" VerticalAlignment="Center"
+                                ToolTip.Tip="座位表中男 / 女生姓名所用的颜色">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Ellipse Width="6" Height="6" Fill="{Binding SeatTextBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="男" FontSize="9.5" Foreground="{Binding SeatTextBrush}"
+                                           VerticalAlignment="Center" />
+                                <Ellipse Width="6" Height="6" Fill="{Binding FemaleMarkBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="女" FontSize="9.5" Foreground="{Binding FemaleMarkBrush}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="chip" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SeatStats}" FontFamily="{StaticResource MonoFont}"
+                                       FontSize="9.5" Foreground="#6B6557" />
+                        </Border>
+                    </StackPanel>
                 </Grid>
 
                 <Border Grid.Row="1" Classes="chart-card">
@@ -420,11 +457,15 @@
                                                         <DataTemplate x:DataType="app:RowViewModel">
                                                             <StackPanel Orientation="Horizontal" Spacing="6"
                                                                         Margin="0,0,0,6">
-                                                                <Border Width="44" IsVisible="{Binding ShowRowLabel}">
-                                                                    <TextBlock Text="{Binding Label}"
-                                                                               TextAlignment="Right" FontSize="9"
-                                                                               Foreground="{Binding LabelBrush}"
-                                                                               VerticalAlignment="Center" />
+                                                                <Border Width="44" IsVisible="{Binding ShowHandle}">
+                                                                    <Button Classes="line-handle" Tag="{Binding}"
+                                                                            Width="30" Height="20"
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"
+                                                                            Content="{Binding Number}"
+                                                                            FontFamily="{StaticResource MonoFont}"
+                                                                            ToolTip.Tip="按住拖动：与目标排整排对调"
+                                                                            AutomationProperties.Name="{Binding AutomationName}" />
                                                                 </Border>
                                                                 <ItemsControl ItemsSource="{Binding Seats}">
                                                                     <ItemsControl.ItemsPanel>
@@ -444,10 +485,6 @@
                                                                                     Foreground="{Binding NameBrush}"
                                                                                     Tag="{Binding}"
                                                                                     Click="OnSeatClick"
-                                                                                    PointerPressed="OnSeatPointerPressed"
-                                                                                    PointerMoved="OnSeatPointerMoved"
-                                                                                    PointerReleased="OnSeatPointerReleased"
-                                                                                    PointerCaptureLost="OnSeatPointerCaptureLost"
                                                                                     ToolTip.Tip="{Binding PositionLabel}"
                                                                                     AutomationProperties.Name="{Binding AutomationName}">
                                                                                 <TextBlock Text="{Binding DisplayName}"
@@ -464,6 +501,28 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
+
+                                                <Grid ColumnDefinitions="Auto,*" Margin="0,3,0,0">
+                                                    <Border Grid.Column="0" Width="44"
+                                                            IsVisible="{Binding ShowRowSpacer}" />
+                                                    <ItemsControl Grid.Column="1" ItemsSource="{Binding ColumnHandles}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="app:ColumnHandleViewModel">
+                                                                <Button Classes="line-handle" Tag="{Binding}"
+                                                                        Width="{Binding Width}" Height="16"
+                                                                        CornerRadius="4" FontSize="10"
+                                                                        Content="⠿"
+                                                                        ToolTip.Tip="按住拖动：与目标列整列对调"
+                                                                        AutomationProperties.Name="{Binding AutomationName}" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Grid>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -549,6 +608,31 @@
                                 </Grid>
                                 <Slider Minimum="50" Maximum="200" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Value="{Binding CellScale, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 行列调整 -->
+                        <Border Classes="settings-card">
+                            <StackPanel Spacing="9">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Classes="section-title" Text="调整行列" />
+                                    <TextBlock Grid.Column="1" Text="SHIFT" FontFamily="{StaticResource MonoFont}"
+                                               FontSize="8.5" Foreground="#A29C8C" VerticalAlignment="Center" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="5">
+                                    <Button Classes="mode" Content="全部向左平移" Click="OnShiftLeft"
+                                            AutomationProperties.Name="全部向左平移" />
+                                    <Button Grid.Column="1" Classes="mode" Content="全部向右平移" Click="OnShiftRight"
+                                            AutomationProperties.Name="全部向右平移" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="5">
+                                    <Button Classes="mode" Content="全部向上平移" Click="OnShiftUp"
+                                            AutomationProperties.Name="全部向上平移" />
+                                    <Button Grid.Column="1" Classes="mode" Content="全部向下平移" Click="OnShiftDown"
+                                            AutomationProperties.Name="全部向下平移" />
+                                </Grid>
+                                <TextBlock Text="整班座位沿当前视角平移一格，超出边缘自动绕回。行首与列尾的暖色把手可按住拖动，与目标整排 / 整列对调。"
+                                           Classes="helper" />
                             </StackPanel>
                         </Border>
 
@@ -670,7 +754,7 @@
                                 <TextBlock Text="未安排学生的座位将隐藏虚线框。" Classes="helper" />
                                 <CheckBox IsChecked="{Binding ShowGroupRowHints, Mode=TwoWay}"
                                           Content="显示组排提示" FontSize="11" />
-                                <TextBlock Text="关闭后隐藏「第几组」和「第几排」提示。" Classes="helper" />
+                                <TextBlock Text="关闭后隐藏「第几组」标题；行首排号把手仍保留，用于拖动整排。" Classes="helper" />
                             </StackPanel>
                         </Border>
 

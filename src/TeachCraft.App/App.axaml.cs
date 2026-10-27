@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using TeachCraft.App.ViewModels;
 using TeachCraft.App.Views;
@@ -25,7 +26,10 @@ public partial class App : Application
             desktop.MainWindow = window;
 
             if (!CaptureGradeStripIfRequested(desktop) && !CaptureSeatGridIfRequested(desktop) &&
-                !CaptureClassBlockIfRequested(desktop) && !ShowSeatGridDemoIfRequested(desktop))
+                !CaptureClassBlockIfRequested(desktop) && !CaptureGradeWeaveIfRequested(desktop) &&
+                !CaptureGradeWeaveTimetableIfRequested(desktop) &&
+                !CaptureGradeWeaveConflictIfRequested(desktop) &&
+                !ShowSeatGridDemoIfRequested(desktop))
                 CaptureIfRequested(desktop, window);
         }
 
@@ -60,6 +64,215 @@ public partial class App : Application
 
                 await Task.Delay(900);
                 window.CaptureTo(target);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
+    }
+
+    /// <summary>设计走查：打开「织序」窗口并截图。</summary>
+    private static bool CaptureGradeWeaveIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--gradeweave-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var source = index + 2 < args.Length && args[index + 2] != "-" ? args[index + 2] : null;
+        var stepText = index + 3 < args.Length ? args[index + 3] : null;
+        var lockText = index + 4 < args.Length ? args[index + 4] : null;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+                var window = new GradeWeave.App.GradeWeaveWindow
+                {
+                    Width = 1440,
+                    Height = 920,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                };
+
+                window.Show();
+                await Task.Delay(400);
+
+                if (!string.IsNullOrWhiteSpace(source))
+                {
+                    if (!string.Equals(source, "empty", StringComparison.OrdinalIgnoreCase))
+                        await window.LoadProjectFromFileAsync(source);
+                }
+                else
+                {
+                    window.LoadDemoProject();
+                }
+
+                if (int.TryParse(stepText, out var step))
+                {
+                    window.SetStepForCapture(step);
+                    if (step == 5)
+                    {
+                        await window.GenerateForCaptureAsync();
+
+                        // 走查锁课角标：给当前班级的所有普通课加锁。
+                        if (string.Equals(lockText, "lock", StringComparison.OrdinalIgnoreCase) &&
+                            window.DataContext is GradeWeave.App.GradeWeaveViewModel viewModel &&
+                            viewModel.FilteredClasses.FirstOrDefault() is { } classItem)
+                        {
+                            viewModel.SetClassLessonsLocked(classItem.Class.Id, locked: true);
+                        }
+                    }
+                }
+
+                await Task.Delay(900);
+                window.UpdateLayout();
+
+                var pixelSize = new PixelSize(
+                    (int)Math.Max(1, window.Bounds.Width),
+                    (int)Math.Max(1, window.Bounds.Height));
+                using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+                bitmap.Render(window);
+
+                using var stream = File.Create(target);
+                bitmap.Save(stream, new PngBitmapEncoderOptions());
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
+    }
+
+    /// <summary>设计走查：打开织序「作息时间表」编辑窗口并截图。</summary>
+    private static bool CaptureGradeWeaveTimetableIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--gradeweave-timetable-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var source = index + 2 < args.Length && args[index + 2] != "-" ? args[index + 2] : null;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+
+                GradeWeave.Core.Models.WeaveProject project;
+                if (source is not null)
+                {
+                    project = new GradeWeave.Core.Import.WeaveWorkbookImporter().Import(source).Project;
+                    GradeWeave.Core.Timetable.TimetableService.Ensure(project);
+                }
+                else
+                {
+                    project = GradeWeave.Core.Models.WeaveSamples.CreateDemo();
+                }
+
+                var window = new GradeWeave.App.TimetableEditorWindow(project)
+                {
+                    Width = 1040,
+                    Height = 800,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                };
+                window.Show();
+                await Task.Delay(900);
+                window.UpdateLayout();
+
+                var pixelSize = new PixelSize(
+                    (int)Math.Max(1, window.Bounds.Width),
+                    (int)Math.Max(1, window.Bounds.Height));
+                using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+                bitmap.Render(window);
+
+                using var stream = File.Create(target);
+                bitmap.Save(stream, new PngBitmapEncoderOptions());
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
+    }
+
+    /// <summary>设计走查：打开织序冲突聚合台并截图。</summary>
+    private static bool CaptureGradeWeaveConflictIfRequested(
+        IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--gradeweave-conflicts-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var source = index + 2 < args.Length && args[index + 2] != "-" ? args[index + 2] : null;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+                var window = new GradeWeave.App.GradeWeaveWindow
+                {
+                    Width = 1440,
+                    Height = 920,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                };
+                window.Show();
+                await Task.Delay(300);
+
+                if (source is not null) await window.LoadProjectFromFileAsync(source);
+                else window.LoadDemoProject();
+
+                window.SetStepForCapture(5);
+                if (window.DataContext is not GradeWeave.App.GradeWeaveViewModel viewModel)
+                    throw new InvalidOperationException("织序窗口没有可用的视图模型。");
+
+                if (viewModel.Project.Lessons.Count == 0) await window.GenerateForCaptureAsync();
+                await viewModel.RefreshConflictsAsync(quiet: true, announce: false);
+
+                var center = new GradeWeave.App.ConflictCenterWindow(viewModel, _ => { })
+                {
+                    Width = 880,
+                    Height = 700,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                };
+                center.Show(window);
+                await Task.Delay(900);
+                center.UpdateLayout();
+
+                var pixelSize = new PixelSize(
+                    (int)Math.Max(1, center.Bounds.Width),
+                    (int)Math.Max(1, center.Bounds.Height));
+                using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+                bitmap.Render(center);
+
+                using var stream = File.Create(target);
+                bitmap.Save(stream, new PngBitmapEncoderOptions());
+                center.Close();
                 window.Close();
             }
             catch (Exception ex)

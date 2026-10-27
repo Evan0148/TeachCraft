@@ -1,18 +1,19 @@
 <Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/tests/">
-    <Project Path="tests/TeachCraft.Tests/TeachCraft.Tests.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/ClassBlock.App/ClassBlock.App.csproj" />
+    <Project Path="src/ClassBlock.Core/ClassBlock.Core.csproj" />
+    <Project Path="src/GradeStrip.App/GradeStrip.App.csproj" />
+    <Project Path="src/GradeStrip.Core/GradeStrip.Core.csproj" />
+    <Project Path="src/GradeWeave.App/GradeWeave.App.csproj" />
+    <Project Path="src/GradeWeave.Core/GradeWeave.Core.csproj" />
+    <Project Path="src/SeatGrid.App/SeatGrid.App.csproj" />
+    <Project Path="src/SeatGrid.Core/SeatGrid.Core.csproj" />
+    <Project Path="src/TeachCraft.App/TeachCraft.App.csproj" />
+    <Project Path="src/TeachCraft.Core/TeachCraft.Core.csproj" />
   </Folder>
-  <Project Path="src/ClassBlock.App/ClassBlock.App.csproj" />
-  <Project Path="src/ClassBlock.Core/ClassBlock.Core.csproj" />
-  <Project Path="src/SeatGrid.App/SeatGrid.App.csproj" />
-  <Project Path="src/SeatGrid.Core/SeatGrid.Core.csproj" />
-  <Project Path="src/TeachCraft.App/TeachCraft.App.csproj" />
-  <Project Path="src/TeachCraft.Core/TeachCraft.Core.csproj" />
-
-  <!-- vendor 分晓列入清单：sln 配置映射决定其编译配置，避免传递引用按默认 Debug 编译（配合 DiagnosticsSupport 条件元数据在 Release restore 下会冻结 None 而丢包）。 -->
-  <Folder Name="/vendor/">
-    <Project Path="vendor/gradestrip/src/GradeStrip.Core/GradeStrip.Core.csproj" />
-    <Project Path="vendor/gradestrip/src/GradeStrip.App/GradeStrip.App.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="tests/GradeStrip.Tests/GradeStrip.Tests.csproj" />
+    <Project Path="tests/GradeWeave.Tests/GradeWeave.Tests.csproj" />
+    <Project Path="tests/TeachCraft.Tests/TeachCraft.Tests.csproj" />
   </Folder>
 </Solution>

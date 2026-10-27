@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -148,6 +149,7 @@ public static class SeatChartRenderer
         var titleColor = Color("#141413");
         var groupColor = Color(settings.GroupLabel);
         var rowColor = Color(settings.RowLabel);
+        using var paintCache = new SeatPaintCache(settings);
 
         var y = pad;
 
@@ -205,9 +207,7 @@ public static class SeatChartRenderer
 
                 if (settings.ShowGroupRowHints)
                 {
-                    using var rowFontLocal = new SKFont(RegularTypeface.Value, 10f);
-                    using var rowPaintLocal = new SKPaint { Color = rowColor, IsAntialias = true };
-                    canvas.DrawText(row.Label, pad + metrics.RowLabelWidth - 9f, rowY + metrics.Cell / 2f - rowFontLocal.Metrics.Ascent / 2f - rowFontLocal.Metrics.Descent / 2f + 1.5f, SKTextAlign.Right, rowFontLocal, rowPaintLocal);
+                    canvas.DrawText(row.Label, pad + metrics.RowLabelWidth - 9f, rowY + metrics.Cell / 2f - rowFont.Metrics.Ascent / 2f - rowFont.Metrics.Descent / 2f + 1.5f, SKTextAlign.Right, rowFont, rowPaint);
                 }
 
                 for (var columnIndex = 0; columnIndex < row.Seats.Count; columnIndex++)
@@ -219,7 +219,7 @@ public static class SeatChartRenderer
                         groupX + columnIndex * (metrics.Cell + metrics.Gap) + metrics.Cell,
                         rowY + metrics.Cell);
 
-                    DrawSeat(canvas, document, seat, rect, seatFontSize);
+                    DrawSeat(canvas, document, seat, rect, seatFontSize, paintCache);
                 }
             }
         }
@@ -231,31 +231,21 @@ public static class SeatChartRenderer
         }
     }
 
-    private static void DrawSeat(SKCanvas canvas, SeatChartDocument document, DisplaySeat seat, SKRect rect, float fontSize)
+    private static void DrawSeat(
+        SKCanvas canvas,
+        SeatChartDocument document,
+        DisplaySeat seat,
+        SKRect rect,
+        float fontSize,
+        SeatPaintCache paintCache)
     {
         var settings = document.Settings;
         var empty = seat.IsEmpty;
 
-        using var fill = new SKPaint
-        {
-            Color = Color(empty ? settings.EmptySeatBackground : settings.SeatBackground),
-            IsAntialias = true,
-            Style = SKPaintStyle.Fill,
-        };
-        canvas.DrawRoundRect(rect, 6f, 6f, fill);
+        canvas.DrawRoundRect(rect, 6f, 6f, paintCache.Fill(empty));
 
         if (!empty || !settings.HideEmptySeats)
-        {
-            using var border = new SKPaint
-            {
-                Color = Color(settings.SeatBorder),
-                IsAntialias = true,
-                Style = SKPaintStyle.Stroke,
-                StrokeWidth = 1f,
-                PathEffect = empty ? SKPathEffect.CreateDash(new[] { 4f, 3f }, 0f) : null,
-            };
-            canvas.DrawRoundRect(rect, 6f, 6f, border);
-        }
+            canvas.DrawRoundRect(rect, 6f, 6f, paintCache.Border(empty));
 
         if (empty) return;
 
@@ -263,8 +253,8 @@ public static class SeatChartRenderer
         if (string.IsNullOrWhiteSpace(name)) return;
 
         var size = fontSize;
-        var typeface = settings.BoldNames ? BoldTypeface.Value : RegularTypeface.Value;
-        using var measureFont = new SKFont(typeface, size);
+        var bold = settings.BoldNames;
+        var measureFont = paintCache.Font(size, bold);
         var available = rect.Width - 10f;
         var measured = measureFont.MeasureText(name);
 
@@ -273,12 +263,8 @@ public static class SeatChartRenderer
             size = Math.Max(8f, size * available / measured);
         }
 
-        using var nameFont = new SKFont(typeface, size);
-        using var namePaint = new SKPaint
-        {
-            Color = settings.MarkFemales && seat.IsFemale ? Color(settings.FemaleMark) : Color(settings.SeatText),
-            IsAntialias = true,
-        };
+        var nameFont = paintCache.Font(size, bold);
+        var namePaint = paintCache.Name(settings.MarkFemales && seat.IsFemale);
 
         var centerY = rect.MidY - (nameFont.Metrics.Ascent + nameFont.Metrics.Descent) / 2f;
         canvas.DrawText(name, rect.MidX, centerY, SKTextAlign.Center, nameFont, namePaint);
@@ -328,6 +314,81 @@ public static class SeatChartRenderer
             (byte)((value >> 16) & 0xFF),
             (byte)((value >> 8) & 0xFF),
             (byte)(value & 0xFF));
+    }
+
+    /// <summary>一次渲染内复用的画刷与字体缓存，避免每个座位重复解析颜色、创建原生对象。</summary>
+    private sealed class SeatPaintCache : IDisposable
+    {
+        private readonly SKPaint _seatFill;
+        private readonly SKPaint _emptyFill;
+        private readonly SKPaint _seatBorder;
+        private readonly SKPaint _emptyBorder;
+        private readonly SKPaint _inkPaint;
+        private readonly SKPaint _femalePaint;
+        private readonly SKPathEffect _emptyDash;
+        private readonly Dictionary<(float Size, bool Bold), SKFont> _fonts = new();
+
+        public SeatPaintCache(SeatChartSettings settings)
+        {
+            _seatFill = new SKPaint
+            {
+                Color = Color(settings.SeatBackground),
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill,
+            };
+            _emptyFill = new SKPaint
+            {
+                Color = Color(settings.EmptySeatBackground),
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill,
+            };
+            var borderColor = Color(settings.SeatBorder);
+            _seatBorder = new SKPaint
+            {
+                Color = borderColor,
+                IsAntialias = true,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 1f,
+            };
+            _emptyDash = SKPathEffect.CreateDash([4f, 3f], 0f);
+            _emptyBorder = new SKPaint
+            {
+                Color = borderColor,
+                IsAntialias = true,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 1f,
+                PathEffect = _emptyDash,
+            };
+            _inkPaint = new SKPaint { Color = Color(settings.SeatText), IsAntialias = true };
+            _femalePaint = new SKPaint { Color = Color(settings.FemaleMark), IsAntialias = true };
+        }
+
+        public SKPaint Fill(bool empty) => empty ? _emptyFill : _seatFill;
+        public SKPaint Border(bool empty) => empty ? _emptyBorder : _seatBorder;
+        public SKPaint Name(bool female) => female ? _femalePaint : _inkPaint;
+
+        public SKFont Font(float size, bool bold)
+        {
+            var key = (size, bold);
+            if (_fonts.TryGetValue(key, out var font)) return font;
+
+            font = new SKFont(bold ? BoldTypeface.Value : RegularTypeface.Value, size);
+            _fonts[key] = font;
+            return font;
+        }
+
+        public void Dispose()
+        {
+            foreach (var font in _fonts.Values) font.Dispose();
+            _fonts.Clear();
+            _seatFill.Dispose();
+            _emptyFill.Dispose();
+            _seatBorder.Dispose();
+            _emptyBorder.Dispose();
+            _inkPaint.Dispose();
+            _femalePaint.Dispose();
+            _emptyDash.Dispose();
+        }
     }
 
     private sealed class ChartMetrics

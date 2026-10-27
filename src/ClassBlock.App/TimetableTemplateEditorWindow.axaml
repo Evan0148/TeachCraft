@@ -1,0 +1,155 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:ClassBlock.App"
+        x:Class="ClassBlock.App.TimetableTemplateEditorWindow"
+        x:DataType="app:TimetableTemplateEditorViewModel"
+        Title="作息模板编辑器"
+        Width="780" Height="760"
+        MinWidth="680" MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+
+    <Window.Styles>
+        <Style Selector="Border.row-card">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ListBox.rows">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.rows ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="ListBox.rows ListBoxItem:pointerover Border.row-card">
+            <Setter Property="Background" Value="#F7F4EB" />
+        </Style>
+        <Style Selector="ListBox.rows ListBoxItem:selected Border.row-card">
+            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+        <Style Selector="ListBox.rows ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBox.rows ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.hint">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="14" RowSpacing="10">
+        <!-- 名称与只读提示 -->
+        <StackPanel Grid.Row="0" Spacing="7">
+            <Grid ColumnDefinitions="56,*" ColumnSpacing="8" VerticalAlignment="Center">
+                <TextBlock Text="模板名" FontSize="11.5" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" Classes="field" Text="{Binding TemplateName, Mode=TwoWay}"
+                         IsEnabled="{Binding CanEdit}" PlaceholderText="例如：八年级作息（自定义）" />
+            </Grid>
+            <TextBlock Classes="hint" IsVisible="{Binding IsBuiltin}"
+                       Text="内置预设不可修改。点「复制为自定义」后即可编辑并另存。" />
+        </StackPanel>
+
+        <!-- 行编辑区 -->
+        <ListBox Grid.Row="2" Classes="rows" ItemsSource="{Binding Rows}"
+                 SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="app:TemplateRowEditViewModel">
+                    <Border Classes="row-card" Margin="0,0,0,8"
+                            IsEnabled="{Binding $parent[Window].DataContext.CanEdit}">
+                        <StackPanel Spacing="6">
+                            <Grid ColumnDefinitions="120,110,90,1*" ColumnSpacing="8">
+                                <TextBox Classes="field" Text="{Binding Time1, Mode=TwoWay}"
+                                         PlaceholderText="时间，如 10:50—11:00" />
+                                <TextBox Grid.Column="1" Text="{Binding Time2, Mode=TwoWay}"
+                                         PlaceholderText="时间段2（晚修）" />
+                                <TextBox Grid.Column="2" Text="{Binding Label, Mode=TwoWay}"
+                                         PlaceholderText="标签" />
+                                <ComboBox Grid.Column="3"
+                                          ItemsSource="{Binding $parent[Window].DataContext.SlotOptions}"
+                                          SelectedItem="{Binding Slot, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="app:SlotOption">
+                                            <TextBlock Text="{Binding Display}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+                            <Grid ColumnDefinitions="170,1*,Auto,Auto" ColumnSpacing="8">
+                                <ComboBox
+                                    ItemsSource="{Binding $parent[Window].DataContext.KindOptions}"
+                                    SelectedItem="{Binding Kind, Mode=TwoWay}"
+                                    HorizontalAlignment="Stretch">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="app:KindOption">
+                                            <TextBlock Text="{Binding Display}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBox Grid.Column="1" Text="{Binding StaticText, Mode=TwoWay}"
+                                         PlaceholderText="静态内容 / 整行文字" />
+                                <CheckBox Grid.Column="2" IsChecked="{Binding MergeDays, Mode=TwoWay}"
+                                          Content="五天合并" VerticalAlignment="Center" FontSize="11" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- 操作栏 -->
+        <StackPanel Grid.Row="3" Spacing="8">
+            <TextBlock x:Name="EditorStatus" Classes="hint" Text="" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Classes="ghost" Content="添加一行" Command="{Binding AddRowCommand}" />
+                <Button Classes="ghost" Content="上移" Command="{Binding MoveUpCommand}" />
+                <Button Classes="ghost" Content="下移" Command="{Binding MoveDownCommand}" />
+                <Button Classes="ghost" Content="删除行" Command="{Binding RemoveRowCommand}" />
+                <Border Width="1" Height="22" Background="{StaticResource LineBrush}" Margin="4,0" />
+                <Button Classes="primary" Content="复制为自定义" Command="{Binding CopyAsCustomCommand}"
+                        IsVisible="{Binding IsBuiltin}" />
+                <Button Classes="primary" Content="保存模板" Click="OnSave"
+                        IsVisible="{Binding !IsBuiltin}" IsEnabled="{Binding CanSave}" />
+                <Button Classes="ghost" Content="删除模板" x:Name="DeleteButton" Click="OnDelete"
+                        IsVisible="{Binding CanDelete}" />
+                <Button Classes="ghost" Content="关闭" Click="OnClose" />
+            </StackPanel>
+            <TextBlock Classes="helper"
+                       Text="「绑定」为空的行使用静态内容；绑定第 N 节 / 早读 / 午学 / 课服 / 晚修的行会自动填入总表数据。显示开关（早读、午学等）只对绑定行生效。" />
+        </StackPanel>
+    </Grid>
+</Window>

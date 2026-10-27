@@ -16,7 +16,8 @@
                 <TextBlock Text="{Binding CategoryLabel}" FontSize="10.5" LetterSpacing="0.8"
                            Foreground="{StaticResource MutedBrush}" />
             </StackPanel>
-            <Button Grid.Column="1" Classes="panel-close" Click="OnClose" VerticalAlignment="Top">
+            <Button Grid.Column="1" Classes="panel-close" Click="OnClose" VerticalAlignment="Top"
+                    ToolTip.Tip="关闭" AutomationProperties.Name="关闭">
                 <Path Width="11" Height="11" Stretch="Uniform"
                       Data="M3,3 L11,11 M11,3 L3,11" Stroke="{Binding $parent[Button].Foreground}"
                       StrokeThickness="1.4" StrokeLineCap="Round" />
@@ -70,9 +71,12 @@
                             <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="10.5"
                                        Foreground="{StaticResource InkSoftBrush}" TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
-                            <Button Grid.Column="2" Classes="mini" Content="↑" Tag="{Binding}" Click="OnMoveUp" />
-                            <Button Grid.Column="3" Classes="mini" Content="↓" Tag="{Binding}" Click="OnMoveDown" />
-                            <Button Grid.Column="4" Classes="mini" Content="×" Tag="{Binding}" Click="OnRemoveFile" />
+                            <Button Grid.Column="2" Classes="mini" Content="↑" Tag="{Binding}" Click="OnMoveUp"
+                                    ToolTip.Tip="上移" AutomationProperties.Name="上移" />
+                            <Button Grid.Column="3" Classes="mini" Content="↓" Tag="{Binding}" Click="OnMoveDown"
+                                    ToolTip.Tip="下移" AutomationProperties.Name="下移" />
+                            <Button Grid.Column="4" Classes="mini" Content="×" Tag="{Binding}" Click="OnRemoveFile"
+                                    ToolTip.Tip="移除" AutomationProperties.Name="移除" />
                         </Grid>
                     </Border>
                 </DataTemplate>
@@ -92,7 +96,7 @@
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="画质" FontSize="10.5" LetterSpacing="0.6"
                                Foreground="{StaticResource MutedBrush}" />
-                    <TextBlock Grid.Column="1" Text="{Binding Quality, StringFormat='{}{0:0}'}"
+                    <TextBlock Grid.Column="1" Text="{Binding Quality, StringFormat='{}{0:0}%'}"
                                FontFamily="{StaticResource MonoFont}" FontSize="10.5"
                                Foreground="{StaticResource InkBrush}" />
                 </Grid>

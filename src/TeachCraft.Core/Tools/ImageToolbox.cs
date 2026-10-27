@@ -287,12 +287,11 @@ public static class ImageToolbox
         var directory = Path.GetDirectoryName(output);
         if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
 
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(format, Math.Clamp(quality, 1, 100));
-        if (data is null) throw new ToolboxException("编码失败，请检查输出格式。");
-
+        // 直接编码进文件流。走 image.Encode(...) → SKData 会把整张编码结果再缓冲一份，
+        // 高像素照片（4000 万像素以上）仅这份副本就上百 MB，峰值会白白抬高一大截。
         using var stream = File.Create(output);
-        data.SaveTo(stream);
+        if (!bitmap.Encode(stream, format, Math.Clamp(quality, 1, 100)))
+            throw new ToolboxException("编码失败，请检查输出格式。");
     }
 
     private static SKEncodedImageFormat FormatFromPath(string path) =>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ClassBlock.Core.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -48,8 +49,10 @@ public static class TimetableRenderer
         File.WriteAllBytes(path, RenderPngBytes(timetable, scale));
     }
 
-    public static byte[] RenderPngBytes(ClassTimetable timetable, float scale)
+    public static byte[] RenderPngBytes(
+        ClassTimetable timetable, float scale, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var height = MeasureHeight(timetable);
         var width = PageWidth;
 
@@ -65,6 +68,7 @@ public static class TimetableRenderer
             scale *= (float)ratio;
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         using var surface = SKSurface.Create(new SKImageInfo(pixelWidth, pixelHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
         if (surface is null)
             throw new ClassBlockException("导出画布创建失败，请重试。");
@@ -72,9 +76,10 @@ public static class TimetableRenderer
         var canvas = surface.Canvas;
         canvas.Clear(SKColors.White);
         canvas.Scale(scale);
-        Draw(canvas, timetable);
+        Draw(canvas, timetable, cancellationToken);
         canvas.Flush();
 
+        cancellationToken.ThrowIfCancellationRequested();
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         return data.ToArray();
@@ -133,7 +138,7 @@ public static class TimetableRenderer
         _ => NormalRowHeight,
     };
 
-    private static void Draw(SKCanvas canvas, ClassTimetable timetable)
+    private static void Draw(SKCanvas canvas, ClassTimetable timetable, CancellationToken cancellationToken)
     {
         var left = Pad;
         var tableWidth = PageWidth - Pad * 2;
@@ -166,6 +171,7 @@ public static class TimetableRenderer
 
         foreach (var row in timetable.Rows)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var rowHeight = RowHeight(row);
             var bottom = y + rowHeight;
             DrawRow(canvas, row, left, tableWidth, y, bottom, xTime, xLabel, dayWidth);

@@ -1,0 +1,201 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:GradeWeave.App"
+        x:Class="GradeWeave.App.ActivityEditorWindow"
+        x:DataType="app:ActivityEditorViewModel"
+        Title="活动"
+        Width="560" Height="700"
+        MinWidth="500" MinHeight="620"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+    <Window.Styles>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.4" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="ComboBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="MinHeight" Value="24" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,14">
+            <StackPanel Spacing="3">
+                <TextBlock Text="{Binding Title}" FontFamily="{StaticResource SerifFont}"
+                           FontSize="19" Foreground="{StaticResource InkBrush}" />
+                <TextBlock Text="临时插入书法课、讲座等活动；默认只叠加提醒，不影响原有课程。"
+                           FontSize="10" Foreground="{StaticResource MutedBrush}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,14">
+            <StackPanel Spacing="12" Margin="0,0,4,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="field-label" Text="活动名称" />
+                    <TextBox Classes="field" Text="{Binding Name, Mode=TwoWay}"
+                             PlaceholderText="例如：书法课"
+                             AutomationProperties.Name="活动名称" />
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,110,110" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="field-label" Text="星期" />
+                        <ComboBox Classes="field" ItemsSource="{Binding Days}"
+                                  SelectedIndex="{Binding DayIndex, Mode=TwoWay}"
+                                  AutomationProperties.Name="活动星期" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Classes="field-label" Text="开始时间" />
+                        <TextBox Classes="field" Text="{Binding StartTime, Mode=TwoWay}"
+                                 PlaceholderText="10:50"
+                                 AutomationProperties.Name="活动开始时间" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Classes="field-label" Text="结束时间" />
+                        <TextBox Classes="field" Text="{Binding EndTime, Mode=TwoWay}"
+                                 PlaceholderText="11:10"
+                                 AutomationProperties.Name="活动结束时间" />
+                    </StackPanel>
+                </Grid>
+
+                <Border Background="#FCFAF4" BorderBrush="#E2DCCC" BorderThickness="1"
+                        CornerRadius="8" Padding="10,8">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="节次识别" Classes="field-label" />
+                        <TextBlock Text="{Binding PeriodHint}" FontSize="11.5"
+                                   Foreground="{StaticResource AccentDeepBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="field-label" Text="归属节次" />
+                    <ComboBox Classes="field" ItemsSource="{Binding PeriodChoices}"
+                              SelectedItem="{Binding SelectedPeriod, Mode=TwoWay}"
+                              AutomationProperties.Name="归属节次">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="app:PeriodOption">
+                                <TextBlock Text="{Binding Label}" FontSize="11.5" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Classes="helper"
+                               Text="默认按时间自动匹配：10:50—11:10 会落在重叠的第 4 节。作息时间不标准时可在下拉里手动指定。" />
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="field-label" Text="适用范围" />
+                        <ComboBox Classes="field" SelectedIndex="{Binding ScopeIndex, Mode=TwoWay}"
+                                  AutomationProperties.Name="活动适用范围">
+                            <ComboBoxItem Content="全年级" />
+                            <ComboBoxItem Content="指定班级" />
+                        </ComboBox>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding SelectedClassCountText}" FontSize="10"
+                               Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom"
+                               IsVisible="{Binding IsCustomScope}" />
+                </Grid>
+
+                <Border IsVisible="{Binding IsCustomScope}" Background="#FCFBF7"
+                        BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                        CornerRadius="7" Padding="8">
+                    <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ClassOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="app:ClassOptionViewModel">
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="field-label" Text="任课教师（可选）" />
+                        <ComboBox Classes="field" ItemsSource="{Binding TeacherChoices}"
+                                  SelectedItem="{Binding SelectedTeacher, Mode=TwoWay}"
+                                  AutomationProperties.Name="活动任课教师">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="app:TeacherChoice">
+                                    <TextBlock Text="{Binding Display}" FontSize="11.5" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Classes="field-label" Text="地点（可选）" />
+                        <TextBox Classes="field" Text="{Binding Room, Mode=TwoWay}"
+                                 PlaceholderText="例如：报告厅"
+                                 AutomationProperties.Name="活动地点" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="field-label" Text="处理方式" />
+                    <ComboBox Classes="field" SelectedIndex="{Binding ModeIndex, Mode=TwoWay}"
+                              AutomationProperties.Name="活动处理方式">
+                        <ComboBoxItem Content="只叠加提醒（原课照常）" />
+                        <ComboBoxItem Content="替换该节课程（移除原课）" />
+                    </ComboBox>
+                    <TextBlock Classes="helper"
+                               Text="叠加：格子里多一行活动提醒，不改变课时与冲突。替换：该节原课被活动占用，被移除的课时会出现在冲突检查里，可重新生成课表补到其他时段。" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="field-label" Text="备注（可选）" />
+                    <TextBox Classes="field" Text="{Binding Note, Mode=TwoWay}"
+                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="56"
+                             PlaceholderText="例如：全年级硬笔书法 20 分钟"
+                             AutomationProperties.Name="活动备注" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <Button Grid.Column="0" Classes="ghost" Content="删除活动" Click="OnDelete"
+                        IsVisible="{Binding IsEditing}" FontSize="11.5" Padding="12,7"
+                        AutomationProperties.Name="删除当前活动" />
+                <TextBlock Grid.Column="1" Text="{Binding Error}" IsVisible="{Binding HasError}"
+                           FontSize="10.5" Foreground="{StaticResource AccentDeepBrush}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="ghost" Content="取消" Click="OnCancel" FontSize="11.5" Padding="14,7"
+                            IsCancel="True" AutomationProperties.Name="取消编辑活动" />
+                    <Button Classes="primary" Content="保存活动" Click="OnSave" FontSize="11.5" Padding="16,7"
+                            IsDefault="True" AutomationProperties.Name="保存活动" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

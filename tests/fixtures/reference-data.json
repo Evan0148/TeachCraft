@@ -1,0 +1,3138 @@
+[
+ {
+  "no": 1,
+  "name": "王知行",
+  "examNo": "77000018",
+  "subjects": {
+   "语文": {
+    "score": 102,
+    "classRank": 1,
+    "classDelta": 0
+   },
+   "数学": {
+    "score": 85,
+    "classRank": 4,
+    "classDelta": -1
+   },
+   "英语": {
+    "score": 110,
+    "classRank": 2,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 99,
+    "classRank": 1,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 65.1,
+    "classRank": 1,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 49,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 65.8,
+    "classRank": 1,
+    "classDelta": 2
+   },
+   "历史": {
+    "score": 64,
+    "classRank": 4,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 754.9,
+   "schoolRank": 58,
+   "classRank": 1,
+   "schoolDelta": -21,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 2,
+  "name": "董星河",
+  "examNo": "77000036",
+  "subjects": {
+   "语文": {
+    "score": 99,
+    "classRank": 2,
+    "classDelta": 5
+   },
+   "数学": {
+    "score": 88,
+    "classRank": 3,
+    "classDelta": -2
+   },
+   "英语": {
+    "score": 115.5,
+    "classRank": 1,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 93,
+    "classRank": 3,
+    "classDelta": -1
+   },
+   "化学": {
+    "score": 60.9,
+    "classRank": 3,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 49,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 62.3,
+    "classRank": 5,
+    "classDelta": -4
+   },
+   "历史": {
+    "score": 66.4,
+    "classRank": 3,
+    "classDelta": 0
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 749.1,
+   "schoolRank": 67,
+   "classRank": 2,
+   "schoolDelta": -5,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 3,
+  "name": "黄北辰",
+  "examNo": "77000011",
+  "subjects": {
+   "语文": {
+    "score": 98,
+    "classRank": 3,
+    "classDelta": -1
+   },
+   "数学": {
+    "score": 77,
+    "classRank": 8,
+    "classDelta": 0
+   },
+   "英语": {
+    "score": 92,
+    "classRank": 8,
+    "classDelta": -2
+   },
+   "物理": {
+    "score": 95,
+    "classRank": 2,
+    "classDelta": 1
+   },
+   "化学": {
+    "score": 51.1,
+    "classRank": 13,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 50,
+    "classRank": 1,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 64.4,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "历史": {
+    "score": 58.4,
+    "classRank": 7,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 48,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 66,
+    "classRank": 11,
+    "classDelta": 17
+   }
+  },
+  "total": {
+   "score": 699.9,
+   "schoolRank": 179,
+   "classRank": 3,
+   "schoolDelta": -63,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 4,
+  "name": "杜星河",
+  "examNo": "77000037",
+  "subjects": {
+   "语文": {
+    "score": 98,
+    "classRank": 3,
+    "classDelta": 5
+   },
+   "数学": {
+    "score": 81,
+    "classRank": 5,
+    "classDelta": -4
+   },
+   "英语": {
+    "score": 83.5,
+    "classRank": 11,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 89,
+    "classRank": 4,
+    "classDelta": 4
+   },
+   "化学": {
+    "score": 58.1,
+    "classRank": 5,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 47,
+    "classRank": 6,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 52.5,
+    "classRank": 7,
+    "classDelta": -4
+   },
+   "历史": {
+    "score": 73.6,
+    "classRank": 1,
+    "classDelta": 6
+   },
+   "地理": {
+    "score": 48,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 65,
+    "classRank": 15,
+    "classDelta": -7
+   }
+  },
+  "total": {
+   "score": 695.7,
+   "schoolRank": 188,
+   "classRank": 4,
+   "schoolDelta": -13,
+   "classDelta": 1
+  }
+ },
+ {
+  "no": 5,
+  "name": "黄星河",
+  "examNo": "77000027",
+  "subjects": {
+   "语文": {
+    "score": 85,
+    "classRank": 8,
+    "classDelta": 6
+   },
+   "数学": {
+    "score": 78,
+    "classRank": 7,
+    "classDelta": -3
+   },
+   "英语": {
+    "score": 104,
+    "classRank": 5,
+    "classDelta": -1
+   },
+   "物理": {
+    "score": 89,
+    "classRank": 4,
+    "classDelta": 1
+   },
+   "化学": {
+    "score": 59.5,
+    "classRank": 4,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 49,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 64.4,
+    "classRank": 2,
+    "classDelta": 3
+   },
+   "历史": {
+    "score": 53.6,
+    "classRank": 13,
+    "classDelta": -1
+   },
+   "地理": {
+    "score": 48,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 57,
+    "classRank": 31,
+    "classDelta": -23
+   }
+  },
+  "total": {
+   "score": 687.5,
+   "schoolRank": 218,
+   "classRank": 5,
+   "schoolDelta": -65,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 6,
+  "name": "谢念安",
+  "examNo": "77000004",
+  "subjects": {
+   "语文": {
+    "score": 93.5,
+    "classRank": 6,
+    "classDelta": -3
+   },
+   "数学": {
+    "score": 54,
+    "classRank": 22,
+    "classDelta": -9
+   },
+   "英语": {
+    "score": 103,
+    "classRank": 6,
+    "classDelta": 2
+   },
+   "物理": {
+    "score": 78,
+    "classRank": 12,
+    "classDelta": -6
+   },
+   "化学": {
+    "score": 56.7,
+    "classRank": 6,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 47,
+    "classRank": 6,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 50.4,
+    "classRank": 10,
+    "classDelta": 1
+   },
+   "历史": {
+    "score": 70.4,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "地理": {
+    "score": 48,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 11
+   }
+  },
+  "total": {
+   "score": 671,
+   "schoolRank": 259,
+   "classRank": 6,
+   "schoolDelta": -75,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 7,
+  "name": "张北辰",
+  "examNo": "77000041",
+  "subjects": {
+   "语文": {
+    "score": 94,
+    "classRank": 5,
+    "classDelta": 0
+   },
+   "数学": {
+    "score": 89,
+    "classRank": 2,
+    "classDelta": 7
+   },
+   "英语": {
+    "score": 105.5,
+    "classRank": 4,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 76,
+    "classRank": 13,
+    "classDelta": 3
+   },
+   "化学": {
+    "score": 53.9,
+    "classRank": 8,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 46,
+    "classRank": 8,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 51.1,
+    "classRank": 8,
+    "classDelta": 1
+   },
+   "历史": {
+    "score": 53.6,
+    "classRank": 13,
+    "classDelta": -7
+   },
+   "地理": {
+    "score": 47,
+    "classRank": 6,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 47,
+    "classRank": 43,
+    "classDelta": -19
+   }
+  },
+  "total": {
+   "score": 663.1,
+   "schoolRank": 275,
+   "classRank": 7,
+   "schoolDelta": -57,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 8,
+  "name": "李星河",
+  "examNo": "77000022",
+  "subjects": {
+   "语文": {
+    "score": 88,
+    "classRank": 7,
+    "classDelta": 3
+   },
+   "数学": {
+    "score": 92,
+    "classRank": 1,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 42,
+    "classRank": 33,
+    "classDelta": 12
+   },
+   "物理": {
+    "score": 86,
+    "classRank": 7,
+    "classDelta": -4
+   },
+   "化学": {
+    "score": 65.1,
+    "classRank": 1,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 49,
+    "classRank": 2,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 64.4,
+    "classRank": 2,
+    "classDelta": 5
+   },
+   "历史": {
+    "score": 56.8,
+    "classRank": 10,
+    "classDelta": 3
+   },
+   "地理": {
+    "score": 49,
+    "classRank": 1,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 59,
+    "classRank": 27,
+    "classDelta": 14
+   }
+  },
+  "total": {
+   "score": 651.3,
+   "schoolRank": 301,
+   "classRank": 8,
+   "schoolDelta": 104,
+   "classDelta": 4
+  }
+ },
+ {
+  "no": 9,
+  "name": "冯北辰",
+  "examNo": "77000008",
+  "subjects": {
+   "语文": {
+    "score": 75,
+    "classRank": 21,
+    "classDelta": -2
+   },
+   "数学": {
+    "score": 76,
+    "classRank": 9,
+    "classDelta": 1
+   },
+   "英语": {
+    "score": 96,
+    "classRank": 7,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 83,
+    "classRank": 9,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 53.2,
+    "classRank": 10,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 43,
+    "classRank": 14,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 51.1,
+    "classRank": 8,
+    "classDelta": 25
+   },
+   "历史": {
+    "score": 44,
+    "classRank": 28,
+    "classDelta": -9
+   },
+   "地理": {
+    "score": 44,
+    "classRank": 16,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 635.3,
+   "schoolRank": 347,
+   "classRank": 9,
+   "schoolDelta": -15,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 10,
+  "name": "刘念安",
+  "examNo": "77000009",
+  "subjects": {
+   "语文": {
+    "score": 82,
+    "classRank": 15,
+    "classDelta": -2
+   },
+   "数学": {
+    "score": 76,
+    "classRank": 9,
+    "classDelta": -2
+   },
+   "英语": {
+    "score": 78,
+    "classRank": 14,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 85,
+    "classRank": 8,
+    "classDelta": 5
+   },
+   "化学": {
+    "score": 45.5,
+    "classRank": 23,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 44,
+    "classRank": 12,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 46.2,
+    "classRank": 20,
+    "classDelta": -6
+   },
+   "历史": {
+    "score": 59.2,
+    "classRank": 5,
+    "classDelta": 4
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 69,
+    "classRank": 7,
+    "classDelta": -6
+   }
+  },
+  "total": {
+   "score": 629.9,
+   "schoolRank": 357,
+   "classRank": 10,
+   "schoolDelta": -80,
+   "classDelta": -2
+  }
+ },
+ {
+  "no": 11,
+  "name": "周星河",
+  "examNo": "77000025",
+  "subjects": {
+   "语文": {
+    "score": 73,
+    "classRank": 24,
+    "classDelta": 6
+   },
+   "数学": {
+    "score": 70,
+    "classRank": 14,
+    "classDelta": 8
+   },
+   "英语": {
+    "score": 107,
+    "classRank": 3,
+    "classDelta": -2
+   },
+   "物理": {
+    "score": 89,
+    "classRank": 4,
+    "classDelta": 14
+   },
+   "化学": {
+    "score": 46.9,
+    "classRank": 22,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 42,
+    "classRank": 18,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 44.8,
+    "classRank": 22,
+    "classDelta": -13
+   },
+   "历史": {
+    "score": 44.8,
+    "classRank": 27,
+    "classDelta": 9
+   },
+   "地理": {
+    "score": 44,
+    "classRank": 16,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 66,
+    "classRank": 11,
+    "classDelta": 1
+   }
+  },
+  "total": {
+   "score": 627.5,
+   "schoolRank": 363,
+   "classRank": 11,
+   "schoolDelta": 68,
+   "classDelta": 4
+  }
+ },
+ {
+  "no": 12,
+  "name": "孙北辰",
+  "examNo": "77000029",
+  "subjects": {
+   "语文": {
+    "score": 83,
+    "classRank": 11,
+    "classDelta": 6
+   },
+   "数学": {
+    "score": 74,
+    "classRank": 11,
+    "classDelta": -6
+   },
+   "英语": {
+    "score": 85,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 72,
+    "classRank": 14,
+    "classDelta": 12
+   },
+   "化学": {
+    "score": 41.3,
+    "classRank": 27,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 35,
+    "classRank": 32,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 48.3,
+    "classRank": 15,
+    "classDelta": 16
+   },
+   "历史": {
+    "score": 59.2,
+    "classRank": 5,
+    "classDelta": 20
+   },
+   "地理": {
+    "score": 42,
+    "classRank": 24,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 58,
+    "classRank": 28,
+    "classDelta": -8
+   }
+  },
+  "total": {
+   "score": 597.8,
+   "schoolRank": 421,
+   "classRank": 12,
+   "schoolDelta": 2,
+   "classDelta": 2
+  }
+ },
+ {
+  "no": 13,
+  "name": "高念安",
+  "examNo": "77000005",
+  "subjects": {
+   "语文": {
+    "score": 83,
+    "classRank": 11,
+    "classDelta": -7
+   },
+   "数学": {
+    "score": 43,
+    "classRank": 31,
+    "classDelta": -6
+   },
+   "英语": {
+    "score": 80,
+    "classRank": 13,
+    "classDelta": 22
+   },
+   "物理": {
+    "score": 68,
+    "classRank": 18,
+    "classDelta": -8
+   },
+   "化学": {
+    "score": 52.5,
+    "classRank": 12,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 45,
+    "classRank": 9,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 58.1,
+    "classRank": 6,
+    "classDelta": 0
+   },
+   "历史": {
+    "score": 52.8,
+    "classRank": 16,
+    "classDelta": -9
+   },
+   "地理": {
+    "score": 41,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 68,
+    "classRank": 8,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 591.4,
+   "schoolRank": 429,
+   "classRank": 13,
+   "schoolDelta": 12,
+   "classDelta": 3
+  }
+ },
+ {
+  "no": 14,
+  "name": "周北辰",
+  "examNo": "77000012",
+  "subjects": {
+   "语文": {
+    "score": 83,
+    "classRank": 11,
+    "classDelta": 13
+   },
+   "数学": {
+    "score": 79,
+    "classRank": 6,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 57,
+    "classRank": 24,
+    "classDelta": -11
+   },
+   "物理": {
+    "score": 68,
+    "classRank": 18,
+    "classDelta": -8
+   },
+   "化学": {
+    "score": 42.7,
+    "classRank": 25,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 40,
+    "classRank": 21,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 49.7,
+    "classRank": 11,
+    "classDelta": -3
+   },
+   "历史": {
+    "score": 52,
+    "classRank": 17,
+    "classDelta": 1
+   },
+   "地理": {
+    "score": 42,
+    "classRank": 24,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 583.4,
+   "schoolRank": 456,
+   "classRank": 14,
+   "schoolDelta": -98,
+   "classDelta": -4
+  }
+ },
+ {
+  "no": 15,
+  "name": "许念安",
+  "examNo": "77000006",
+  "subjects": {
+   "语文": {
+    "score": 79,
+    "classRank": 18,
+    "classDelta": -8
+   },
+   "数学": {
+    "score": 67,
+    "classRank": 16,
+    "classDelta": -3
+   },
+   "英语": {
+    "score": 87,
+    "classRank": 9,
+    "classDelta": 3
+   },
+   "物理": {
+    "score": 70,
+    "classRank": 16,
+    "classDelta": -1
+   },
+   "化学": {
+    "score": 36.4,
+    "classRank": 33,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 42,
+    "classRank": 18,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 44.1,
+    "classRank": 24,
+    "classDelta": -11
+   },
+   "历史": {
+    "score": 54.4,
+    "classRank": 12,
+    "classDelta": 13
+   },
+   "地理": {
+    "score": 44,
+    "classRank": 16,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 57,
+    "classRank": 31,
+    "classDelta": 7
+   }
+  },
+  "total": {
+   "score": 580.9,
+   "schoolRank": 459,
+   "classRank": 15,
+   "schoolDelta": -96,
+   "classDelta": -4
+  }
+ },
+ {
+  "no": 16,
+  "name": "罗念安",
+  "examNo": "77000007",
+  "subjects": {
+   "语文": {
+    "score": 80.5,
+    "classRank": 16,
+    "classDelta": 0
+   },
+   "数学": {
+    "score": 47,
+    "classRank": 27,
+    "classDelta": 0
+   },
+   "英语": {
+    "score": 69.5,
+    "classRank": 18,
+    "classDelta": -2
+   },
+   "物理": {
+    "score": 68,
+    "classRank": 18,
+    "classDelta": 6
+   },
+   "化学": {
+    "score": 49.7,
+    "classRank": 16,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 44,
+    "classRank": 12,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 44.8,
+    "classRank": 22,
+    "classDelta": -11
+   },
+   "历史": {
+    "score": 58.4,
+    "classRank": 7,
+    "classDelta": 4
+   },
+   "地理": {
+    "score": 47,
+    "classRank": 6,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 63,
+    "classRank": 18,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 571.9,
+   "schoolRank": 471,
+   "classRank": 16,
+   "schoolDelta": -7,
+   "classDelta": 1
+  }
+ },
+ {
+  "no": 17,
+  "name": "林星河",
+  "examNo": "77000039",
+  "subjects": {
+   "语文": {
+    "score": 78.5,
+    "classRank": 19,
+    "classDelta": -13
+   },
+   "数学": {
+    "score": 63,
+    "classRank": 18,
+    "classDelta": 6
+   },
+   "英语": {
+    "score": 73.5,
+    "classRank": 16,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 65,
+    "classRank": 22,
+    "classDelta": 17
+   },
+   "化学": {
+    "score": 47.6,
+    "classRank": 20,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 43,
+    "classRank": 14,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 44.1,
+    "classRank": 24,
+    "classDelta": -8
+   },
+   "历史": {
+    "score": 48,
+    "classRank": 22,
+    "classDelta": 10
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 63,
+    "classRank": 18,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 570.7,
+   "schoolRank": 476,
+   "classRank": 17,
+   "schoolDelta": 33,
+   "classDelta": 4
+  }
+ },
+ {
+  "no": 18,
+  "name": "魏念安",
+  "examNo": "77000096",
+  "subjects": {
+   "语文": {
+    "score": 69.5,
+    "classRank": 29,
+    "classDelta": -5
+   },
+   "数学": {
+    "score": 69,
+    "classRank": 15,
+    "classDelta": 6
+   },
+   "英语": {
+    "score": 39.5,
+    "classRank": 35,
+    "classDelta": -4
+   },
+   "物理": {
+    "score": 81,
+    "classRank": 11,
+    "classDelta": 3
+   },
+   "化学": {
+    "score": 53.9,
+    "classRank": 8,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 42,
+    "classRank": 18,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 49.7,
+    "classRank": 11,
+    "classDelta": 18
+   },
+   "历史": {
+    "score": 52,
+    "classRank": 17,
+    "classDelta": -4
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 67,
+    "classRank": 9,
+    "classDelta": -8
+   }
+  },
+  "total": {
+   "score": 568.6,
+   "schoolRank": 479,
+   "classRank": 18,
+   "schoolDelta": 46,
+   "classDelta": 4
+  }
+ },
+ {
+  "no": 19,
+  "name": "蔡念安",
+  "examNo": "77000020",
+  "subjects": {
+   "语文": {
+    "score": 69,
+    "classRank": 30,
+    "classDelta": -9
+   },
+   "数学": {
+    "score": 71,
+    "classRank": 12,
+    "classDelta": -2
+   },
+   "英语": {
+    "score": 71.5,
+    "classRank": 17,
+    "classDelta": 2
+   },
+   "物理": {
+    "score": 83,
+    "classRank": 9,
+    "classDelta": -2
+   },
+   "化学": {
+    "score": 47.6,
+    "classRank": 20,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 36,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 39.2,
+    "classRank": 27,
+    "classDelta": -10
+   },
+   "历史": {
+    "score": 40,
+    "classRank": 34,
+    "classDelta": 5
+   },
+   "地理": {
+    "score": 46,
+    "classRank": 8,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 63,
+    "classRank": 18,
+    "classDelta": -6
+   }
+  },
+  "total": {
+   "score": 566.3,
+   "schoolRank": 483,
+   "classRank": 19,
+   "schoolDelta": -62,
+   "classDelta": -6
+  }
+ },
+ {
+  "no": 20,
+  "name": "谢星河",
+  "examNo": "77000097",
+  "subjects": {
+   "语文": {
+    "score": 80,
+    "classRank": 17,
+    "classDelta": 6
+   },
+   "数学": {
+    "score": 59,
+    "classRank": 21,
+    "classDelta": 7
+   },
+   "英语": {
+    "score": 49.5,
+    "classRank": 29,
+    "classDelta": -4
+   },
+   "物理": {
+    "score": 67,
+    "classRank": 21,
+    "classDelta": 17
+   },
+   "化学": {
+    "score": 51.1,
+    "classRank": 13,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 43,
+    "classRank": 14,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 49.7,
+    "classRank": 11,
+    "classDelta": 6
+   },
+   "历史": {
+    "score": 48,
+    "classRank": 22,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 44,
+    "classRank": 16,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 62,
+    "classRank": 21,
+    "classDelta": 11
+   }
+  },
+  "total": {
+   "score": 553.3,
+   "schoolRank": 518,
+   "classRank": 20,
+   "schoolDelta": 103,
+   "classDelta": 7
+  }
+ },
+ {
+  "no": 21,
+  "name": "苏星河",
+  "examNo": "77000093",
+  "subjects": {
+   "语文": {
+    "score": 84,
+    "classRank": 9,
+    "classDelta": 0
+   },
+   "数学": {
+    "score": 71,
+    "classRank": 12,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 82.5,
+    "classRank": 12,
+    "classDelta": 16
+   },
+   "物理": {
+    "score": 53,
+    "classRank": 29,
+    "classDelta": -12
+   },
+   "化学": {
+    "score": 33.6,
+    "classRank": 38,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 40,
+    "classRank": 21,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 48.3,
+    "classRank": 15,
+    "classDelta": 5
+   },
+   "历史": {
+    "score": 58.4,
+    "classRank": 7,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 45,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 35,
+    "classRank": 48,
+    "classDelta": -5
+   }
+  },
+  "total": {
+   "score": 550.8,
+   "schoolRank": 525,
+   "classRank": 21,
+   "schoolDelta": -50,
+   "classDelta": -3
+  }
+ },
+ {
+  "no": 22,
+  "name": "马念安",
+  "examNo": "77000043",
+  "subjects": {
+   "语文": {
+    "score": 73.5,
+    "classRank": 23,
+    "classDelta": -5
+   },
+   "数学": {
+    "score": 51,
+    "classRank": 24,
+    "classDelta": -7
+   },
+   "英语": {
+    "score": 67.5,
+    "classRank": 20,
+    "classDelta": 2
+   },
+   "物理": {
+    "score": 71,
+    "classRank": 15,
+    "classDelta": 6
+   },
+   "化学": {
+    "score": 53.2,
+    "classRank": 10,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 40,
+    "classRank": 21,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 47.6,
+    "classRank": 18,
+    "classDelta": 6
+   },
+   "历史": {
+    "score": 49.6,
+    "classRank": 19,
+    "classDelta": -4
+   },
+   "地理": {
+    "score": 39,
+    "classRank": 31,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 55,
+    "classRank": 33,
+    "classDelta": 3
+   }
+  },
+  "total": {
+   "score": 547.4,
+   "schoolRank": 533,
+   "classRank": 22,
+   "schoolDelta": -8,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 23,
+  "name": "刘北辰",
+  "examNo": "77000014",
+  "subjects": {
+   "语文": {
+    "score": 71,
+    "classRank": 26,
+    "classDelta": -5
+   },
+   "数学": {
+    "score": 66,
+    "classRank": 17,
+    "classDelta": 1
+   },
+   "英语": {
+    "score": 63.5,
+    "classRank": 21,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 69,
+    "classRank": 17,
+    "classDelta": 1
+   },
+   "化学": {
+    "score": 55.3,
+    "classRank": 7,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 45,
+    "classRank": 9,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 42,
+    "classRank": 26,
+    "classDelta": 16
+   },
+   "历史": {
+    "score": 42.4,
+    "classRank": 32,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 42,
+    "classRank": 24,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 45,
+    "classRank": 45,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 541.2,
+   "schoolRank": 545,
+   "classRank": 23,
+   "schoolDelta": 59,
+   "classDelta": 2
+  }
+ },
+ {
+  "no": 24,
+  "name": "潘星河",
+  "examNo": "77000033",
+  "subjects": {
+   "语文": {
+    "score": 83,
+    "classRank": 11,
+    "classDelta": 4
+   },
+   "数学": {
+    "score": 50,
+    "classRank": 25,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 57.5,
+    "classRank": 23,
+    "classDelta": -14
+   },
+   "物理": {
+    "score": 53,
+    "classRank": 29,
+    "classDelta": -9
+   },
+   "化学": {
+    "score": 49,
+    "classRank": 17,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 43,
+    "classRank": 14,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 48.3,
+    "classRank": 15,
+    "classDelta": 7
+   },
+   "历史": {
+    "score": 53.6,
+    "classRank": 13,
+    "classDelta": 12
+   },
+   "地理": {
+    "score": 43,
+    "classRank": 21,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 58,
+    "classRank": 28,
+    "classDelta": -16
+   }
+  },
+  "total": {
+   "score": 538.4,
+   "schoolRank": 555,
+   "classRank": 24,
+   "schoolDelta": -72,
+   "classDelta": -5
+  }
+ },
+ {
+  "no": 25,
+  "name": "徐星河",
+  "examNo": "77000024",
+  "subjects": {
+   "语文": {
+    "score": 84,
+    "classRank": 9,
+    "classDelta": 3
+   },
+   "数学": {
+    "score": 52,
+    "classRank": 23,
+    "classDelta": 3
+   },
+   "英语": {
+    "score": 41,
+    "classRank": 34,
+    "classDelta": -3
+   },
+   "物理": {
+    "score": 64,
+    "classRank": 23,
+    "classDelta": -13
+   },
+   "化学": {
+    "score": 50.4,
+    "classRank": 15,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 45,
+    "classRank": 9,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 49.7,
+    "classRank": 11,
+    "classDelta": 3
+   },
+   "历史": {
+    "score": 56.8,
+    "classRank": 10,
+    "classDelta": 0
+   },
+   "地理": {
+    "score": 43,
+    "classRank": 21,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 47,
+    "classRank": 43,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 532.9,
+   "schoolRank": 567,
+   "classRank": 25,
+   "schoolDelta": -63,
+   "classDelta": -5
+  }
+ },
+ {
+  "no": 26,
+  "name": "梁星河",
+  "examNo": "77000028",
+  "subjects": {
+   "语文": {
+    "score": 69,
+    "classRank": 30,
+    "classDelta": -11
+   },
+   "数学": {
+    "score": 60,
+    "classRank": 20,
+    "classDelta": -5
+   },
+   "英语": {
+    "score": 68.5,
+    "classRank": 19,
+    "classDelta": -5
+   },
+   "物理": {
+    "score": 53,
+    "classRank": 29,
+    "classDelta": -2
+   },
+   "化学": {
+    "score": 42.7,
+    "classRank": 25,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 36,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 35.7,
+    "classRank": 36,
+    "classDelta": -5
+   },
+   "历史": {
+    "score": 47.2,
+    "classRank": 24,
+    "classDelta": 11
+   },
+   "地理": {
+    "score": 40,
+    "classRank": 30,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 55,
+    "classRank": 33,
+    "classDelta": 3
+   }
+  },
+  "total": {
+   "score": 507.1,
+   "schoolRank": 624,
+   "classRank": 26,
+   "schoolDelta": -70,
+   "classDelta": -2
+  }
+ },
+ {
+  "no": 27,
+  "name": "肖星河",
+  "examNo": "77000035",
+  "subjects": {
+   "语文": {
+    "score": 75,
+    "classRank": 21,
+    "classDelta": 8
+   },
+   "数学": {
+    "score": 63,
+    "classRank": 18,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 37,
+    "classRank": 37,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 61,
+    "classRank": 25,
+    "classDelta": 6
+   },
+   "化学": {
+    "score": 39.2,
+    "classRank": 30,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 40,
+    "classRank": 21,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 45.5,
+    "classRank": 21,
+    "classDelta": 9
+   },
+   "历史": {
+    "score": 44,
+    "classRank": 28,
+    "classDelta": 1
+   },
+   "地理": {
+    "score": 38,
+    "classRank": 33,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 52,
+    "classRank": 41,
+    "classDelta": 4
+   }
+  },
+  "total": {
+   "score": 494.7,
+   "schoolRank": 647,
+   "classRank": 27,
+   "schoolDelta": 86,
+   "classDelta": 5
+  }
+ },
+ {
+  "no": 28,
+  "name": "韩北辰",
+  "examNo": "77000100",
+  "subjects": {
+   "语文": {
+    "score": 70,
+    "classRank": 27,
+    "classDelta": null
+   },
+   "数学": {
+    "score": 44,
+    "classRank": 30,
+    "classDelta": null
+   },
+   "英语": {
+    "score": 48,
+    "classRank": 30,
+    "classDelta": null
+   },
+   "物理": {
+    "score": 64,
+    "classRank": 23,
+    "classDelta": null
+   },
+   "化学": {
+    "score": 49,
+    "classRank": 17,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 38,
+    "classRank": 25,
+    "classDelta": null
+   },
+   "政治": {
+    "score": 46.9,
+    "classRank": 19,
+    "classDelta": null
+   },
+   "历史": {
+    "score": 48.8,
+    "classRank": 20,
+    "classDelta": null
+   },
+   "地理": {
+    "score": 44,
+    "classRank": 16,
+    "classDelta": null
+   },
+   "体育": {
+    "score": 37,
+    "classRank": 47,
+    "classDelta": null
+   }
+  },
+  "total": {
+   "score": 489.7,
+   "schoolRank": 656,
+   "classRank": 28,
+   "schoolDelta": null,
+   "classDelta": null
+  }
+ },
+ {
+  "no": 29,
+  "name": "孙星河",
+  "examNo": "77000023",
+  "subjects": {
+   "语文": {
+    "score": 72,
+    "classRank": 25,
+    "classDelta": 3
+   },
+   "数学": {
+    "score": 31,
+    "classRank": 35,
+    "classDelta": 3
+   },
+   "英语": {
+    "score": 50.5,
+    "classRank": 28,
+    "classDelta": -9
+   },
+   "物理": {
+    "score": 57,
+    "classRank": 28,
+    "classDelta": 6
+   },
+   "化学": {
+    "score": 44.8,
+    "classRank": 24,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 36,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 38.5,
+    "classRank": 32,
+    "classDelta": -6
+   },
+   "历史": {
+    "score": 43.2,
+    "classRank": 31,
+    "classDelta": -9
+   },
+   "地理": {
+    "score": 43,
+    "classRank": 21,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 54,
+    "classRank": 37,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 470,
+   "schoolRank": 676,
+   "classRank": 29,
+   "schoolDelta": -2,
+   "classDelta": 1
+  }
+ },
+ {
+  "no": 30,
+  "name": "袁念安",
+  "examNo": "77000094",
+  "subjects": {
+   "语文": {
+    "score": 66,
+    "classRank": 35,
+    "classDelta": -8
+   },
+   "数学": {
+    "score": 35,
+    "classRank": 32,
+    "classDelta": -13
+   },
+   "英语": {
+    "score": 58,
+    "classRank": 22,
+    "classDelta": 4
+   },
+   "物理": {
+    "score": 61,
+    "classRank": 25,
+    "classDelta": -3
+   },
+   "化学": {
+    "score": 48.3,
+    "classRank": 19,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 37,
+    "classRank": 27,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 38.5,
+    "classRank": 32,
+    "classDelta": -7
+   },
+   "历史": {
+    "score": 32,
+    "classRank": 43,
+    "classDelta": -6
+   },
+   "地理": {
+    "score": 38,
+    "classRank": 33,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 53,
+    "classRank": 40,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 466.8,
+   "schoolRank": 685,
+   "classRank": 30,
+   "schoolDelta": -55,
+   "classDelta": -2
+  }
+ },
+ {
+  "no": 31,
+  "name": "袁星河",
+  "examNo": "77000015",
+  "subjects": {
+   "语文": {
+    "score": 77,
+    "classRank": 20,
+    "classDelta": 15
+   },
+   "数学": {
+    "score": 47,
+    "classRank": 27,
+    "classDelta": 14
+   },
+   "英语": {
+    "score": 45,
+    "classRank": 31,
+    "classDelta": -4
+   },
+   "物理": {
+    "score": 43,
+    "classRank": 34,
+    "classDelta": -5
+   },
+   "化学": {
+    "score": 32.9,
+    "classRank": 39,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 34,
+    "classRank": 35,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 35.7,
+    "classRank": 36,
+    "classDelta": -10
+   },
+   "历史": {
+    "score": 40,
+    "classRank": 34,
+    "classDelta": -6
+   },
+   "地理": {
+    "score": 41,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 61,
+    "classRank": 23,
+    "classDelta": 5
+   }
+  },
+  "total": {
+   "score": 456.6,
+   "schoolRank": 716,
+   "classRank": 31,
+   "schoolDelta": 18,
+   "classDelta": 2
+  }
+ },
+ {
+  "no": 32,
+  "name": "马星河",
+  "examNo": "77000026",
+  "subjects": {
+   "语文": {
+    "score": 68.5,
+    "classRank": 33,
+    "classDelta": -9
+   },
+   "数学": {
+    "score": 50,
+    "classRank": 25,
+    "classDelta": -5
+   },
+   "英语": {
+    "score": 32,
+    "classRank": 41,
+    "classDelta": -12
+   },
+   "物理": {
+    "score": 42,
+    "classRank": 36,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 37.8,
+    "classRank": 32,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 38,
+    "classRank": 25,
+    "classDelta": 0
+   },
+   "政治": {
+    "score": 39.2,
+    "classRank": 27,
+    "classDelta": -1
+   },
+   "历史": {
+    "score": 45.6,
+    "classRank": 26,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 38,
+    "classRank": 33,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 62,
+    "classRank": 21,
+    "classDelta": -11
+   }
+  },
+  "total": {
+   "score": 453.1,
+   "schoolRank": 722,
+   "classRank": 32,
+   "schoolDelta": -89,
+   "classDelta": -3
+  }
+ },
+ {
+  "no": 33,
+  "name": "曹念安",
+  "examNo": "77000034",
+  "subjects": {
+   "语文": {
+    "score": 67.5,
+    "classRank": 34,
+    "classDelta": -2
+   },
+   "数学": {
+    "score": 21,
+    "classRank": 41,
+    "classDelta": -6
+   },
+   "英语": {
+    "score": 77.5,
+    "classRank": 15,
+    "classDelta": 8
+   },
+   "物理": {
+    "score": 42,
+    "classRank": 36,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 38.5,
+    "classRank": 31,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 28,
+    "classRank": 42,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 36.4,
+    "classRank": 35,
+    "classDelta": -13
+   },
+   "历史": {
+    "score": 40,
+    "classRank": 34,
+    "classDelta": -15
+   },
+   "地理": {
+    "score": 35,
+    "classRank": 41,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 58,
+    "classRank": 28,
+    "classDelta": -8
+   }
+  },
+  "total": {
+   "score": 443.9,
+   "schoolRank": 735,
+   "classRank": 33,
+   "schoolDelta": -35,
+   "classDelta": -2
+  }
+ },
+ {
+  "no": 34,
+  "name": "李念安",
+  "examNo": "77000010",
+  "subjects": {
+   "语文": {
+    "score": 58.5,
+    "classRank": 45,
+    "classDelta": -13
+   },
+   "数学": {
+    "score": 34,
+    "classRank": 34,
+    "classDelta": -3
+   },
+   "英语": {
+    "score": 53,
+    "classRank": 27,
+    "classDelta": -9
+   },
+   "物理": {
+    "score": 40,
+    "classRank": 39,
+    "classDelta": -17
+   },
+   "化学": {
+    "score": 40.6,
+    "classRank": 29,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 36,
+    "classRank": 28,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 39.2,
+    "classRank": 27,
+    "classDelta": -10
+   },
+   "历史": {
+    "score": 42.4,
+    "classRank": 32,
+    "classDelta": -16
+   },
+   "地理": {
+    "score": 36,
+    "classRank": 39,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 61,
+    "classRank": 23,
+    "classDelta": -3
+   }
+  },
+  "total": {
+   "score": 440.7,
+   "schoolRank": 739,
+   "classRank": 34,
+   "schoolDelta": -131,
+   "classDelta": -8
+  }
+ },
+ {
+  "no": 35,
+  "name": "曹星河",
+  "examNo": "77000030",
+  "subjects": {
+   "语文": {
+    "score": 69,
+    "classRank": 30,
+    "classDelta": 7
+   },
+   "数学": {
+    "score": 35,
+    "classRank": 32,
+    "classDelta": 7
+   },
+   "英语": {
+    "score": 36.5,
+    "classRank": 38,
+    "classDelta": 4
+   },
+   "物理": {
+    "score": 60,
+    "classRank": 27,
+    "classDelta": 15
+   },
+   "化学": {
+    "score": 35,
+    "classRank": 35,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 35,
+    "classRank": 32,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 33.6,
+    "classRank": 38,
+    "classDelta": -2
+   },
+   "历史": {
+    "score": 34.4,
+    "classRank": 40,
+    "classDelta": 4
+   },
+   "地理": {
+    "score": 36,
+    "classRank": 39,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 54,
+    "classRank": 37,
+    "classDelta": -21
+   }
+  },
+  "total": {
+   "score": 428.5,
+   "schoolRank": 758,
+   "classRank": 35,
+   "schoolDelta": 80,
+   "classDelta": 5
+  }
+ },
+ {
+  "no": 36,
+  "name": "唐星河",
+  "examNo": "77000032",
+  "subjects": {
+   "语文": {
+    "score": 65,
+    "classRank": 36,
+    "classDelta": 6
+   },
+   "数学": {
+    "score": 19,
+    "classRank": 44,
+    "classDelta": -13
+   },
+   "英语": {
+    "score": 55.5,
+    "classRank": 25,
+    "classDelta": 15
+   },
+   "物理": {
+    "score": 40,
+    "classRank": 39,
+    "classDelta": -15
+   },
+   "化学": {
+    "score": 41.3,
+    "classRank": 27,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 32,
+    "classRank": 38,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 31.5,
+    "classRank": 39,
+    "classDelta": 0
+   },
+   "历史": {
+    "score": 38.4,
+    "classRank": 38,
+    "classDelta": 0
+   },
+   "地理": {
+    "score": 38,
+    "classRank": 33,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 65,
+    "classRank": 15,
+    "classDelta": 10
+   }
+  },
+  "total": {
+   "score": 425.7,
+   "schoolRank": 761,
+   "classRank": 36,
+   "schoolDelta": 26,
+   "classDelta": 2
+  }
+ },
+ {
+  "no": 37,
+  "name": "郭北辰",
+  "examNo": "77000013",
+  "subjects": {
+   "语文": {
+    "score": 70,
+    "classRank": 27,
+    "classDelta": 9
+   },
+   "数学": {
+    "score": 24,
+    "classRank": 39,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 38,
+    "classRank": 36,
+    "classDelta": 1
+   },
+   "物理": {
+    "score": 47,
+    "classRank": 32,
+    "classDelta": 10
+   },
+   "化学": {
+    "score": 21.7,
+    "classRank": 46,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 34,
+    "classRank": 35,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 39.2,
+    "classRank": 27,
+    "classDelta": 17
+   },
+   "历史": {
+    "score": 44,
+    "classRank": 28,
+    "classDelta": 14
+   },
+   "地理": {
+    "score": 39,
+    "classRank": 31,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 60,
+    "classRank": 26,
+    "classDelta": 2
+   }
+  },
+  "total": {
+   "score": 416.9,
+   "schoolRank": 776,
+   "classRank": 37,
+   "schoolDelta": 50,
+   "classDelta": 2
+  }
+ },
+ {
+  "no": 38,
+  "name": "余念安",
+  "examNo": "77000019",
+  "subjects": {
+   "语文": {
+    "score": 62,
+    "classRank": 40,
+    "classDelta": 3
+   },
+   "数学": {
+    "score": 47,
+    "classRank": 27,
+    "classDelta": 9
+   },
+   "英语": {
+    "score": 29,
+    "classRank": 43,
+    "classDelta": -14
+   },
+   "物理": {
+    "score": 29,
+    "classRank": 44,
+    "classDelta": -4
+   },
+   "化学": {
+    "score": 32.2,
+    "classRank": 41,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 31,
+    "classRank": 39,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 37.8,
+    "classRank": 34,
+    "classDelta": 6
+   },
+   "历史": {
+    "score": 34.4,
+    "classRank": 40,
+    "classDelta": -6
+   },
+   "地理": {
+    "score": 38,
+    "classRank": 33,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 66,
+    "classRank": 11,
+    "classDelta": 14
+   }
+  },
+  "total": {
+   "score": 406.4,
+   "schoolRank": 793,
+   "classRank": 38,
+   "schoolDelta": -7,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 39,
+  "name": "彭念安",
+  "examNo": "77000017",
+  "subjects": {
+   "语文": {
+    "score": 59,
+    "classRank": 44,
+    "classDelta": 2
+   },
+   "数学": {
+    "score": 28,
+    "classRank": 37,
+    "classDelta": -8
+   },
+   "英语": {
+    "score": 53.5,
+    "classRank": 26,
+    "classDelta": -2
+   },
+   "物理": {
+    "score": 30,
+    "classRank": 43,
+    "classDelta": -16
+   },
+   "化学": {
+    "score": 27.3,
+    "classRank": 44,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 33,
+    "classRank": 37,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 29.4,
+    "classRank": 41,
+    "classDelta": -20
+   },
+   "历史": {
+    "score": 48.8,
+    "classRank": 20,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 30,
+    "classRank": 46,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 67,
+    "classRank": 9,
+    "classDelta": 7
+   }
+  },
+  "total": {
+   "score": 406,
+   "schoolRank": 794,
+   "classRank": 39,
+   "schoolDelta": -24,
+   "classDelta": -5
+  }
+ },
+ {
+  "no": 40,
+  "name": "任念安",
+  "examNo": "77000016",
+  "subjects": {
+   "语文": {
+    "score": 63.5,
+    "classRank": 39,
+    "classDelta": -9
+   },
+   "数学": {
+    "score": 18,
+    "classRank": 45,
+    "classDelta": -1
+   },
+   "英语": {
+    "score": 33.5,
+    "classRank": 40,
+    "classDelta": -6
+   },
+   "物理": {
+    "score": 35,
+    "classRank": 41,
+    "classDelta": -11
+   },
+   "化学": {
+    "score": 32.9,
+    "classRank": 39,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 35,
+    "classRank": 32,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 27.3,
+    "classRank": 43,
+    "classDelta": -9
+   },
+   "历史": {
+    "score": 46.4,
+    "classRank": 25,
+    "classDelta": 4
+   },
+   "地理": {
+    "score": 46,
+    "classRank": 8,
+    "classDelta": 0
+   },
+   "体育": {
+    "score": 55,
+    "classRank": 33,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 392.6,
+   "schoolRank": 812,
+   "classRank": 40,
+   "schoolDelta": -41,
+   "classDelta": -5
+  }
+ },
+ {
+  "no": 41,
+  "name": "彭星河",
+  "examNo": "77000092",
+  "subjects": {
+   "语文": {
+    "score": 61,
+    "classRank": 41,
+    "classDelta": -3
+   },
+   "数学": {
+    "score": 29,
+    "classRank": 36,
+    "classDelta": -5
+   },
+   "英语": {
+    "score": 45,
+    "classRank": 31,
+    "classDelta": 2
+   },
+   "物理": {
+    "score": 34,
+    "classRank": 42,
+    "classDelta": -11
+   },
+   "化学": {
+    "score": 35,
+    "classRank": 35,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 24,
+    "classRank": 47,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 39.2,
+    "classRank": 27,
+    "classDelta": 10
+   },
+   "历史": {
+    "score": 34.4,
+    "classRank": 40,
+    "classDelta": -17
+   },
+   "地理": {
+    "score": 32,
+    "classRank": 43,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 52,
+    "classRank": 41,
+    "classDelta": -8
+   }
+  },
+  "total": {
+   "score": 385.6,
+   "schoolRank": 820,
+   "classRank": 41,
+   "schoolDelta": -38,
+   "classDelta": -5
+  }
+ },
+ {
+  "no": 42,
+  "name": "韩念安",
+  "examNo": "77000031",
+  "subjects": {
+   "语文": {
+    "score": 64,
+    "classRank": 37,
+    "classDelta": 3
+   },
+   "数学": {
+    "score": 27,
+    "classRank": 38,
+    "classDelta": -1
+   },
+   "英语": {
+    "score": 22.5,
+    "classRank": 45,
+    "classDelta": -4
+   },
+   "物理": {
+    "score": 44,
+    "classRank": 33,
+    "classDelta": 1
+   },
+   "化学": {
+    "score": 35,
+    "classRank": 35,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 30,
+    "classRank": 41,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 25.2,
+    "classRank": 46,
+    "classDelta": -4
+   },
+   "历史": {
+    "score": 29.6,
+    "classRank": 44,
+    "classDelta": -1
+   },
+   "地理": {
+    "score": 33,
+    "classRank": 42,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 65,
+    "classRank": 15,
+    "classDelta": 3
+   }
+  },
+  "total": {
+   "score": 375.3,
+   "schoolRank": 833,
+   "classRank": 42,
+   "schoolDelta": 16,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 43,
+  "name": "蔡北辰",
+  "examNo": "77000042",
+  "subjects": {
+   "语文": {
+    "score": 48,
+    "classRank": 47,
+    "classDelta": -2
+   },
+   "数学": {
+    "score": 20,
+    "classRank": 43,
+    "classDelta": -12
+   },
+   "英语": {
+    "score": 18,
+    "classRank": 46,
+    "classDelta": 0
+   },
+   "物理": {
+    "score": 42,
+    "classRank": 36,
+    "classDelta": 4
+   },
+   "化学": {
+    "score": 35.7,
+    "classRank": 34,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 31,
+    "classRank": 39,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 30.1,
+    "classRank": 40,
+    "classDelta": 6
+   },
+   "历史": {
+    "score": 26.4,
+    "classRank": 47,
+    "classDelta": -7
+   },
+   "地理": {
+    "score": 42,
+    "classRank": 24,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 70,
+    "classRank": 1,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 363.2,
+   "schoolRank": 846,
+   "classRank": 43,
+   "schoolDelta": 7,
+   "classDelta": 0
+  }
+ },
+ {
+  "no": 44,
+  "name": "黄念安",
+  "examNo": "77000044",
+  "subjects": {
+   "语文": {
+    "score": 60,
+    "classRank": 42,
+    "classDelta": 2
+   },
+   "数学": {
+    "score": 24,
+    "classRank": 39,
+    "classDelta": 0
+   },
+   "英语": {
+    "score": 36,
+    "classRank": 39,
+    "classDelta": 4
+   },
+   "物理": {
+    "score": 21,
+    "classRank": 48,
+    "classDelta": -17
+   },
+   "化学": {
+    "score": 30.1,
+    "classRank": 42,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 25,
+    "classRank": 44,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 27.3,
+    "classRank": 43,
+    "classDelta": -6
+   },
+   "历史": {
+    "score": 36.8,
+    "classRank": 39,
+    "classDelta": 7
+   },
+   "地理": {
+    "score": 37,
+    "classRank": 38,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 66,
+    "classRank": 11,
+    "classDelta": 14
+   }
+  },
+  "total": {
+   "score": 363.2,
+   "schoolRank": 846,
+   "classRank": 43,
+   "schoolDelta": 18,
+   "classDelta": 1
+  }
+ },
+ {
+  "no": 45,
+  "name": "谢北辰",
+  "examNo": "77000040",
+  "subjects": {
+   "语文": {
+    "score": 59.5,
+    "classRank": 43,
+    "classDelta": -11
+   },
+   "数学": {
+    "score": 18,
+    "classRank": 45,
+    "classDelta": -3
+   },
+   "英语": {
+    "score": 23.5,
+    "classRank": 44,
+    "classDelta": -5
+   },
+   "物理": {
+    "score": 25,
+    "classRank": 46,
+    "classDelta": -1
+   },
+   "化学": {
+    "score": 28,
+    "classRank": 43,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 25,
+    "classRank": 44,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 28.7,
+    "classRank": 42,
+    "classDelta": -1
+   },
+   "历史": {
+    "score": 40,
+    "classRank": 34,
+    "classDelta": -2
+   },
+   "地理": {
+    "score": 31,
+    "classRank": 45,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 55,
+    "classRank": 33,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 333.7,
+   "schoolRank": 874,
+   "classRank": 45,
+   "schoolDelta": -22,
+   "classDelta": -3
+  }
+ },
+ {
+  "no": 46,
+  "name": "李北辰",
+  "examNo": "77000038",
+  "subjects": {
+   "语文": {
+    "score": 64,
+    "classRank": 37,
+    "classDelta": 2
+   },
+   "数学": {
+    "score": 21,
+    "classRank": 41,
+    "classDelta": 4
+   },
+   "英语": {
+    "score": 30,
+    "classRank": 42,
+    "classDelta": -6
+   },
+   "物理": {
+    "score": 23,
+    "classRank": 47,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 17.5,
+    "classRank": 47,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 27,
+    "classRank": 43,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 25.2,
+    "classRank": 46,
+    "classDelta": -1
+   },
+   "历史": {
+    "score": 29.6,
+    "classRank": 44,
+    "classDelta": -3
+   },
+   "地理": {
+    "score": 32,
+    "classRank": 43,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 61,
+    "classRank": 23,
+    "classDelta": 5
+   }
+  },
+  "total": {
+   "score": 330.3,
+   "schoolRank": 878,
+   "classRank": 46,
+   "schoolDelta": -7,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 47,
+  "name": "吕北辰",
+  "examNo": "77000003",
+  "subjects": {
+   "语文": {
+    "score": 54,
+    "classRank": 46,
+    "classDelta": -5
+   },
+   "数学": {
+    "score": 12,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "英语": {
+    "score": 17,
+    "classRank": 47,
+    "classDelta": -3
+   },
+   "物理": {
+    "score": 28,
+    "classRank": 45,
+    "classDelta": 0
+   },
+   "化学": {
+    "score": 22.4,
+    "classRank": 45,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 25,
+    "classRank": 44,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 26.6,
+    "classRank": 45,
+    "classDelta": -11
+   },
+   "历史": {
+    "score": 29.6,
+    "classRank": 44,
+    "classDelta": 0
+   },
+   "地理": {
+    "score": 29,
+    "classRank": 47,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 41,
+    "classRank": 46,
+    "classDelta": 0
+   }
+  },
+  "total": {
+   "score": 284.6,
+   "schoolRank": 914,
+   "classRank": 47,
+   "schoolDelta": -9,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 48,
+  "name": "胡星河",
+  "examNo": "77000021",
+  "subjects": {
+   "语文": {
+    "score": 7,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "数学": {
+    "score": 15,
+    "classRank": 47,
+    "classDelta": -1
+   },
+   "英语": {
+    "score": 16,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "物理": {
+    "score": 43,
+    "classRank": 34,
+    "classDelta": 10
+   },
+   "化学": {
+    "score": 13.3,
+    "classRank": 48,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": 17,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "政治": {
+    "score": 20.3,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "历史": {
+    "score": 14.4,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "地理": {
+    "score": 21,
+    "classRank": 48,
+    "classDelta": -1
+   },
+   "体育": {
+    "score": 54,
+    "classRank": 37,
+    "classDelta": 3
+   }
+  },
+  "total": {
+   "score": 221,
+   "schoolRank": 940,
+   "classRank": 48,
+   "schoolDelta": 12,
+   "classDelta": -1
+  }
+ },
+ {
+  "no": 49,
+  "name": "秦星河",
+  "examNo": "77000098",
+  "subjects": {
+   "语文": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "数学": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "英语": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "物理": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "化学": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "生物学": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "政治": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "历史": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "地理": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   },
+   "体育": {
+    "score": null,
+    "classRank": null,
+    "classDelta": null
+   }
+  },
+  "total": {
+   "score": null,
+   "schoolRank": null,
+   "classRank": null,
+   "schoolDelta": null,
+   "classDelta": null
+  }
+ }
+]

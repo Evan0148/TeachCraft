@@ -1,0 +1,416 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GradeStrip.App.App"
+             xmlns:local="using:GradeStrip.App"
+             Name="分晓 · GradeStrip"
+             RequestedThemeVariant="Light">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <!-- Anthropic 品牌色板 -->
+        <SolidColorBrush x:Key="InkBrush" Color="#141413" />
+        <SolidColorBrush x:Key="InkSoftBrush" Color="#3D3B36" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#85806F" />
+        <SolidColorBrush x:Key="PaperBrush" Color="#FAF9F5" />
+        <SolidColorBrush x:Key="PaperDeepBrush" Color="#F4F2EC" />
+        <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="LineBrush" Color="#E7E3D8" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#D97757" />
+        <SolidColorBrush x:Key="AccentDeepBrush" Color="#C6613F" />
+        <SolidColorBrush x:Key="MossBrush" Color="#5A7A4B" />
+
+        <FontFamily x:Key="SerifFont">avares://GradeStrip.App/Assets/Fonts#Anthropic Serif</FontFamily>
+        <FontFamily x:Key="MonoFont">avares://GradeStrip.App/Assets/Fonts#Anthropic Mono</FontFamily>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif" />
+            <Setter Property="Background" Value="{StaticResource PaperBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Hiragino Sans GB, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif" />
+            <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+        </Style>
+
+        <!-- 卡片：白面 + 细边，无阴影，Anthropic 的扁平做法 -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="20" />
+        </Style>
+
+        <!-- 忙碌遮罩卡片：进入时从 0.96 轻微放大淡入（0.22s，克制动效） -->
+        <Style Selector="Border.busy-in">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Forward">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="0.96" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="0.96" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                        <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- 忙碌指示弧：恒定角速度旋转（linear），仅在忙碌时转动 -->
+        <Style Selector="Canvas.busy-spin">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Style.Animations>
+                <Animation Duration="0:0:0.9" IterationCount="INFINITE">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RotateTransform.Angle" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RotateTransform.Angle" Value="360" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- 衬线标题 -->
+        <Style Selector="TextBlock.display">
+            <Setter Property="FontFamily" Value="avares://GradeStrip.App/Assets/Fonts#Anthropic Serif, SimSun, Songti SC, STSong, Noto Serif CJK SC, serif" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+
+        <!-- 等宽数字 -->
+        <Style Selector="TextBlock.numeral">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+
+        <!-- 等宽小标签 -->
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.2" />
+        </Style>
+
+        <!-- 中文小标签 -->
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.6" />
+        </Style>
+
+        <Style Selector="TextBlock.mono-label">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.8" />
+        </Style>
+
+        <!-- 按钮系统：Apple 式物理按压反馈（80ms scale(0.97) 快速响应，零延迟） -->
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="15,8" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                    <BrushTransition Property="Foreground" Duration="0:0:0.12" />
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" Easing="CircularEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.97)" />
+        </Style>
+
+        <!-- 返回按钮：带有向左微移的方向指示动画 (Directional Feedback) -->
+        <Style Selector="Button.back-btn">
+            <Setter Property="RenderTransform" Value="none" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.back-btn:pointerover">
+            <Setter Property="RenderTransform" Value="translate(-2.5px, 0px)" />
+        </Style>
+        <Style Selector="Button.back-btn:pressed">
+            <Setter Property="RenderTransform" Value="translate(-3.5px, 0px) scale(0.97)" />
+        </Style>
+
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource InkBrush}" />
+            <Setter Property="Foreground" Value="#FAF9F5" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2E2C28" />
+            <Setter Property="Foreground" Value="#FAF9F5" />
+        </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#000000" />
+        </Style>
+        <Style Selector="Button.primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#DDD9CE" />
+            <Setter Property="Foreground" Value="#6F6A5E" />
+        </Style>
+
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="BorderBrush" Value="#D6D1C4" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="BorderBrush" Value="#BDB6A4" />
+        </Style>
+
+        <!-- 导航：文字式，选中用左侧陶土色细条 -->
+        <Style Selector="Button.nav">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="Button.nav:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.nav.active">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.nav.active /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.nav.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EDE9DE" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+
+        <!-- 侧栏操作项：无框扁平、与批次等宽对齐、浅色弱化、悬停提亮 -->
+        <Style Selector="Button.nav.nav-action">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.78" />
+        </Style>
+        <Style Selector="Button.nav.nav-action:pointerover">
+            <Setter Property="Opacity" Value="1.0" />
+        </Style>
+        <Style Selector="Button.nav.nav-action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+        </Style>
+
+        <!-- 报表/表名切换 chip：未选中为细边纸面，选中用陶土色描边与文字 -->
+        <Style Selector="Button.report-chip">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        <Style Selector="Button.report-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FBF9F3" />
+            <Setter Property="BorderBrush" Value="#CFC8B6" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.report-chip.active">
+            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="Button.report-chip.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F8EDE4" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDeepBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+        </Style>
+
+        <!-- 分析报表的班级选择：与纸面卡片同色，细边 -->
+        <Style Selector="ComboBox.report-class">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="MinWidth" Value="118" />
+        </Style>
+        <Style Selector="ComboBox.report-class:pointerover /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="#CFC8B6" />
+        </Style>
+
+        <!-- 学生排行姓名后的微型班级角标：纸面小胶囊，细边无阴影 -->
+        <Style Selector="Border.class-badge">
+            <Setter Property="Background" Value="{StaticResource PaperBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.class-badge TextBlock">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="Foreground" Value="{StaticResource InkSoftBrush}" />
+        </Style>
+
+        <!-- 可点击的卡片：微量物理下沉与柔和温润纸感过渡 -->
+        <Style Selector="Border.clickable">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+                    <BrushTransition Property="Background" Duration="0:0:0.12" />
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" Easing="CircularEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.card.clickable:pointerover">
+            <Setter Property="BorderBrush" Value="#CFC8B6" />
+            <Setter Property="Background" Value="#FEFCF7" />
+        </Style>
+        <Style Selector="Border.card.clickable:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.992)" />
+        </Style>
+
+        <!-- 可点击的姓名 -->
+        <Style Selector="Button.link">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+        </Style>
+        <Style Selector="Button.link:pointerover TextBlock">
+            <Setter Property="TextDecorations" Value="Underline" />
+        </Style>
+
+        <!-- 学生排名行：整行可悬停、可点击，具备按下反馈 -->
+        <Style Selector="Border.rank-row">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.rank-row:pointerover">
+            <Setter Property="Background" Value="#FBF9F3" />
+        </Style>
+        <Style Selector="Border.rank-row:pressed">
+            <Setter Property="Background" Value="#F2EEE2" />
+        </Style>
+
+        <!-- 页面视图切换进场动效：当 IsVisible 变为 True 时，执行细腻的淡入 -->
+        <Style Selector=":is(Control).view-transition[IsVisible=True]">
+            <Style.Animations>
+                <Animation Duration="0:0:0.2" FillMode="Forward" Easing="CubicEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- 关键修复：让 Button 模板内部的 ContentPresenter 拥有真正的色彩平滑过渡 -->
+        <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- 空状态拖拽虚线框过渡 -->
+        <Style Selector="Border.drop-box">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.drop-box:pointerover">
+            <Setter Property="Background" Value="#F7F5EE" />
+            <Setter Property="BorderBrush" Value="#BDB6A4" />
+        </Style>
+
+        <Style Selector="ScrollViewer">
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="12.5" />
+        </Style>
+        <!-- 排名维度分段切换按钮 -->
+        <Style Selector="Button.rank-seg-btn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="Foreground" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.rank-seg-btn:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Button.rank-seg-btn.active">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+    </Application.Styles>
+</Application>

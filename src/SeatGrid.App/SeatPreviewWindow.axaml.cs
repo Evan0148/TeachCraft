@@ -25,6 +25,14 @@ public partial class SeatPreviewWindow : Window
             PreviewImage.Source = new Bitmap(imagePath);
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        // 预览图是整张座位表解码后的像素缓冲，关窗即释放，避免反复预览累积内存。
+        (PreviewImage.Source as IDisposable)?.Dispose();
+        PreviewImage.Source = null;
+        base.OnClosed(e);
+    }
+
     private void OnOpenFolder(object? sender, RoutedEventArgs e)
     {
         if (!File.Exists(_imagePath)) return;

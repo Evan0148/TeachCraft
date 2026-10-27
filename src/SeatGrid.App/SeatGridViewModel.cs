@@ -24,8 +24,23 @@ public partial class SeatGridViewModel : ObservableObject
     private readonly Dictionary<SeatPosition, StudentViewModel> _assignments = new();
     private readonly Dictionary<SeatPosition, SeatCellViewModel> _seats = new();
     private bool _suppressRebuild;
+    private bool _interactiveLayoutEdit;
+    private bool _structureDirty;
+    private bool _scaleDirty;
 
-    public ObservableCollection<StudentViewModel> FilteredStudents { get; } = new();
+    // 画刷是绑定高频读取的属性，按颜色缓存，颜色变化时统一失效。
+    private IBrush? _seatBackgroundBrush;
+    private IBrush? _emptySeatBrush;
+    private IBrush? _seatTextBrush;
+    private IBrush? _seatBorderBrush;
+    private IBrush? _podiumBackgroundBrush;
+    private IBrush? _podiumTextBrush;
+    private IBrush? _groupLabelBrush;
+    private IBrush? _femaleMarkBrush;
+
+    /// <summary>用列表整体替换，避免 3000 条逐项 Add 触发等量集合通知。</summary>
+    [ObservableProperty] private IReadOnlyList<StudentViewModel> _filteredStudents = Array.Empty<StudentViewModel>();
+
     public ObservableCollection<GroupViewModel> Groups { get; } = new();
 
     public IReadOnlyList<string> ArrangeModes { get; } = new[]
@@ -105,9 +120,12 @@ public partial class SeatGridViewModel : ObservableObject
     public bool PodiumOnTop => IsStudentView;
     public bool PodiumOnBottom => !IsStudentView;
     public bool HasStudents => _students.Count > 0;
+    public bool CanArrange => HasStudents && !IsBusy;
+    public bool CanExport => HasStudents && !IsBusy;
     public bool IsChartEmpty => _students.Count == 0;
     public bool HasRosterHint => RosterHint.Length > 0;
     public bool IsRosterEmpty => FilteredStudents.Count == 0;
+    public bool ShowGenderLegend => MarkFemales;
     public string RosterEmptyText => _students.Count == 0 ? "还没有名单" : "没有匹配的学生";
 
     public int StudentCount => _students.Count;
@@ -147,15 +165,14 @@ public partial class SeatGridViewModel : ObservableObject
     public bool CanAssign => SelectedStudent is not null && SelectedSeat is not null;
     public bool CanClearSeat => SelectedSeat is not null;
 
-    public IBrush SeatBackgroundBrush => new SolidColorBrush(SeatBackgroundColor);
-    public IBrush EmptySeatBrush => new SolidColorBrush(EmptySeatColor);
-    public IBrush SeatTextBrush => new SolidColorBrush(SeatTextColor);
-    public IBrush SeatBorderBrush => new SolidColorBrush(SeatBorderColor);
-    public IBrush PodiumBackgroundBrush => new SolidColorBrush(PodiumBackgroundColor);
-    public IBrush PodiumTextBrush => new SolidColorBrush(PodiumTextColor);
-    public IBrush GroupLabelBrush => new SolidColorBrush(GroupLabelColor);
-    public IBrush RowLabelBrush => new SolidColorBrush(RowLabelColor);
-    public IBrush FemaleMarkBrush => new SolidColorBrush(FemaleMarkColor);
+    public IBrush SeatBackgroundBrush => _seatBackgroundBrush ??= new SolidColorBrush(SeatBackgroundColor);
+    public IBrush EmptySeatBrush => _emptySeatBrush ??= new SolidColorBrush(EmptySeatColor);
+    public IBrush SeatTextBrush => _seatTextBrush ??= new SolidColorBrush(SeatTextColor);
+    public IBrush SeatBorderBrush => _seatBorderBrush ??= new SolidColorBrush(SeatBorderColor);
+    public IBrush PodiumBackgroundBrush => _podiumBackgroundBrush ??= new SolidColorBrush(PodiumBackgroundColor);
+    public IBrush PodiumTextBrush => _podiumTextBrush ??= new SolidColorBrush(PodiumTextColor);
+    public IBrush GroupLabelBrush => _groupLabelBrush ??= new SolidColorBrush(GroupLabelColor);
+    public IBrush FemaleMarkBrush => _femaleMarkBrush ??= new SolidColorBrush(FemaleMarkColor);
 
     private SeatChartLayout CurrentLayout => new(
         Math.Clamp((int)Math.Round(GroupCount), 1, 8),
@@ -168,10 +185,45 @@ public partial class SeatGridViewModel : ObservableObject
 
     // ----------------------------- 设置变更 -----------------------------
 
+    /// <summary>滑块按下时暂停重建，松手后再一次性刷新，避免拖动过程中逐 tick 重建整张座位表。</summary>
+    public void BeginInteractiveLayoutChange()
+    {
+        _interactiveLayoutEdit = true;
+        _structureDirty = false;
+        _scaleDirty = false;
+    }
+
+    public void EndInteractiveLayoutChange()
+    {
+        if (!_interactiveLayoutEdit) return;
+        _interactiveLayoutEdit = false;
+
+        if (_structureDirty)
+        {
+            _structureDirty = false;
+            _scaleDirty = false;
+            BuildGrid();
+            NotifyCounts();
+            return;
+        }
+
+        if (_scaleDirty)
+        {
+            _scaleDirty = false;
+            RefreshSeatVisuals();
+            UpdatePodium();
+        }
+    }
+
     partial void OnGroupCountChanged(double value)
     {
         if (_suppressRebuild) return;
         OnPropertyChanged(nameof(GroupCountLabel));
+        if (_interactiveLayoutEdit)
+        {
+            _structureDirty = true;
+            return;
+        }
         BuildGrid();
         NotifyCounts();
     }
@@ -180,6 +232,11 @@ public partial class SeatGridViewModel : ObservableObject
     {
         if (_suppressRebuild) return;
         OnPropertyChanged(nameof(RowCountLabel));
+        if (_interactiveLayoutEdit)
+        {
+            _structureDirty = true;
+            return;
+        }
         BuildGrid();
         NotifyCounts();
     }
@@ -188,6 +245,11 @@ public partial class SeatGridViewModel : ObservableObject
     {
         if (_suppressRebuild) return;
         OnPropertyChanged(nameof(ColumnCountLabel));
+        if (_interactiveLayoutEdit)
+        {
+            _structureDirty = true;
+            return;
+        }
         BuildGrid();
         NotifyCounts();
     }
@@ -205,6 +267,11 @@ public partial class SeatGridViewModel : ObservableObject
     {
         if (_suppressRebuild) return;
         OnPropertyChanged(nameof(CellSizeLabel));
+        if (_interactiveLayoutEdit)
+        {
+            _scaleDirty = true;
+            return;
+        }
         RefreshSeatVisuals();
         UpdatePodium();
     }
@@ -225,7 +292,11 @@ public partial class SeatGridViewModel : ObservableObject
 
     partial void OnHideEmptySeatsChanged(bool value) => RefreshSeatVisuals();
 
-    partial void OnMarkFemalesChanged(bool value) => RefreshSeatVisuals();
+    partial void OnMarkFemalesChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowGenderLegend));
+        RefreshSeatVisuals();
+    }
 
     partial void OnSpaceTwoCharNamesChanged(bool value) => RefreshSeatVisuals();
 
@@ -301,12 +372,26 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(CanClearSeat));
     }
 
-    partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(IsIdle));
+    partial void OnIsBusyChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsIdle));
+        OnPropertyChanged(nameof(CanArrange));
+        OnPropertyChanged(nameof(CanExport));
+    }
 
     partial void OnRosterHintChanged(string value) => OnPropertyChanged(nameof(HasRosterHint));
 
     private void ColorChanged()
     {
+        _seatBackgroundBrush = null;
+        _emptySeatBrush = null;
+        _seatTextBrush = null;
+        _seatBorderBrush = null;
+        _podiumBackgroundBrush = null;
+        _podiumTextBrush = null;
+        _groupLabelBrush = null;
+        _femaleMarkBrush = null;
+
         OnPropertyChanged(nameof(SeatBackgroundBrush));
         OnPropertyChanged(nameof(EmptySeatBrush));
         OnPropertyChanged(nameof(SeatTextBrush));
@@ -314,7 +399,6 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(PodiumBackgroundBrush));
         OnPropertyChanged(nameof(PodiumTextBrush));
         OnPropertyChanged(nameof(GroupLabelBrush));
-        OnPropertyChanged(nameof(RowLabelBrush));
         OnPropertyChanged(nameof(FemaleMarkBrush));
         RefreshSeatVisuals();
     }
@@ -360,10 +444,14 @@ public partial class SeatGridViewModel : ObservableObject
                     seats.Add(seat);
                 }
 
-                rows.Add(new RowViewModel(row + 1, $"第{row + 1}排", seats));
+                rows.Add(new RowViewModel(row + 1, seats));
             }
 
-            Groups.Add(new GroupViewModel(group + 1, $"第{group + 1}组", rows));
+            var columnHandles = new List<ColumnHandleViewModel>();
+            for (var column = 0; column < layout.Columns; column++)
+                columnHandles.Add(new ColumnHandleViewModel(group, column));
+
+            Groups.Add(new GroupViewModel(group + 1, $"第{group + 1}组", rows, columnHandles));
         }
 
         OnPropertyChanged(nameof(SeatCount));
@@ -421,12 +509,11 @@ public partial class SeatGridViewModel : ObservableObject
             group.LabelMargin = ShowGroupRowHints && groupIndex == 0
                 ? new Thickness(44, 0, 0, 5)
                 : new Thickness(0, 0, 0, 5);
+            group.ShowRowSpacer = groupIndex == 0;
             foreach (var row in group.Rows)
-            {
-                row.LabelBrush = RowLabelBrush;
-                row.ShowHints = ShowGroupRowHints;
-                row.ShowRowLabel = ShowGroupRowHints && groupIndex == 0;
-            }
+                row.ShowHandle = groupIndex == 0;
+            foreach (var handle in group.ColumnHandles)
+                handle.Width = size;
 
             groupIndex++;
         }
@@ -439,7 +526,7 @@ public partial class SeatGridViewModel : ObservableObject
         var layout = CurrentLayout;
         var groupWidth = layout.Columns * CellSizeValue + (layout.Columns - 1) * 6;
         var gridWidth = layout.Groups * groupWidth + (layout.Groups - 1) * 22;
-        var contentWidth = gridWidth + (ShowGroupRowHints ? 44 : 0);
+        var contentWidth = gridWidth + 44; // 行首把手列固定占位
 
         PodiumWidth = Math.Min(contentWidth * 0.55, 360);
         PodiumTopMargin = new Thickness(0, 0, 0, PodiumGap);
@@ -495,15 +582,17 @@ public partial class SeatGridViewModel : ObservableObject
         var selected = SelectedStudent;
         var keyword = SearchText.Trim().ToLowerInvariant();
 
-        FilteredStudents.Clear();
+        var matches = new List<StudentViewModel>(_students.Count);
         foreach (var student in _students)
         {
             if (keyword.Length == 0 || student.SearchKey.Contains(keyword))
-                FilteredStudents.Add(student);
+                matches.Add(student);
         }
 
+        FilteredStudents = matches;
+
         if (selected is not null)
-            SelectedStudent = FilteredStudents.Contains(selected) ? selected : null;
+            SelectedStudent = matches.Contains(selected) ? selected : null;
 
         OnPropertyChanged(nameof(IsRosterEmpty));
         OnPropertyChanged(nameof(RosterEmptyText));
@@ -596,6 +685,103 @@ public partial class SeatGridViewModel : ObservableObject
         SetStatus($"已清空 {label}。");
     }
 
+    // ----------------------------- 行列调整 -----------------------------
+
+    /// <summary>所有座位视图模型，供拖拽高亮遍历。</summary>
+    public IEnumerable<SeatCellViewModel> Seats => _seats.Values;
+
+    /// <summary>整班座位沿当前视角平移一格：dx 向右、dy 向下，超出边缘自动绕回。</summary>
+    public void ShiftAllSeats(int dx, int dy)
+    {
+        if (_assignments.Count == 0)
+        {
+            SetStatus("还没有已安排的座位，先自动排座或手动放入。", true);
+            return;
+        }
+
+        var layout = CurrentLayout;
+        var width = layout.Groups * layout.Columns;
+        var shifted = new Dictionary<SeatPosition, StudentViewModel>(_assignments.Count);
+
+        foreach (var (position, student) in _assignments)
+        {
+            // 教师视角第 1 组在最左、第一排靠下；学生视角整体旋转 180°。平移按屏幕方向换算。
+            var displayColumn = IsStudentView
+                ? (layout.Groups - 1 - position.Group) * layout.Columns + position.Column
+                : position.Group * layout.Columns + position.Column;
+            var displayRow = IsStudentView ? position.Row : layout.Rows - 1 - position.Row;
+
+            displayColumn = ((displayColumn + dx) % width + width) % width;
+            displayRow = ((displayRow + dy) % layout.Rows + layout.Rows) % layout.Rows;
+
+            var group = IsStudentView
+                ? layout.Groups - 1 - displayColumn / layout.Columns
+                : displayColumn / layout.Columns;
+            var column = displayColumn % layout.Columns;
+            var row = IsStudentView ? displayRow : layout.Rows - 1 - displayRow;
+
+            shifted[new SeatPosition(group, row, column)] = student;
+        }
+
+        _assignments.Clear();
+        foreach (var (position, student) in shifted)
+            _assignments[position] = student;
+
+        RefreshSeatVisuals();
+        var direction = dy < 0 ? "上" : dy > 0 ? "下" : dx < 0 ? "左" : "右";
+        SetStatus($"已整体向{direction}平移一格（边缘自动绕回）。");
+    }
+
+    /// <summary>整排对调：两排在所有小组、所有列上互换学生。</summary>
+    public void SwapRows(int rowA, int rowB)
+    {
+        var layout = CurrentLayout;
+        if (rowA == rowB || rowA < 0 || rowB < 0 || rowA >= layout.Rows || rowB >= layout.Rows) return;
+        if (_assignments.Count == 0)
+        {
+            SetStatus("还没有已安排的座位。", true);
+            return;
+        }
+
+        for (var group = 0; group < layout.Groups; group++)
+            for (var column = 0; column < layout.Columns; column++)
+                SwapAssignments(new SeatPosition(group, rowA, column), new SeatPosition(group, rowB, column));
+
+        RefreshSeatVisuals();
+        SetStatus($"已把第 {Math.Min(rowA, rowB) + 1} 排与第 {Math.Max(rowA, rowB) + 1} 排整排对调。");
+    }
+
+    /// <summary>整列对调：两列在所有排上互换学生，可以跨小组。</summary>
+    public void SwapColumns(int groupA, int columnA, int groupB, int columnB)
+    {
+        var layout = CurrentLayout;
+        if (groupA == groupB && columnA == columnB) return;
+        if (groupA < 0 || groupB < 0 || groupA >= layout.Groups || groupB >= layout.Groups ||
+            columnA < 0 || columnB < 0 || columnA >= layout.Columns || columnB >= layout.Columns) return;
+        if (_assignments.Count == 0)
+        {
+            SetStatus("还没有已安排的座位。", true);
+            return;
+        }
+
+        for (var row = 0; row < layout.Rows; row++)
+            SwapAssignments(new SeatPosition(groupA, row, columnA), new SeatPosition(groupB, row, columnB));
+
+        RefreshSeatVisuals();
+        SetStatus(columnA == columnB
+            ? $"已把第 {Math.Min(groupA, groupB) + 1} 组与第 {Math.Max(groupA, groupB) + 1} 组的第 {columnA + 1} 列整列对调。"
+            : $"已把第 {groupA + 1} 组第 {columnA + 1} 列与第 {groupB + 1} 组第 {columnB + 1} 列整列对调。");
+    }
+
+    private void SwapAssignments(SeatPosition a, SeatPosition b)
+    {
+        _assignments.TryGetValue(a, out var studentA);
+        _assignments.TryGetValue(b, out var studentB);
+
+        if (studentB is not null) _assignments[a] = studentB; else _assignments.Remove(a);
+        if (studentA is not null) _assignments[b] = studentA; else _assignments.Remove(b);
+    }
+
     public bool HasSelectedStudent => SelectedStudent is not null;
     public string EditPanelTitle => SelectedStudent is null ? "新增学生" : $"编辑学生 · {SelectedStudent.Name}";
 
@@ -659,6 +845,7 @@ public partial class SeatGridViewModel : ObservableObject
         _students.Add(student);
         RefreshStudents();
         SelectedStudent = student;
+        NotifyCounts();
         SetStatus($"已把 {name} 加入名单。");
     }
 
@@ -826,6 +1013,8 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(SeatStats));
         OnPropertyChanged(nameof(InfoLine));
         OnPropertyChanged(nameof(HasStudents));
+        OnPropertyChanged(nameof(CanArrange));
+        OnPropertyChanged(nameof(CanExport));
         OnPropertyChanged(nameof(IsChartEmpty));
     }
 }

@@ -1,0 +1,162 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:GradeWeave.App"
+        xmlns:models="using:GradeWeave.Core.Models"
+        x:Class="GradeWeave.App.AssignmentEditorWindow"
+        x:DataType="app:AssignmentEditorViewModel"
+        Title="教师分工"
+        Width="1020" Height="680"
+        MinWidth="820" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+    <Window.Styles>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.4" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBox.cell">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="MinHeight" Value="26" />
+        </Style>
+        <Style Selector="Border.headcell">
+            <Setter Property="Background" Value="#F1EFE9" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="FontSize" Value="10.5" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="18,12">
+            <StackPanel Spacing="2">
+                <TextBlock Text="教师分工" FontFamily="{StaticResource SerifFont}"
+                           FontSize="18" Foreground="{StaticResource InkBrush}" />
+                <TextBlock Text="每行一个班：填班主任与各学科任课教师。教师按姓名自动建档，清空某格即取消该班该学科的任课。"
+                           FontSize="10" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                <TextBlock Text="工程里还没有学科：请先导入含分工表 / 课程表的工作簿，或用「全新制作」配置学科与周课时。"
+                           IsVisible="{Binding !HasSubjects}" FontSize="10"
+                           Foreground="{StaticResource AccentDeepBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="18,10,18,0">
+            <Button Classes="ghost" Content="+ 添加班级" Command="{Binding AddClassCommand}"
+                    FontSize="10.5" Padding="10,4"
+                    AutomationProperties.Name="添加班级" />
+            <TextBlock Text="删除只影响表格草稿，点「保存分工」后才清掉被删班级的任课、课表与活动归属。"
+                       FontSize="10" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Grid Grid.Row="2" RowDefinitions="Auto,*" Margin="18,10,4,0">
+            <ScrollViewer x:Name="HeaderScroll" Grid.Row="0"
+                          HorizontalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <Border Classes="headcell" Width="92">
+                        <TextBlock Text="班级" FontSize="10" Foreground="{StaticResource InkSoftBrush}" />
+                    </Border>
+                    <Border Classes="headcell" Width="84">
+                        <TextBlock Text="班主任" FontSize="10" Foreground="{StaticResource InkSoftBrush}" />
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Subjects}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:Subject">
+                                <Border Classes="headcell" Width="86">
+                                    <TextBlock HorizontalAlignment="Center" TextAlignment="Center"
+                                               FontSize="10" Foreground="{StaticResource InkSoftBrush}"
+                                               TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}"
+                                               AutomationProperties.Name="{Binding Name, StringFormat=学科 {0}}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}·{1}节">
+                                                <Binding Path="Name" />
+                                                <Binding Path="WeeklyHours" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Classes="headcell" Width="36" Margin="0,0,0,0">
+                        <TextBlock Text="操作" FontSize="10" Foreground="{StaticResource InkSoftBrush}" />
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto" ScrollChanged="OnRowsScrollChanged">
+                <ItemsControl ItemsSource="{Binding Rows}" Margin="0,4,0,8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="app:AssignmentRowViewModel">
+                            <StackPanel Orientation="Horizontal" Margin="0,1">
+                                <TextBox Classes="cell" Width="92" Margin="0,0,4,0"
+                                         Text="{Binding ClassName, Mode=TwoWay}"
+                                         PlaceholderText="班级名"
+                                         AutomationProperties.Name="{Binding RowName, StringFormat=班级 {0}}" />
+                                <TextBox Classes="cell" Width="84" Margin="0,0,4,0"
+                                         Text="{Binding HeadTeacher, Mode=TwoWay}"
+                                         PlaceholderText="班主任"
+                                         AutomationProperties.Name="{Binding RowName, StringFormat=班主任 {0}}" />
+                                <ItemsControl ItemsSource="{Binding Cells}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="app:AssignmentCellViewModel">
+                                            <TextBox Classes="cell" Width="86" Margin="0,0,4,0"
+                                                     Text="{Binding Text, Mode=TwoWay}"
+                                                     PlaceholderText="教师"
+                                                     AutomationProperties.Name="{Binding AutomationName}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Classes="link" Content="删除" Width="36" Height="26"
+                                        FontSize="10" VerticalAlignment="Center"
+                                        Command="{Binding RemoveSelfCommand}"
+                                        AutomationProperties.Name="{Binding RowName, StringFormat=删除班级 {0}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="18,12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{Binding Error}" IsVisible="{Binding HasError}"
+                           FontSize="10.5" Foreground="{StaticResource AccentDeepBrush}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="ghost" Content="取消" Click="OnCancel" FontSize="11.5" Padding="14,7"
+                            IsCancel="True" AutomationProperties.Name="取消编辑分工" />
+                    <Button Classes="primary" Content="保存分工" Click="OnSave" FontSize="11.5" Padding="16,7"
+                            IsDefault="True" AutomationProperties.Name="保存分工" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

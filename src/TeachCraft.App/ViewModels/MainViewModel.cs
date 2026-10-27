@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using TeachCraft.Core.Tools;
@@ -13,8 +14,31 @@ public partial class MainViewModel : ObservableObject
     private readonly List<ToolItemViewModel> _imageTools;
     private readonly List<ToolItemViewModel> _fileTools;
 
+    /// <summary>界面版本号直接取程序集版本，避免与 Directory.Build.props 重复硬编码。</summary>
+    public string VersionText { get; } =
+        $"V{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0"}";
+
+    public string VersionLine => $"{VersionText} · 10 TOOLS · 4 APPS";
+
     public ObservableCollection<ToolItemViewModel> VisibleImageTools { get; } = new();
     public ObservableCollection<ToolItemViewModel> VisibleFileTools { get; } = new();
+
+    /// <summary>案头常备四张卡的检索文本（应用名 + 英文名 + 描述），与工具卡走同一套匹配规则。顺序：分晓 / 归位 / 时序 / 织序。</summary>
+    private static readonly string[] AppCards =
+    {
+        "gradestrip 分晓 把智学网导出的成绩总表，变成一叠可以裁开的成绩条。多考进退、学科诊断、学生画像，都在同一张纸上。",
+        "seatgrid 归位 座位表 导入名单，自动识别姓名与性别；排座、预览、打印与导出一次完成。",
+        "classblock 时序 课程表 导入课程总表，自动识别年级与班级；选中班级即可得到可直接打印的课程表。",
+        "gradeweave 织序 课表编排 全年级课表编排：教研、走班、会议先定，再一次排清冲突。",
+    };
+
+    private int _visibleAppCardCount = AppCards.Length;
+
+    public bool IsGradeStripVisible { get; private set; } = true;
+    public bool IsSeatGridVisible { get; private set; } = true;
+    public bool IsClassBlockVisible { get; private set; } = true;
+    public bool IsGradeWeaveVisible { get; private set; } = true;
+    public bool HasPinnedResults { get; private set; } = true;
 
     public MainViewModel()
     {
@@ -22,7 +46,7 @@ public partial class MainViewModel : ObservableObject
         {
             new(ToolKind.ImageConvert, "01", "image-convert", "图片格式转换",
                 "PNG、JPG、WebP 格式之间自由互转。", "image", "图",
-                "PNG / JPG / WebP", "指定目标格式", new[] { "PNG", "JPG", "WebP" }),
+                "PNG / JPG / WebP", "转换后的 PNG / JPG / WebP 文件", new[] { "PNG", "JPG", "WebP" }),
             new(ToolKind.ImageResize, "02", "image-resize", "图片尺寸调整",
                 "自定义像素、分辨率或等比例缩放。", "image", "图",
                 "任意图片", "指定宽高或缩放比例"),
@@ -75,12 +99,16 @@ public partial class MainViewModel : ObservableObject
     public string ImageCountLabel => VisibleImageTools.Count.ToString("00");
     public string FileCountLabel => VisibleFileTools.Count.ToString("00");
 
+    public int MatchCount => VisibleImageTools.Count + VisibleFileTools.Count + _visibleAppCardCount;
+
+    public string PinnedCountLabel => _visibleAppCardCount.ToString("00");
+
     public string SearchSummary =>
         string.IsNullOrWhiteSpace(SearchText)
             ? "ALL TOOLS · 10"
-            : $"MATCH · {VisibleImageTools.Count + VisibleFileTools.Count}";
+            : $"MATCH · {MatchCount}";
 
-    public bool IsEmptyVisible => VisibleImageTools.Count + VisibleFileTools.Count == 0;
+    public bool IsEmptyVisible => MatchCount == 0;
     public bool HasImageResults => VisibleImageTools.Count > 0;
     public bool HasFileResults => VisibleFileTools.Count > 0;
 
@@ -149,12 +177,38 @@ public partial class MainViewModel : ObservableObject
         foreach (var tool in _fileTools)
             if (Matches(tool, query)) VisibleFileTools.Add(tool);
 
+        ApplyCardFilter(query);
+
         OnPropertyChanged(nameof(ImageCountLabel));
         OnPropertyChanged(nameof(FileCountLabel));
         OnPropertyChanged(nameof(SearchSummary));
         OnPropertyChanged(nameof(IsEmptyVisible));
         OnPropertyChanged(nameof(HasImageResults));
         OnPropertyChanged(nameof(HasFileResults));
+    }
+
+    private void ApplyCardFilter(string query)
+    {
+        IsGradeStripVisible = Matches(AppCards[0], query);
+        IsSeatGridVisible = Matches(AppCards[1], query);
+        IsClassBlockVisible = Matches(AppCards[2], query);
+        IsGradeWeaveVisible = Matches(AppCards[3], query);
+        HasPinnedResults = IsGradeStripVisible || IsSeatGridVisible || IsClassBlockVisible || IsGradeWeaveVisible;
+        _visibleAppCardCount = new[] { IsGradeStripVisible, IsSeatGridVisible, IsClassBlockVisible, IsGradeWeaveVisible }
+            .Count(visible => visible);
+
+        OnPropertyChanged(nameof(IsGradeStripVisible));
+        OnPropertyChanged(nameof(IsSeatGridVisible));
+        OnPropertyChanged(nameof(IsClassBlockVisible));
+        OnPropertyChanged(nameof(IsGradeWeaveVisible));
+        OnPropertyChanged(nameof(HasPinnedResults));
+        OnPropertyChanged(nameof(PinnedCountLabel));
+    }
+
+    private static bool Matches(string haystack, string query)
+    {
+        if (query.Length == 0) return true;
+        return haystack.ToLowerInvariant().Contains(query, StringComparison.Ordinal);
     }
 
     private static bool Matches(ToolItemViewModel tool, string query)

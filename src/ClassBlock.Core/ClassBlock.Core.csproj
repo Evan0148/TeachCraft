@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Timetable\Templates\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" />

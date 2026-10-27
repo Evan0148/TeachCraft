@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using ClassBlock.Core;
 using ClassBlock.Core.Import;
 using ClassBlock.Core.Rendering;
+using ClassBlock.Core.Timetable;
 
 namespace ClassBlock.App;
 
@@ -29,6 +30,14 @@ public partial class ClassBlockWindow : Window
     }
 
     private ClassBlockViewModel ViewModel => (ClassBlockViewModel)DataContext!;
+
+    protected override void OnClosed(EventArgs e)
+    {
+        // 先取消仍在跑的渲染，再释放当前位图，避免后台任务回写一张无人引用的图。
+        ViewModel.CancelPendingPreview();
+        ViewModel.Preview = null;
+        base.OnClosed(e);
+    }
 
     /// <summary>设计走查用：直接导入总表并等待课表渲染完成。</summary>
     public async Task LoadMasterAsync(string path)
@@ -56,6 +65,31 @@ public partial class ClassBlockWindow : Window
         bitmap.Render(this);
         using var stream = File.Create(path);
         bitmap.Save(stream, new PngBitmapEncoderOptions());
+    }
+
+    // ----------------------------- 作息模板 -----------------------------
+
+    private async void OnEditTemplate(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedTemplate is null) return;
+
+        var editor = new TimetableTemplateEditorWindow(ViewModel.SelectedTemplate);
+        await editor.ShowDialog(this);
+
+        if (editor.SavedTemplateId is not null)
+            ViewModel.AdoptSavedTemplate(editor.SavedTemplateId);
+        else
+            ViewModel.LoadTemplates();
+    }
+
+    private async void OnNewTemplate(object? sender, RoutedEventArgs e)
+    {
+        var source = ViewModel.SelectedTemplate ?? TimetableTemplates.DefaultForGrade(null);
+        var editor = new TimetableTemplateEditorWindow(source, startAsCopy: true);
+        await editor.ShowDialog(this);
+
+        if (editor.SavedTemplateId is not null)
+            ViewModel.AdoptSavedTemplate(editor.SavedTemplateId);
     }
 
     // ----------------------------- 导入 -----------------------------

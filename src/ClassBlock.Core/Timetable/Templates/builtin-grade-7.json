@@ -1,0 +1,25 @@
+{
+  "id": "builtin-grade-7",
+  "name": "七年级作息（内置）",
+  "isBuiltin": true,
+  "gradeTag": "七",
+  "rows": [
+    { "times": ["7:20—7:50"], "label": "早读", "kind": "Normal", "slot": "EarlyReading" },
+    { "times": ["8:00—8:40"], "label": "1", "kind": "Normal", "slot": "Period1" },
+    { "times": ["8:50—9:30"], "label": "2", "kind": "Normal", "slot": "Period2" },
+    { "times": ["9:30—10:00"], "label": "", "kind": "Break", "slot": "None", "staticText": "大课间" },
+    { "times": ["10:00—10:40"], "label": "3", "kind": "Normal", "slot": "Period3" },
+    { "times": ["10:50—11:00"], "label": "朗读", "kind": "Normal", "slot": "None", "staticText": "朗读", "mergeDays": true },
+    { "times": ["11:00—11:40"], "label": "4", "kind": "Normal", "slot": "Period4" },
+    { "times": [], "label": "", "kind": "Lunch", "slot": "None", "staticText": "11:30—12:00　午餐" },
+    { "times": ["12:00—12:30"], "label": "午学", "kind": "Normal", "slot": "LunchStudy" },
+    { "times": ["14:20—15:00"], "label": "5", "kind": "Normal", "slot": "Period5" },
+    { "times": ["15:10—15:50"], "label": "6", "kind": "Normal", "slot": "Period6" },
+    { "times": ["16:00—16:40"], "label": "7", "kind": "Normal", "slot": "Period7" },
+    { "times": ["16:50—17:20"], "label": "课服1", "kind": "Normal", "slot": "AfterSchool1" },
+    { "times": ["17:20—17:50"], "label": "课服2", "kind": "Normal", "slot": "AfterSchool2" },
+    { "times": [], "label": "", "kind": "Dinner", "slot": "None", "staticText": "17:50—18:50　晚餐" },
+    { "times": ["19:00—19:20"], "label": "", "kind": "News", "slot": "None", "staticText": "新闻联播" },
+    { "times": ["19:20—20:20", "20:30—21:30"], "label": "晚修", "kind": "Evening", "slot": "Evening" }
+  ]
+}

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -60,8 +61,8 @@ public partial class SeatCellViewModel : ObservableObject
         IsSelected = isSelected;
         Width = size;
         Height = size;
-        FontSize = fontSize;
         FontWeight = bold ? FontWeight.SemiBold : FontWeight.Normal;
+        FontSize = FitFontSize(displayName, fontSize, FontWeight, size);
         Fill = isEmpty ? emptyBackground : seatBackground;
         Stroke = border;
         NameBrush = isFemale ? femaleColor : nameColor;
@@ -72,6 +73,29 @@ public partial class SeatCellViewModel : ObservableObject
         AutomationName = isEmpty
             ? $"空座位 {PositionLabel}"
             : $"{PositionLabel} {displayName}";
+    }
+
+    /// <summary>
+    /// 与导出渲染（SeatChartRenderer.DrawSeat）同一套缩名规则：姓名实测宽度超过格子
+    /// 可用宽度（边长 - 10px）时按比例缩小字号，下限 8px，保证屏幕与导出图一致不溢出。
+    /// </summary>
+    private static double FitFontSize(string name, double fontSize, FontWeight weight, double cellSize)
+    {
+        if (string.IsNullOrWhiteSpace(name) || fontSize <= 0) return fontSize;
+
+        var available = cellSize - 10;
+        if (available <= 0) return fontSize;
+
+        var measured = new FormattedText(
+            name,
+            CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight,
+            new Typeface(FontFamily.Default, FontStyle.Normal, weight),
+            fontSize,
+            Brushes.Black).Width;
+
+        if (measured <= available || measured <= 0) return fontSize;
+        return Math.Max(8, fontSize * available / measured);
     }
 
     public void SetSelected(bool selected)

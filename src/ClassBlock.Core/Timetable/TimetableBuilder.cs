@@ -7,25 +7,21 @@ using ClassBlock.Core.Models;
 namespace ClassBlock.Core.Timetable;
 
 /// <summary>
-/// 把总表里的一个班级组装成参考图样式的固定课程表：
-/// 早读、1–7 节、大课间、午餐、午学、课后服务、晚餐、新闻联播、晚修。
+/// 按「作息模板」把总表里的一个班级组装成课程表：
+/// 模板决定行序与时间，Slot 决定每行从总表绑定什么数据。
 /// </summary>
 public static class TimetableBuilder
 {
     private static readonly string[] DayHeaders = { "星期一", "星期二", "星期三", "星期四", "星期五" };
 
-    private static readonly (string Time, string Label)[] PeriodSlots =
-    {
-        ("8:00—8:40", "1"),
-        ("8:50—9:30", "2"),
-        ("10:00—10:40", "3"),
-        ("10:50—11:30", "4"),
-        ("14:20—15:00", "5"),
-        ("15:10—15:50", "6"),
-        ("16:00—16:40", "7"),
-    };
-
     public static ClassTimetable Build(MasterSchedule master, string classKeyOrName, TimetableSettings? settings = null)
+        => Build(master, classKeyOrName, TimetableTemplates.DefaultForGrade(master.Info.Grade), settings);
+
+    public static ClassTimetable Build(
+        MasterSchedule master,
+        string classKeyOrName,
+        TimetableTemplate template,
+        TimetableSettings? settings = null)
     {
         settings ??= new TimetableSettings();
 
@@ -33,13 +29,15 @@ public static class TimetableBuilder
                   ?? throw new ClassBlockException("总表里没有这个班级，请重新选择。");
 
         var headTeacher = master.HeadTeachers.TryGetValue(cls.Key, out var found) ? found : string.Empty;
-        var days = cls.Days;
         var rows = new List<TimetableRow>();
 
-        AddEarlyReading(rows, master, settings);
-        AddPeriods(rows, master, cls, settings);
-        AddAfterSchool(rows, master, cls, settings);
-        AddEveningStudy(rows, days, settings);
+        foreach (var spec in template.Rows)
+        {
+            if (!IsEnabled(settings, spec.Slot)) continue;
+
+            var row = BuildRow(master, cls, spec, settings);
+            if (row is not null) rows.Add(row);
+        }
 
         var title = string.IsNullOrWhiteSpace(settings.Title) ? $"{cls.Name}课程表" : settings.Title.Trim();
 
@@ -56,6 +54,121 @@ public static class TimetableBuilder
         };
     }
 
+    /// <summary>显示开关只过滤绑定行；静态行与结构行（大课间/午餐/晚餐/新闻联播）始终保留。</summary>
+    private static bool IsEnabled(TimetableSettings settings, TemplateSlot slot) => slot switch
+    {
+        TemplateSlot.EarlyReading => settings.ShowEarlyReading,
+        TemplateSlot.LunchStudy => settings.ShowLunchStudy,
+        TemplateSlot.AfterSchool1 or TemplateSlot.AfterSchool2 => settings.ShowAfterSchool,
+        TemplateSlot.Evening => settings.ShowEveningStudy,
+        _ => true,
+    };
+
+    private static TimetableRow? BuildRow(MasterSchedule master, ClassSchedule cls, TemplateRowSpec spec, TimetableSettings settings)
+    {
+        return spec.Slot switch
+        {
+            TemplateSlot.Period1 => PeriodRow(cls, spec, 0, settings.ShowTeachers),
+            TemplateSlot.Period2 => PeriodRow(cls, spec, 1, settings.ShowTeachers),
+            TemplateSlot.Period3 => PeriodRow(cls, spec, 2, settings.ShowTeachers),
+            TemplateSlot.Period4 => PeriodRow(cls, spec, 3, settings.ShowTeachers),
+            TemplateSlot.Period5 => PeriodRow(cls, spec, 4, settings.ShowTeachers),
+            TemplateSlot.Period6 => PeriodRow(cls, spec, 5, settings.ShowTeachers),
+            TemplateSlot.Period7 => PeriodRow(cls, spec, 6, settings.ShowTeachers),
+            TemplateSlot.EarlyReading => EarlyReadingRow(master, spec),
+            TemplateSlot.LunchStudy => LunchStudyRow(master, cls, spec),
+            TemplateSlot.AfterSchool1 => ServiceRow(master, cls, spec, first: true, settings.ShowTeachers),
+            TemplateSlot.AfterSchool2 => ServiceRow(master, cls, spec, first: false, settings.ShowTeachers),
+            TemplateSlot.Evening => EveningRow(cls.Days, spec),
+            _ => StaticRow(spec),
+        };
+    }
+
+    private static TimetableRow PeriodRow(ClassSchedule cls, TemplateRowSpec spec, int periodIndex, bool showTeachers) => new()
+    {
+        Times = spec.Times,
+        Label = spec.Label,
+        Kind = TimetableRowKind.Normal,
+        Cells = Enumerable.Range(0, 5)
+            .Select(day => CourseText(cls.Days, day, periodIndex, showTeachers))
+            .ToArray(),
+    };
+
+    private static TimetableRow? EarlyReadingRow(MasterSchedule master, TemplateRowSpec spec)
+    {
+        var cells = Enumerable.Range(0, 5)
+            .Select(i => i < master.EarlyReading.Count ? Normalize(master.EarlyReading[i]) : string.Empty)
+            .ToArray();
+
+        if (cells.All(string.IsNullOrWhiteSpace)) return null;
+
+        return new TimetableRow { Times = spec.Times, Label = spec.Label, Kind = spec.Kind, Cells = cells };
+    }
+
+    private static TimetableRow? LunchStudyRow(MasterSchedule master, ClassSchedule cls, TemplateRowSpec spec)
+    {
+        if (!master.LunchStudy.TryGetValue(cls.Key, out var lunch) || lunch.Count == 0) return null;
+
+        var cells = Enumerable.Range(0, 5)
+            .Select(i => i < lunch.Count ? FormatTeacher(lunch[i]) : string.Empty)
+            .ToArray();
+
+        if (cells.All(string.IsNullOrWhiteSpace)) return null;
+
+        return new TimetableRow { Times = spec.Times, Label = spec.Label, Kind = spec.Kind, Cells = cells };
+    }
+
+    private static TimetableRow? ServiceRow(MasterSchedule master, ClassSchedule cls, TemplateRowSpec spec, bool first, bool showTeachers)
+    {
+        var cells = Enumerable.Range(0, 5)
+            .Select(day => ServiceText(master, cls, day, first, showTeachers))
+            .ToArray();
+
+        if (cells.All(t => t.Length == 0)) return null;
+
+        return new TimetableRow
+        {
+            Times = spec.Times,
+            Label = spec.Label,
+            Kind = spec.Kind,
+            Cells = cells,
+            MergeDays = Mergeable(cells),
+        };
+    }
+
+    private static TimetableRow EveningRow(IReadOnlyList<DaySchedule> days, TemplateRowSpec spec) => new()
+    {
+        Times = spec.Times,
+        Label = spec.Label,
+        Kind = TimetableRowKind.Evening,
+        Cells = Enumerable.Range(0, 5)
+            .Select(day => day < days.Count ? FormatTeacher(days[day].EveningStudy) : string.Empty)
+            .ToArray(),
+    };
+
+    private static TimetableRow StaticRow(TemplateRowSpec spec)
+    {
+        if (spec.Kind is TimetableRowKind.Break or TimetableRowKind.News or TimetableRowKind.Lunch or TimetableRowKind.Dinner)
+        {
+            return new TimetableRow
+            {
+                Times = spec.Times,
+                Label = spec.Label,
+                Kind = spec.Kind,
+                MergedText = spec.StaticText,
+            };
+        }
+
+        return new TimetableRow
+        {
+            Times = spec.Times,
+            Label = spec.Label,
+            Kind = spec.Kind,
+            Cells = Enumerable.Repeat(spec.StaticText, 5).ToArray(),
+            MergeDays = spec.MergeDays,
+        };
+    }
+
     private static string BuildSubtitle(MasterSchedule master, string headTeacher)
     {
         var parts = new List<string>();
@@ -63,148 +176,6 @@ public static class TimetableBuilder
         if (!string.IsNullOrWhiteSpace(master.Info.Month)) parts.Add(master.Info.Month);
         if (!string.IsNullOrWhiteSpace(headTeacher)) parts.Add($"班主任 {headTeacher}");
         return string.Join(" · ", parts);
-    }
-
-    private static void AddEarlyReading(List<TimetableRow> rows, MasterSchedule master, TimetableSettings settings)
-    {
-        if (!settings.ShowEarlyReading) return;
-
-        var cells = Enumerable.Range(0, 5)
-            .Select(i => i < master.EarlyReading.Count ? Normalize(master.EarlyReading[i]) : string.Empty)
-            .ToArray();
-
-        if (cells.All(string.IsNullOrWhiteSpace)) return;
-
-        rows.Add(new TimetableRow
-        {
-            Times = new[] { "7:20—7:50" },
-            Label = "早读",
-            Kind = TimetableRowKind.Normal,
-            Cells = cells,
-        });
-    }
-
-    private static void AddPeriods(List<TimetableRow> rows, MasterSchedule master, ClassSchedule cls, TimetableSettings settings)
-    {
-        var days = cls.Days;
-        for (var index = 0; index < PeriodSlots.Length; index++)
-        {
-            var (time, label) = PeriodSlots[index];
-            rows.Add(new TimetableRow
-            {
-                Times = new[] { time },
-                Label = label,
-                Kind = TimetableRowKind.Normal,
-                Cells = Enumerable.Range(0, 5)
-                    .Select(day => CourseText(days, day, index, settings.ShowTeachers))
-                    .ToArray(),
-            });
-
-            if (index == 1)
-            {
-                rows.Add(new TimetableRow
-                {
-                    Times = new[] { "9:30—10:00" },
-                    Kind = TimetableRowKind.Break,
-                    MergedText = "大课间",
-                });
-            }
-            else if (index == 3)
-            {
-                rows.Add(new TimetableRow
-                {
-                    Kind = TimetableRowKind.Lunch,
-                    MergedText = "11:30—12:00　午餐",
-                });
-
-                AddLunchStudy(rows, master, cls.Key, settings);
-            }
-        }
-    }
-
-    private static void AddLunchStudy(List<TimetableRow> rows, MasterSchedule master, string key, TimetableSettings settings)
-    {
-        if (!settings.ShowLunchStudy) return;
-        if (!master.LunchStudy.TryGetValue(key, out var lunch) || lunch.Count == 0) return;
-
-        var cells = Enumerable.Range(0, 5)
-            .Select(i => i < lunch.Count ? FormatTeacher(lunch[i]) : string.Empty)
-            .ToArray();
-
-        if (cells.All(string.IsNullOrWhiteSpace)) return;
-
-        rows.Add(new TimetableRow
-        {
-            Times = new[] { "12:00—12:30" },
-            Label = "午学",
-            Kind = TimetableRowKind.Normal,
-            Cells = cells,
-        });
-    }
-
-    private static void AddAfterSchool(List<TimetableRow> rows, MasterSchedule master, ClassSchedule cls, TimetableSettings settings)
-    {
-        if (settings.ShowAfterSchool)
-        {
-            var first = Enumerable.Range(0, 5)
-                .Select(day => ServiceText(master, cls, day, first: true, settings.ShowTeachers))
-                .ToArray();
-            var second = Enumerable.Range(0, 5)
-                .Select(day => ServiceText(master, cls, day, first: false, settings.ShowTeachers))
-                .ToArray();
-
-            if (first.Any(t => t.Length > 0))
-            {
-                rows.Add(new TimetableRow
-                {
-                    Times = new[] { "16:50—17:20" },
-                    Label = "课服1",
-                    Kind = TimetableRowKind.Normal,
-                    Cells = first,
-                    MergeDays = Mergeable(first),
-                });
-            }
-
-            if (second.Any(t => t.Length > 0))
-            {
-                rows.Add(new TimetableRow
-                {
-                    Times = new[] { "17:20—17:50" },
-                    Label = "课服2",
-                    Kind = TimetableRowKind.Normal,
-                    Cells = second,
-                    MergeDays = Mergeable(second),
-                });
-            }
-        }
-
-        rows.Add(new TimetableRow
-        {
-            Kind = TimetableRowKind.Dinner,
-            MergedText = "17:50—18:50　晚餐",
-        });
-    }
-
-    private static void AddEveningStudy(List<TimetableRow> rows, IReadOnlyList<DaySchedule> days, TimetableSettings settings)
-    {
-        if (!settings.ShowEveningStudy) return;
-
-        rows.Add(new TimetableRow
-        {
-            Times = new[] { "19:00—19:20" },
-            Kind = TimetableRowKind.News,
-            MergedText = "新闻联播",
-        });
-
-        rows.Add(new TimetableRow
-        {
-            Times = new[] { "19:20—20:20", "20:30—21:30" },
-            Label = "晚修",
-            Kind = TimetableRowKind.Evening,
-            Cells = Enumerable.Range(0, 5)
-                .Select(day => day < days.Count ? FormatTeacher(days[day].EveningStudy) : string.Empty)
-                .ToArray(),
-        });
     }
 
     private static string CourseText(IReadOnlyList<DaySchedule> days, int day, int period, bool showTeachers)

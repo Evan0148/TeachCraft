@@ -25,7 +25,8 @@
     <ProjectReference Include="..\TeachCraft.Core\TeachCraft.Core.csproj" />
     <ProjectReference Include="..\SeatGrid.App\SeatGrid.App.csproj" />
     <ProjectReference Include="..\ClassBlock.App\ClassBlock.App.csproj" />
-    <ProjectReference Include="..\..\vendor\gradestrip\src\GradeStrip.App\GradeStrip.App.csproj" />
+    <ProjectReference Include="..\GradeWeave.App\GradeWeave.App.csproj" />
+    <ProjectReference Include="..\GradeStrip.App\GradeStrip.App.csproj" />
   </ItemGroup>
 
   <!-- 分晓以程序集形式在主窗口中打开，发布目录里不需要它自己的 exe / runtimeconfig。 -->

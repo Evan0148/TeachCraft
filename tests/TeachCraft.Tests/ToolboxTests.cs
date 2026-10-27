@@ -1,7 +1,7 @@
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using PdfSharpCore.Pdf.IO;
+using PdfSharp.Pdf.IO;
 using SkiaSharp;
 using TeachCraft.Core.Tools;
 

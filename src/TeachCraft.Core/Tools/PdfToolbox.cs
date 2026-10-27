@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.IO;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -118,20 +118,23 @@ public static class PdfToolbox
             var pageCount = PageCount(input);
             using var stream = File.OpenRead(input);
 
-            for (var index = 0; index < pageCount; index++)
+            // 一次加载整份 PDF，再逐页惰性渲染；逐页调用 ToImage 会让 pdfium 每页重新解析整份文档。
+            var options = new PDFtoImage.RenderOptions { Dpi = Math.Clamp(dpi, 72, 300) };
+            var pages = Enumerable.Range(0, pageCount);
+            var index = 0;
+            foreach (var bitmap in PDFtoImage.Conversion.ToImages(
+                         stream, pages, leaveOpen: true, password: null, options: options))
             {
-                using var bitmap = PDFtoImage.Conversion.ToImage(
-                    stream,
-                    index,
-                    leaveOpen: true,
-                    password: null,
-                    options: new PDFtoImage.RenderOptions { Dpi = Math.Clamp(dpi, 72, 600) });
+                using (bitmap)
+                {
+                    var path = Path.Combine(outputDirectory, $"{baseName}-第{index + 1}页.png");
+                    using var file = File.Create(path);
+                    if (!bitmap.Encode(file, SkiaSharp.SKEncodedImageFormat.Png, 100))
+                        throw new ToolboxException($"第 {index + 1} 页编码失败，请检查输出目录。");
+                }
 
-                var path = Path.Combine(outputDirectory, $"{baseName}-第{index + 1}页.png");
-                using var data = bitmap.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
-                using var file = File.Create(path);
-                data.SaveTo(file);
-                progress?.Report((index + 1) * 100 / pageCount);
+                index++;
+                progress?.Report(index * 100 / pageCount);
             }
 
             return $"{pageCount} 页 → {pageCount} 张 PNG · {Path.GetFileName(outputDirectory)}";

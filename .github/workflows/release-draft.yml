@@ -31,7 +31,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Run Tests
-        run: dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj --configuration Release --verbosity normal
+        run: |
+          dotnet test tests/GradeStrip.Tests/GradeStrip.Tests.csproj --configuration Release --verbosity normal
+          dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj --configuration Release --verbosity normal
+          dotnet test tests/GradeWeave.Tests/GradeWeave.Tests.csproj --configuration Release --verbosity normal
 
   build-matrix:
     name: Build (${{ matrix.rid }} · ${{ matrix.deployment }})
@@ -157,12 +160,13 @@ jobs:
           body: |
             ## 知微 · TeachCraft 全矩阵跨平台构建（${{ env.VERSION_TAG }}）
 
-            以「分晓 · GradeStrip」的纸墨设计语言做出的教师工具箱：10 件图片 / PDF 小工具，加上分晓、归位与时序三只常备应用，一个窗口里全部搞定。
+            以「分晓 · GradeStrip」的纸墨设计语言做出的教师工具箱：10 件图片 / PDF 小工具，加上分晓、归位、时序与织序四只常备应用，一个窗口里全部搞定。
 
             ### 工具清单
             - **分晓 · GradeStrip**：成绩总表 → 个人成绩条，多考对比、学科诊断、学生画像。
             - **归位 · SeatGrid**：导入名单自动识别姓名 / 性别 / 身高 / 视力，自动排座，打印、导出 Excel 与 PNG。
             - **时序 · ClassBlock**：导入课程总表自动识别年级与班级，选中班级生成可直接打印的课程表。
+            - **织序 · GradeWeave**：导入年级工作簿，先定教研、走班与会议时段，再自动编排全年级课表并检查冲突；支持插入书法课等临时活动（可只叠加提醒，也可替换整节课程）。
             - **图片处理**：格式转换、尺寸调整、压缩、文字水印。
             - **格式工厂**：PDF ↔ Word、图片合成 PDF、PDF 转图片、PDF 合并、PDF 拆分提取。
 

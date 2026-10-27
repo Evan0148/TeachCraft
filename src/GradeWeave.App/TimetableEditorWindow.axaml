@@ -1,0 +1,403 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:GradeWeave.App"
+        x:Class="GradeWeave.App.TimetableEditorWindow"
+        x:DataType="app:TimetableEditorViewModel"
+        Title="作息时间表"
+        Width="1040" Height="800"
+        MinWidth="920" MinHeight="680"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PaperBrush}">
+    <Window.Styles>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="LetterSpacing" Value="0.4" />
+        </Style>
+        <Style Selector="TextBlock.helper">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="LineHeight" Value="16" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.card-title">
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontFamily" Value="{StaticResource SerifFont}" />
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="TextBlock.mono">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        </Style>
+        <Style Selector="TextBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
+        <Style Selector="ComboBox.field">
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="ListBox.timetable">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.timetable ListBoxItem">
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Margin" Value="0,0,0,3" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="BorderBrush" Value="#F0ECE1" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ListBox.timetable ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F8F4EA" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        </Style>
+        <Style Selector="ListBox.timetable ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+        <!-- 顶栏：标题 + 内置预设 -->
+        <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Padding="20,14">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                <StackPanel Spacing="3">
+                    <StackPanel Orientation="Horizontal" Spacing="9">
+                        <TextBlock Text="作息时间表" FontFamily="{StaticResource SerifFont}"
+                                   FontSize="19" Foreground="{StaticResource InkBrush}" />
+                        <Border Background="#F4F1E8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TableName}" FontSize="10" Foreground="{StaticResource MutedBrush}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="按学校作息排出一天的时段；确认后「正课」与「课服 / 晚修」会成为编排节次。"
+                               FontSize="10" Foreground="{StaticResource MutedBrush}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <ComboBox Classes="field" Width="250" ItemsSource="{Binding Presets}"
+                              SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                              AutomationProperties.Name="内置作息预设">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="app:TimetablePresetOption">
+                                <StackPanel Spacing="1">
+                                    <TextBlock Text="{Binding Name}" FontSize="11" />
+                                    <TextBlock Text="{Binding Description}" FontSize="10"
+                                               Foreground="{StaticResource MutedBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Classes="ghost" Content="套用预设" Click="OnApplyPreset"
+                            FontSize="11.5" Padding="12,7"
+                            AutomationProperties.Name="用所选预设替换作息草稿" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 横向时间轴 -->
+        <Border Grid.Row="1" Margin="20,12,20,0" Background="#FCFAF4"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8" Padding="12,9">
+            <Grid RowDefinitions="Auto,Auto">
+                <Grid ColumnDefinitions="Auto,*">
+                    <TextBlock Classes="field-label" Text="一天时间轴" VerticalAlignment="Center" />
+                    <ItemsControl Grid.Column="1" ItemsSource="{Binding LegendItems}" HorizontalAlignment="Right">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="app:TimetableLegendItem">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Border Width="8" Height="8" CornerRadius="2" Background="{Binding Color}"
+                                            VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Label}" FontSize="10"
+                                               Foreground="{StaticResource MutedBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+                <Canvas Grid.Row="1" x:Name="TimelineCanvas" Height="72" Margin="0,4,0,0" />
+            </Grid>
+        </Border>
+
+        <!-- 左：时段列表 / 中：详情 / 右：节次预览 -->
+        <Grid Grid.Row="2" ColumnDefinitions="310,*,292" ColumnSpacing="12" Margin="20,12,20,0">
+            <Border Grid.Column="0" Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                <Grid RowDefinitions="Auto,Auto,Auto,*">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="card-title" Text="时段列表" />
+                        <TextBlock Grid.Column="1" Text="{Binding RowCountText}" FontSize="10"
+                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,10,0,6">
+                        <ComboBox Classes="field" ItemsSource="{Binding KindOptions}"
+                                  SelectedItem="{Binding SelectedNewKind, Mode=TwoWay}"
+                                  AutomationProperties.Name="新增时段类型">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="app:TimetableKindOption">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <Border Width="7" Height="7" CornerRadius="2"
+                                                Background="{Binding Color}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Label}" FontSize="11" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Button Grid.Column="1" Classes="ghost" Content="+ 添加" Click="OnAdd"
+                                FontSize="10.5" Padding="10,5"
+                                AutomationProperties.Name="按所选类型新增时段" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" Classes="helper"
+                               Text="新增时段默认接在最后一段之后 10 分钟；还没有时段时用各类型的常规时间。"
+                               Margin="0,0,0,8" />
+
+                    <Grid Grid.Row="3">
+                        <ListBox Classes="timetable" ItemsSource="{Binding Rows}"
+                                 SelectedItem="{Binding SelectedRow, Mode=TwoWay}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="app:TimetableRowItemViewModel">
+                                    <Grid ColumnDefinitions="4,*,Auto" ColumnSpacing="8">
+                                        <Border Width="4" CornerRadius="2" Background="{Binding Color}"
+                                                MinHeight="26" VerticalAlignment="Stretch" />
+                                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="12"
+                                                       FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding TimeText}" FontSize="10"
+                                                       FontFamily="{StaticResource MonoFont}"
+                                                       Foreground="{StaticResource MutedBrush}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                            <Border Background="#F5F1E7" BorderBrush="{StaticResource LineBrush}"
+                                                    BorderThickness="1" CornerRadius="3" Padding="5,1"
+                                                    HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding KindLabel}" FontSize="10"
+                                                           Foreground="{StaticResource MutedBrush}" />
+                                            </Border>
+                                            <TextBlock Text="{Binding DurationText}" FontSize="10"
+                                                       Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel IsVisible="{Binding IsEmpty}" Spacing="4"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="还没有时段" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="14" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Text="先在上方选「正课」并点「+ 添加」。" FontSize="10"
+                                       Foreground="{StaticResource MutedBrush}" TextAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+                <Grid RowDefinitions="Auto,*" RowSpacing="10">
+                    <TextBlock Classes="card-title" Text="时段详情" />
+
+                    <Grid Grid.Row="1">
+                        <ScrollViewer IsVisible="{Binding HasSelection}" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="12" Margin="0,0,12,0">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="field-label" Text="类型" />
+                                    <ComboBox Classes="field" ItemsSource="{Binding KindOptions}"
+                                              SelectedItem="{Binding SelectedKind, Mode=TwoWay}"
+                                              AutomationProperties.Name="时段类型">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="app:TimetableKindOption">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <Border Width="7" Height="7" CornerRadius="2"
+                                                            Background="{Binding Color}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Label}" FontSize="11" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <TextBlock Classes="helper"
+                                               Text="只有「正课」与扩展时段（课服 / 晚修）会成为编排节次；其余只作为作息提示。" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="field-label" Text="名称" />
+                                    <TextBox Classes="field" Text="{Binding Name, Mode=TwoWay}"
+                                             PlaceholderText="{Binding NamePlaceholder}"
+                                             AutomationProperties.Name="时段名称" />
+                                    <TextBlock Classes="helper"
+                                               Text="留空时按类型显示默认名称；正课建议按「第 N 节」命名。" />
+                                </StackPanel>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Classes="field-label" Text="开始时间" />
+                                        <TextBox Classes="field" Text="{Binding StartTime, Mode=TwoWay}"
+                                                 PlaceholderText="08:00"
+                                                 AutomationProperties.Name="开始时间" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Classes="field-label" Text="结束时间" />
+                                        <TextBox Classes="field" Text="{Binding EndTime, Mode=TwoWay}"
+                                                 PlaceholderText="08:40"
+                                                 AutomationProperties.Name="结束时间" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="#FCFAF4" BorderBrush="#E2DCCC" BorderThickness="1"
+                                        CornerRadius="8" Padding="10,8">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Classes="field-label" Text="小结" />
+                                        <TextBlock Text="{Binding DetailHint}" FontSize="10.5"
+                                                   Foreground="{StaticResource AccentDeepBrush}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock Classes="field-label" Text="调整" />
+                                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="6">
+                                        <Button Classes="ghost" Content="上移" Click="OnMoveUp"
+                                                FontSize="10" Padding="6,4" MinHeight="28"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="上移选中时段" />
+                                        <Button Grid.Column="1" Classes="ghost" Content="下移" Click="OnMoveDown"
+                                                FontSize="10" Padding="6,4" MinHeight="28"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="下移选中时段" />
+                                        <Button Grid.Column="2" Classes="ghost" Content="复制" Click="OnDuplicate"
+                                                FontSize="10" Padding="6,4" MinHeight="28"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="复制选中时段" />
+                                        <Button Grid.Column="3" Classes="ghost" Content="删除" Click="OnDelete"
+                                                FontSize="10" Padding="6,4" MinHeight="28"
+                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                                AutomationProperties.Name="删除选中时段" />
+                                    </Grid>
+                                    <Button Classes="ghost" Content="按时间排序" Click="OnSort"
+                                            FontSize="10" Padding="6,4" MinHeight="28"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                                            AutomationProperties.Name="按开始时间重排时段" />
+                                    <TextBlock Classes="helper"
+                                               Text="排序按开始时间从早到晚重排列表；确认时也会按时间顺序写入。" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <StackPanel IsVisible="{Binding !HasSelection}" Spacing="5"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="从左侧选择一个时段" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="15" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Text="选中后可改类型、名称与起止时间。" FontSize="10"
+                                       Foreground="{StaticResource MutedBrush}" TextAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <StackPanel Spacing="2">
+                        <TextBlock Classes="card-title" Text="节次预览" />
+                        <TextBlock Text="{Binding PreviewSummary}" FontSize="10"
+                                   Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <ItemsControl ItemsSource="{Binding PeriodPreview}" Margin="0,0,12,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="app:TimetablePeriodPreviewViewModel">
+                                        <Border Background="#FCFBF7" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="6" Padding="8,6"
+                                                Margin="0,0,0,4">
+                                            <Grid ColumnDefinitions="4,*,Auto" ColumnSpacing="8">
+                                                <Border Width="4" CornerRadius="2" Background="{Binding Color}"
+                                                        MinHeight="22" VerticalAlignment="Stretch" />
+                                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Label}" FontSize="11.5"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource InkBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Ordinal}" FontSize="10"
+                                                               Foreground="{StaticResource MutedBrush}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding TimeText}" FontSize="10"
+                                                               FontFamily="{StaticResource MonoFont}"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding Tag}" FontSize="10"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               HorizontalAlignment="Right" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="修正校验问题后显示节次预览。" IsVisible="{Binding !HasPreview}"
+                                       FontSize="10" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
+                                       MaxWidth="220" TextAlignment="Center"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Row="2" Classes="helper" Margin="0,6,0,0"
+                               Text="确认后主窗口按这份节次生成课表；超出节次的课会被移除并提示。" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 校验结果 -->
+        <Border Grid.Row="3" Background="#FCFAF4" BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="0,1,0,0" Padding="20,8">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <TextBlock Text="{Binding ValidationSummary}" FontSize="10"
+                           Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding ErrorText}" IsVisible="{Binding HasErrors}" FontSize="10.5"
+                               Foreground="{StaticResource AccentDeepBrush}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding WarningText}" IsVisible="{Binding HasWarnings}" FontSize="10"
+                               Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 底部按钮 -->
+        <Border Grid.Row="4" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <TextBlock Text="改动先保存在草稿里；点「确认并应用」才会写入工程并重新生成节次。"
+                           FontSize="10" Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Classes="ghost" Content="取消" Click="OnCancel"
+                            FontSize="11.5" Padding="14,7" IsCancel="True"
+                            AutomationProperties.Name="取消编辑作息" />
+                    <Button Classes="primary" Content="确认并应用" Click="OnConfirm"
+                            FontSize="11.5" Padding="16,7" IsEnabled="{Binding CanConfirm}" IsDefault="True"
+                            AutomationProperties.Name="确认并应用作息" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

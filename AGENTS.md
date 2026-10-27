@@ -6,7 +6,7 @@
 
 ## 一、项目定位
 
-「知微」是面向教师的本地工具箱：10 件图片 / PDF 小工具，加上「分晓 · GradeStrip」成绩条生成器、「归位 · SeatGrid」座位表生成器与「时序 · ClassBlock」课程表生成器，统一使用分晓的纸墨设计语言与本地优先原则。技术栈为 **C# / .NET 10 + Avalonia 12**，所有文件处理在本机完成，不上传、不留存。
+「知微」是面向教师的本地工具箱：10 件图片 / PDF 小工具，加上「分晓 · GradeStrip」成绩条生成器、「归位 · SeatGrid」座位表生成器、「时序 · ClassBlock」课程表生成器与「织序 · GradeWeave」全年级课表编排器，统一使用分晓的纸墨设计语言与本地优先原则。技术栈为 **C# / .NET 10 + Avalonia 12**，所有文件处理在本机完成，不上传、不留存。
 
 ---
 
@@ -46,7 +46,7 @@ $$\text{v}\{Major\}.\{Minor\}.\{Patch\}[-\text{preview}.\{RunNumber\}]$$
 | **Minor** | 新增工具、新增输出格式、新增平台支持、界面大改版 |
 | **Patch** | Bug 修复、文案/间距/性能微调 |
 
-当前基线：`1.2.1`（2026-10-23 修复归位空名单时的蒙层残影，按 Patch 晋级）。`1.2.0` 新增「时序 · ClassBlock」，`1.1.0` 是归位上线版本，`1.0.0` 是首个完整工具箱版本。
+当前基线：`1.10.2`（2026-10-27 测试资产隐私硬化：两份智学网 `.xls` fixture 在字节层擦除全部残留真实姓名 / 考号 / 校名，覆盖 SST 奇对齐孤儿条目与「姓名_成绩单」属主标题两种此前不可见形态；dry 复扫零命中、NPOI 金丝雀与全量测试结果不变，按 Patch 晋级）。`1.10.1`（2026-10-27 全链路性能修复：织序并发生成门禁与自动保存版本守卫、PDF 转图片批量加载与流式编码、织序课表索引与格子复用、时序预览防抖/取消/后台解码、分晓导入单次物化与 O(N) 排名、归位滑块松手提交与渲染缓存、R2R 实测自包含 +115MB / 框架依赖 +62MB 体积代价过高未启用，按 Patch 晋级）。`1.10.0` 为织序新增「冲突聚合台」与锁课：冲突按类型聚合、可按班级 / 教师 / 关键词筛选并一键定位；课程格可锁定，重新生成时保留，拖拽移动自动锁定，按 Minor 晋级。`1.9.1` 为织序走班组教师下拉只显示当前学科任课教师，并按分工带入任课班教室。`1.9.0` 为织序新增自动保存：每 2 秒防抖保存、关闭前落盘、当前工程原子写回、无路径时写本机恢复文件并可恢复。`1.8.0` 为织序「作息时间表」步骤与确认门槛；`1.7.0` 为织序顶栏「教师分工」入口、新走班组默认自动安排与手动放课；`1.6.0` 为织序「全新制作」、走班自动安排与 `.xls` 导入；`1.5.0` 为织序「临时活动」与 PDF 依赖修复；`1.4.0` 为「织序 · GradeWeave」首版；`1.3.0` 为时序作息模板与演示数据合成化，`1.2.1` 修复归位空名单时的蒙层残影（Patch），`1.2.0` 新增「时序 · ClassBlock」，`1.1.0` 是归位上线版本，`1.0.0` 是首个完整工具箱版本。
 
 ---
 
@@ -54,7 +54,7 @@ $$\text{v}\{Major\}.\{Minor\}.\{Patch\}[-\text{preview}.\{RunNumber\}]$$
 
 工作流：`.github/workflows/release-draft.yml`
 
-1. **测试**：`windows-latest` 上运行 `dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj -c Release`，失败则阻止发布。
+1. **测试**：`windows-latest` 上依次运行 `dotnet test tests/GradeStrip.Tests/GradeStrip.Tests.csproj -c Release`（102 项，分晓导入 / 报表 / 导出回归）、`dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj -c Release`（30 项，工具箱与时序模板端到端）与 `dotnet test tests/GradeWeave.Tests/GradeWeave.Tests.csproj -c Release`（90 项，织序自动保存 / 作息时间表 / 导入 / 编排 / 活动 / 走班 / 手动放课 / 锁课 / 冲突聚合台 / xls 导入 / 导出 / 工程往返 / 岗位匹配回归），失败则阻止发布。
 2. **构建矩阵**：7 个 RID × 2 种部署模式 = 14 个包。
 
 | RID | 运行器 | 产物 |
@@ -96,14 +96,19 @@ chmod +x bundle/macos/build-dmg.sh
 ```
 TeachCraft.slnx
 Directory.Build.props        # 版本号唯一来源
-src/TeachCraft.App           # Avalonia 桌面端（工具箱壳 + 分晓 / 归位入口）
+src/TeachCraft.App           # Avalonia 桌面端（工具箱壳 + 四只常备应用入口）
 src/TeachCraft.Core          # 图片 / PDF 处理引擎
 src/SeatGrid.App             # 归位座位表窗口
 src/SeatGrid.Core            # 名单识别、排座、PNG/PDF/Excel 导出
 src/ClassBlock.App           # 时序课程表窗口
 src/ClassBlock.Core          # 总表识别、班级课程提取、PNG/PDF 渲染
-vendor/gradestrip            # 分晓 App + Core 的只读快照
-tests/TeachCraft.Tests       # xUnit 测试（19 项）
+src/GradeWeave.App           # 织序课表编排窗口
+src/GradeWeave.Core          # 工作簿导入、自动编排、冲突分析、Excel/PNG/PDF 导出
+src/GradeStrip.App           # 分晓成绩条窗口（Library，同进程内嵌）
+src/GradeStrip.Core          # 成绩导入、分析、xlsx 导出
+tests/GradeStrip.Tests       # xUnit 测试（102 项，分晓导入 / 报表 / 导出回归 + 合成 fixtures）
+tests/GradeWeave.Tests       # xUnit 测试（90 项，织序自动保存 / 作息时间表 / 导入 / 编排 / 活动 / 走班 / 手动放课 / 锁课 / 冲突聚合台 / xls 导入 / 导出 / 工程往返 / 岗位匹配回归 + 合成 fixtures）
+tests/TeachCraft.Tests       # xUnit 测试（30 项，工具箱与时序模板端到端）
 installer                    # Inno Setup 脚本与中文语言文件
 bundle/macos                 # Info.plist / Entitlements / DMG 脚本
 scripts/version.ps1          # 版本号计算
@@ -116,9 +121,12 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 
 ## 五、分晓（GradeStrip）集成约定
 
-- 分晓以 **项目引用 + 程序集内嵌** 的方式进入工具箱；点击「打开应用」在 **同一进程** 里创建 `GradeStrip.App.Views.MainWindow`，不要改成启动外部 exe。
-- `vendor/gradestrip` 是 **只读快照**，来源：`Evan0148/GradeStrip`，当前同步至上游 2026-10-24 的 main（携带概览报表管线与成绩导入兼容修复的近期全部上游提交）。唯一的结构性改动是把 `GradeStrip.App` 的 `OutputType` 改为 `Library`：它在本项目里只作为窗口模块使用；若保留 `WinExe`，framework-dependent 发布会报 `NETSDK1151`（自包含可执行文件不能被非自包含可执行文件引用）。
-- 同步方式：从上游复制 `src/GradeStrip.App`、`src/GradeStrip.Core`（排除 `bin/obj` 与 `*.user`），保持相对目录结构；复制后把 `OutputType` 改为 `Library`，并删除 `ApplicationIcon` / `ApplicationManifest` 属性。若上游新增 App 级 `StaticResource`（笔刷、字体、样式），必须同步进 `src/TeachCraft.App/App.axaml`，否则 XAML 会在运行时找不到资源。
+- 分晓以 **一等项目 + 程序集内嵌** 的方式进入工具箱：`src/GradeStrip.App`、`src/GradeStrip.Core` 与归位、时序并列，直接在本仓库开发。点击「打开应用」在 **同一进程** 里创建 `GradeStrip.App.Views.MainWindow`，不要改成启动外部 exe。
+- `GradeStrip.App` 的 `OutputType` 必须是 `Library`：它只作为窗口模块使用；若改回 `WinExe`，framework-dependent 发布会报 `NETSDK1151`（自包含可执行文件不能被非自包含可执行文件引用）。
+- 命名空间保持 `GradeStrip.App` / `GradeStrip.Core` 不变（与 `SeatGrid.*` 同构），不要为了统一品牌做全局重命名。
+- `AvaloniaUI.DiagnosticsSupport` 包引用必须 **无条件引入**（只加 `PrivateAssets=All`），不能按 Configuration 条件排除——否则 Release 还原后 `Program.cs` 的 `WithDeveloperTools()` 会报 CS1061。
+- 历史渊源：代码源自 `Evan0148/GradeStrip`（上游 2026-10-24 main，含概览报表管线与成绩导入兼容修复）。2026-10-24 起并入本仓库直接开发，上游仓库转为独立应用、不再同步；若上游未来有新特性，手动 cherry-pick。
+- 若引入 App 级 `StaticResource`（笔刷、字体、样式），必须同步进 `src/TeachCraft.App/App.axaml`，否则 XAML 会在运行时找不到资源。
 - 发布目录里的 `GradeStrip.App.exe` / `GradeStrip.App.runtimeconfig.json` 由 `RemoveGradeStripAppHost` target 兜底删除，只保留 DLL。
 
 ---
@@ -143,7 +151,8 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 - 总表识别只接受 `.xlsx`；必须同时找到「星期一…星期五」「1–7 节」和班级行，才认定是课程表。`.xls` 提示用户另存为 xlsx，不静默失败。
 - 每天按 10 列分组：7 节课 + 课后服务1 + 课后服务2 + 晚修。读取单元格必须先解析合并区域，否则合并的「培优辅差 / 阳光体育」会只对第一行生效。
 - 辅助信息从同一份工作簿读取：班主任（分工表）、午学（含 12:00 的 5 天表头）、课服/晚修（班级行上方含课服1/2/晚修的子表头）、早读（含「早读」与语文/英语的备注）。缺表时写入警告，不阻断生成。
-- 课程表行序是稳定契约：早读 → 1 → 2 → 大课间 → 3 → 4 → 午餐 → 午学 → 5 → 6 → 7 → 课服1 → 课服2 → 晚餐 → 新闻联播 → 晚修。午餐、晚餐为整行红字；大课间、新闻联播合并星期列；晚修为两段时间的高行。
+- 课程表行序与时间由作息模板驱动：模板行通过 Slot（第 N 节 / 早读 / 午学 / 课服1/2 / 晚修 / 静态）绑定总表数据。内置七 / 八 / 九三套预设；九年级预设 = 原固定行序快照（早读 → 1 → 2 → 大课间 → 3 → 4 → 午餐 → 午学 → 5 → 6 → 7 → 课服1 → 课服2 → 晚餐 → 新闻联播 → 晚修），七 / 八年级在第三节后插入朗读行。午餐、晚餐为整行红字；大课间、新闻联播合并星期列；晚修为两段时间的高行。
+- 作息模板可在界面编辑器中复制内置、增删行、改时间后另存为自定义模板，存于 `%APPDATA%\TeachCraft\ClassBlock\templates`；导入总表后按识别年级自动套用该年级上次使用的模板，无记录时用内置预设。学校改作息只需改模板；新增模板行类型或 Slot 槽位才需要改 Core 并升 Minor，并同步 `.memory/10-时序课程表.md`。
 - 主课默认只显示学科；开启「显示任课教师」后学科加粗、教师排第二行。午学、晚修始终显示教师姓名并补「老师」，含「详见附件」的说明原样保留。
 - 五天课服内容一致才合并为一格；内容不同必须逐日显示，不能为了好看强行合并。
 - 打印 PDF 继续用「高分辨率 PNG 嵌入 A4」（QuestPDF），不要改成矢量 PDF。
@@ -168,11 +177,12 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 
 ## 九、验证要求
 
-- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与 19 项 xUnit 测试。
+- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与全部 xUnit 测试（GradeStrip.Tests 102 项 + TeachCraft.Tests 30 项 + GradeWeave.Tests 90 项）。
 - 涉及图片 / PDF 引擎的改动，必须额外用真实文件跑一遍：格式转换、PDF 合并、Word→PDF、PDF 转图片。
 - 涉及归位的改动，必须额外验证：带表头 / 无表头名单识别、配置 xlsx 往返、PNG / PDF / Excel 三种导出。
 - 涉及时序的改动，必须额外验证：真实总表的年级/学期/月份/班级数识别、目标班级 7 节课与课服/午学/晚修提取、PNG 与 PDF 输出。
-- 发布前用 `--shot` / `--panel <tool-id>` / `--gradestrip-shot` / `--seatgrid-shot` / `--classblock-shot` 做一次视觉走查（详见 `.memory/07-验证与测试资产.md`）。
+- 涉及织序的改动，必须额外验证：真实结构工作簿的导入、生成后无教师 / 班级冲突、教研与会议时段不被占用、分层走班同步、Excel / PNG / PDF 三种导出。
+- 发布前用 `--shot` / `--panel <tool-id>` / `--gradestrip-shot` / `--seatgrid-shot` / `--classblock-shot` / `--gradeweave-shot` 做一次视觉走查（详见 `.memory/07-验证与测试资产.md`）。
 
 ---
 
@@ -183,3 +193,25 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 - **演示内容与截图同规则**：`StripPreview` 演示表、`Assets/Shots` 截图、`design-preview` 资产一律基于合成数据生成；数据更新后用上游分晓 `--shot` 重截。
 - **身份替换对照表不进仓库**：真名→假名映射表仅存本机 `temp/`（已 gitignore）。
 - **提交前自检**：diff 中出现真实姓名/考号/校名（含作为更长字符串的子串出现）即违规，立即停止提交并清理；合成名须选不含任何真实 token 的写法。
+
+---
+
+## 十一、织序（GradeWeave）集成约定
+
+- 织序以独立 Avalonia 窗口运行，由工具箱同进程打开（`GradeWeave.App.GradeWeaveWindow`），单实例复用；不要改成外部 exe。
+- 数据入口有三个：导入工作簿（`.xlsx` / `.xls`，`.xls` 经 NPOI 转内存工作簿后与 `.xlsx` 走同一解析管线）、打开 `.weave.json` 工程、「全新制作」空白工程（`NewProjectWindow` 配置学校 / 年级 / 班级数 / 学科课时，`AssignmentEditorWindow` 以「班级 × 学科」表格填班主任与任课教师，教师按姓名自动建档）。空状态与顶栏都有「全新制作」入口；「教师分工」不进顶栏，作为编排流程的一环放在 05 步「编排对象」卡内，配任课 / 教师摘要并在任课为 0 时提示先补分工，「全新制作」完成后直接接上分工窗口。
+- 数据管线固定为：`WeaveWorkbookImporter` → `TimetableService`（确认作息并编译节次）→ `WeaveScheduler` → `ConflictAnalyzer` → `WeaveExcelExporter` / `WeaveImageRenderer` / `WeavePdfExporter`（冲突报告走 `WeaveConflictReportExporter`）。界面预览与三种导出共用同一个 `WeaveProject` 与 `LessonPlacement`，不得各自写一套排课结果。
+- 五步流程固定为：**确认作息时间表** → 导入年级工作簿（分工表 / 确认表 / 课程表 / 会议活动备注）并核对班级、学科、教师与课时 → 设定教研、走班、会议约束 → 检查冲突后导出。作息时间表未确认时 `WeaveScheduler.Generate` 必须抛出可读中文异常，顶栏「生成课表」与 05 步「重新生成」必须禁用；手动放课、拖拽与清除也必须拒绝。
+- **作息时间表（`WeaveTimetable` / `TimetableRow` / `TimetableService`）**：一天的有序时段列表，行类型固定为 `Lesson / MorningReading / Break / NoonStudy / Lunch / Rest / EyeExercise / AfterSchool / EveningStudy / Routine`；只有 `Lesson` 编译为正课节次，`AfterSchool / EveningStudy` 编译为 `IsExtension=true` 的扩展节次，其余只作作息说明。`TimetableService.Validate` 必须拒绝空表 / 无正课 / 非法时间 / 起止倒置 / 时段重叠，并按开始时间给出排序提示；`Confirm` 把节次写入 `WeaveProject.Periods`、写入内容签名 `ConfirmedSignature`，逐行改动后签名自动失配，必须重新确认。确认后节次减少时，超出新正课范围的 `LessonPlacement` 要移除并如实报告；教研 / 会议 / 走班 / 活动引用越界只提示，不静默改动。内置七 / 八 / 九年级作息与「仅正课七节」预设只使用通用年级名，不得写入真实学校作息；编辑窗口为 `TimetableEditorWindow`，沿用 ClassIsland 的时段列表 + 详情 + 时间轴编排方式，确认才写回工程。新增行类型、内置预设或改变节次编译规则时按 Minor 晋级，并同步 `.memory/12-织序课表编排.md`。
+- 分层走班分两种时段模式：**自动安排**（新建走班组默认；`IsFlexible`，不占固定时段，`PermutationScheduler.ResolveFlexibleGroup` 在生成时挑选所有参与班与各层教师都空闲、不撞教研会议且同科不超限的 `WeeklyHours` 个槽位，落位写入 `ResolvedSlots`）与**固定时段**（学校已排定时才选自选星期与节次）。自动安排一个槽位都找不到时整组退化为普通课并在消息里说明，不静默丢安排；部分落位时余量按普通课编排。固定组优先落位，自动组在固定组之后挑选。生成后状态栏必须报告各组实际时段与「N 个班同节走班」，班级格与总表用底色与「走班 · N 个班同节」标记并在悬浮提示里列出 A/B 层教师；`ConstraintRules.TryGetLayeredGroupAt` 必须同时识别固定区间与 `ResolvedSlots`。走班组教师下拉只列出当前学科的任课教师（`WeaveProject.TeachersOfSubject`），选中教师后优先把教室带成该教师在本学科任课的参与班，带入教室后也按分工表反查该班该学科教师，不得把全年级教师都列进下拉。
+- 手动放课：班级视角 / 总表视角点击课程格打开 `LessonEditorWindow`，按「学科 · 任课教师」列出本班候选并显示应排 / 已排课时与教师本节冲突预判；点一行即放入或替换。`LessonPlacementService` 写入 `IsFixed=true` 的课，重新生成时保留；活动占位与走班时段不得手动放课；教师冲突、教研 / 会议占用、超课时只写警告交给 `ConflictAnalyzer`，不得静默改课。
+- 锁课与冲突聚合台：05 步右侧冲突面板底部「打开冲突聚合台」打开非模态 `ConflictCenterWindow`，按 `ConflictKind` 分组并支持类型 / 班级 / 教师 / 关键词筛选；有星期与节次的冲突定位到课程格，无节次时定位到相关班级或教师，定位只读、不改课。课程格右键菜单、选中后按 `L`、表头「锁定本班 / 解锁本班」可切换 `IsFixed`；锁定课在重新生成时保留，拖拽移动与交换自动锁定两格。活动占位与走班时段不得锁定，仍由活动列表与 03 步走班组管理。
+- 编排策略：每个班的教学时段视为排列，用「分散式初始分配 + 最小冲突局部搜索」消除教师冲突、教研/会议占用与同科每日超限；超过时限（`ScheduleOptions.TimeLimit`）降级返回已排结果并列出未排课程（`UnplacedLesson`），不得谎报“全部排完”。同一班级同一学科每天不超过 2 节、下午不超过 1 节；主课优先上午。20 班 / 62 教师 / 694 节的真实规模回归必须保持可排满。
+- 临时活动（`ActivityBlock`）分两种：`Overlay` 只在格子与导出里叠加「活动名 + 时间」，不改课程、课时与冲突；`Replace` 移除重叠节次的原课，写入 `LessonPlacement(IsActivity=true, IsFixed=true)` 固定占位，重排时必须保留该占位，被移除课时形成的缺口（课时不符 / 未排课）必须如实报告，不得静默补齐。时间通过 `ActivityResolver` 匹配 `PeriodSlot.TimeText` 的重叠节次（端点相接不算重叠）；作息时间不标准时可用 `Period` 手动指定。
+- 活动占位格不可拖拽、不可右键清除；界面与导出必须显示活动名称与时间，活动不计入教师「已排 / 应排」周课时。
+- 冲突类型固定为：教师冲突、班级冲突、教师不可用（教研 / 会议）、走班冲突、缺任课教师、课时不符、未排课程；每条冲突应尽量带星期与节次，导入数据缺节次时聚合台显示「位置未定位」并定位到相关班级或教师。
+- 导出结构：总表、分工表、班级课表、教师课表、冲突页。打印 PDF 继续用「高分辨率 PNG 嵌入 A4」（QuestPDF），不要改成内嵌整套中文字体的矢量 PDF。
+- 导出路径不得覆盖已导入的工作簿；UI 层必须做 `IsSamePath` 检查。首版只接受 `.xlsx`，`.xls` 提示另存为，不静默失败。
+- **自动保存**：窗口每 2 秒检查一次工程快照，内容有变化才落盘；关闭窗口前同步补写一次，不丢最后几秒的改动。当前工程来自 / 已手动保存为 `.weave.json` 时，用 `WeaveProjectIO.SaveJson` 原子写回该文件；没有工程路径或写回失败时，写 `%LOCALAPPDATA%\TeachCraft\GradeWeave\autosave.weave.json` 与 `autosave.meta.json`，空状态显示「恢复上次自动保存」。自动保存绝不能写导入的 `.xlsx` / `.xls`；不得在仓库或上传服务中写快照。UI 状态栏必须显示「自动保存 · HH:mm:ss」或失败提示，不得静默失败。
+- 本地优先：不得加入遥测、上传、账号体系；示例、fixture 与截图一律使用合成学校 / 教师 / 班级（示例中学、沈青禾、陆明川等虚构名），禁止引用真实课表。
+- 新增导入表结构、约束类型或导出格式时，按 Minor 版本晋级，并同步 `.memory/12-织序课表编排.md`。
