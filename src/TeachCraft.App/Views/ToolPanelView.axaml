@@ -25,10 +25,10 @@
         </Grid>
 
         <TextBlock Text="{Binding Name}" FontFamily="{StaticResource SerifFont}" FontSize="32"
-                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" TextWrapping="Wrap" />
+                   LetterSpacing="0" Foreground="{StaticResource InkBrush}" TextWrapping="Wrap" />
         <TextBlock Text="{Binding Id}" FontFamily="{StaticResource MonoFont}" FontSize="9.5"
                    LetterSpacing="1.3" Foreground="{StaticResource AccentDeepBrush}" Margin="0,5,0,14" />
-        <TextBlock Text="{Binding Description}" FontSize="12.5" LineHeight="23" TextWrapping="Wrap"
+        <TextBlock Text="{Binding Description}" FontSize="12.5" LineHeight="20" TextWrapping="Wrap"
                    Foreground="{StaticResource InkSoftBrush}" Margin="0,0,0,20" />
 
         <!-- 选文件 -->
@@ -176,7 +176,7 @@
             <Border IsVisible="{Binding ShowPlainNote}" Background="{StaticResource PaperDeepBrush}"
                     CornerRadius="8" Padding="12,10">
                 <TextBlock Text="{Binding PlainNote}" FontSize="10.5" LineHeight="18"
-                           TextWrapping="Wrap" Foreground="#7E7868" />
+                           TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
             </Border>
         </StackPanel>
 
@@ -202,7 +202,7 @@
                 <Ellipse Width="5" Height="5" Fill="{StaticResource AccentBrush}" Margin="0,6,8,0"
                          VerticalAlignment="Top" />
                 <TextBlock Grid.Column="1" Text="全部处理在本机完成，文件不会上传到任何服务器。"
-                           FontSize="10.5" LineHeight="18" TextWrapping="Wrap" Foreground="#7E7868" />
+                           FontSize="10.5" LineHeight="18" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
             </Grid>
         </Border>
 

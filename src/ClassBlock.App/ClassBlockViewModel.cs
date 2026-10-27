@@ -12,6 +12,7 @@ using ClassBlock.Core.Models;
 using ClassBlock.Core.Rendering;
 using ClassBlock.Core.Timetable;
 using CommunityToolkit.Mvvm.ComponentModel;
+using TeachCraft.Shared;
 
 namespace ClassBlock.App;
 
@@ -244,7 +245,10 @@ public partial class ClassBlockViewModel : ObservableObject
 
     /// <summary>
     /// 重建预览。输入类改动走 250ms 防抖，旧的渲染任务会被取消；
-    /// PNG 解码放到后台线程，避免 2000×3800 位图在 UI 线程解码造成卡顿。
+    /// PNG 解码放到后台线程，避免大位图在 UI 线程解码造成卡顿。
+    /// 预览按 1.25 倍渲染：显示区约 1040 逻辑像素，2 倍渲染是 4 倍像素浪费
+    /// （常驻 21MB 而不是 5MB），清晰度在 Stretch=Uniform 下没有可见差别。
+    /// 导出 PNG / 打印 PDF 仍走各自的高倍率，不受影响。
     /// </summary>
     public async Task RefreshPreviewAsync(bool debounce = false)
     {
@@ -276,7 +280,7 @@ public partial class ClassBlockViewModel : ObservableObject
                 token.ThrowIfCancellationRequested();
                 var doc = TimetableBuilder.Build(master, item.Key, template, settings);
                 token.ThrowIfCancellationRequested();
-                return (doc, TimetableRenderer.RenderPngBytes(doc, 2.0f, token));
+                return (doc, TimetableRenderer.RenderPngBytes(doc, 1.25f, token));
             }, token);
 
             if (version != _renderVersion || token.IsCancellationRequested || _isClosed) return;
@@ -310,7 +314,7 @@ public partial class ClassBlockViewModel : ObservableObject
         catch (Exception ex)
         {
             if (!token.IsCancellationRequested && !_isClosed)
-                SetStatus($"生成课程表失败：{ex.Message}", true);
+                SetStatus(ErrorText.Describe(ex, "生成课程表"), true);
         }
         finally
         {

@@ -6,7 +6,7 @@
         x:DataType="app:SeatGridViewModel"
         Title="归位 · SeatGrid"
         Width="1440" Height="920"
-        MinWidth="1240" MinHeight="780"
+        MinWidth="1180" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource PaperBrush}">
     <Design.DataContext>
@@ -48,7 +48,7 @@
         <Style Selector="TextBlock.helper">
             <Setter Property="FontSize" Value="9.5" />
             <Setter Property="LineHeight" Value="16" />
-            <Setter Property="Foreground" Value="#9C9585" />
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBox.field">
@@ -111,7 +111,7 @@
         </Style>
         <Style Selector="Button.accent-outline:disabled /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="#BDB6A4" />
+            <Setter Property="Foreground" Value="#8A8474" />
             <Setter Property="BorderBrush" Value="#E7E3D8" />
         </Style>
         <Style Selector="ListBox.roster">
@@ -296,7 +296,8 @@
                                FontSize="9.5" LetterSpacing="0.5" Foreground="{StaticResource MutedBrush}" />
 
                     <TextBox Grid.Row="2" Classes="search" Text="{Binding SearchText, Mode=TwoWay}"
-                             PlaceholderText="搜索姓名 / 学号 / 小组" />
+                             PlaceholderText="搜索姓名 / 学号 / 小组"
+                             AutomationProperties.Name="搜索学生姓名、学号或小组" />
 
                     <Grid Grid.Row="3">
                         <ListBox Classes="roster" ItemsSource="{Binding FilteredStudents}"
@@ -320,7 +321,7 @@
                                         <Border Grid.Column="2" Classes="seat-tag"
                                                 Classes.assigned="{Binding IsAssigned}" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding SeatLabel}" FontFamily="{StaticResource MonoFont}"
-                                                       FontSize="8.5" Foreground="#8E8776" />
+                                                       FontSize="8.5" Foreground="{StaticResource MutedBrush}" />
                                         </Border>
                                     </Grid>
                                 </DataTemplate>
@@ -333,7 +334,7 @@
                                        FontSize="15" Foreground="{StaticResource MutedBrush}"
                                        HorizontalAlignment="Center" />
                             <TextBlock Text="导入名单后，这里会出现学生。" FontSize="10"
-                                       Foreground="#A29C8C" HorizontalAlignment="Center" />
+                                       Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Grid>
 
@@ -566,7 +567,7 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Classes="section-title" Text="视角模式" />
                                     <TextBlock Grid.Column="1" Text="VIEW" FontFamily="{StaticResource MonoFont}"
-                                               FontSize="8.5" Foreground="#A29C8C" VerticalAlignment="Center" />
+                                               FontSize="8.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                                     <Button Classes="mode" Classes.active="{Binding IsTeacherView}"
@@ -617,7 +618,7 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Classes="section-title" Text="调整行列" />
                                     <TextBlock Grid.Column="1" Text="SHIFT" FontFamily="{StaticResource MonoFont}"
-                                               FontSize="8.5" Foreground="#A29C8C" VerticalAlignment="Center" />
+                                               FontSize="8.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="5">
                                     <Button Classes="mode" Content="全部向左平移" Click="OnShiftLeft"
@@ -792,7 +793,7 @@
                 </StackPanel>
                 <TextBlock Grid.Column="1" Text="{Binding SeatStats}"
                            FontFamily="{StaticResource MonoFont}" FontSize="9"
-                           Foreground="#A29C8C" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                           Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="LOCAL ONLY · 名单不上传"
                            FontFamily="{StaticResource MonoFont}" FontSize="8.5"
                            LetterSpacing="1.2" Foreground="{StaticResource MossBrush}"

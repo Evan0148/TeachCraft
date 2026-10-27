@@ -9,6 +9,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using GradeStrip.App.ViewModels;
 using GradeStrip.Core.Comparison;
+using TeachCraft.Shared;
 
 namespace GradeStrip.App.Views;
 
@@ -111,6 +112,7 @@ public partial class MainWindow : Window
             {
                 new FilePickerFileType("Excel 工作簿") { Patterns = new[] { "*.xlsx" } },
             },
+            ShowOverwritePrompt = true,
         });
 
         if (file is not null) await ViewModel.ExportAsync(GetSafeLocalPath(file)!);
@@ -267,6 +269,12 @@ public partial class MainWindow : Window
 
         if (files.Count > 0)
         {
+            if (!await ConfirmDialog.ShowAsync(
+                    this, "替换这场考试？",
+                    $"第 {order.Value} 场考试的成绩、分析与对比基准会被新文件整体覆盖，且无法撤销。",
+                    "替换", "取消", danger: true))
+                return;
+
             await ViewModel.ReplaceSessionAsync(order.Value, GetSafeLocalPath(files[0])!);
         }
     }
@@ -288,6 +296,14 @@ public partial class MainWindow : Window
 
     private void OnToggleAbsent(object? sender, PointerPressedEventArgs e) =>
         ViewModel.ExcludeAbsent = !ViewModel.ExcludeAbsent;
+
+    /// <summary>KPI 卡是 Border 实现的开关，补一条键盘路径（Enter / 空格）。</summary>
+    private void OnKpiKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Space)) return;
+        ViewModel.ExcludeAbsent = !ViewModel.ExcludeAbsent;
+        e.Handled = true;
+    }
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {

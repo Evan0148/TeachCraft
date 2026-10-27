@@ -6,7 +6,7 @@
         Title="全新制作课表"
         Width="520" Height="720"
         MinWidth="460" MinHeight="600"
-        CanResize="False"
+        CanResize="True"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource PaperBrush}">
     <Window.Styles>

@@ -20,6 +20,7 @@ using GradeWeave.Core.Models;
 using GradeWeave.Core.Project;
 using GradeWeave.Core.Scheduling;
 using GradeWeave.Core.Timetable;
+using TeachCraft.Shared;
 
 namespace GradeWeave.App;
 
@@ -76,6 +77,8 @@ public partial class GradeWeaveWindow : Window
     private IBrush? _selectedBrush;
     private Thickness _selectedThickness;
     private Point _pressPoint;
+    private Point _grabOffset;          // 按下点相对源格左上角的偏移
+    private Size _dragSourceSize;       // 源格实际尺寸，幽灵不再用固定 112×58
     private Border? _dragGhost;
     private bool _suppressClick;
     private bool _lessonEditorOpen;
@@ -116,6 +119,8 @@ public partial class GradeWeaveWindow : Window
         RefreshRecoveryState();
 
         BuildCurrentStep();
+
+        Opened += (_, _) => WindowFit.Clamp(this);
     }
 
     private GradeWeaveViewModel ViewModel => (GradeWeaveViewModel)DataContext!;
@@ -162,6 +167,14 @@ public partial class GradeWeaveWindow : Window
 
     protected override void OnClosing(WindowClosingEventArgs e)
     {
+        if (!_closeReady && ViewModel.IsBusy)
+        {
+            // 生成 / 导入在跑：此时序列化会读到半成品，宁可拦一次也不静默丢盘。
+            e.Cancel = true;
+            ViewModel.SetStatus("正在处理中，完成后再关闭窗口。");
+            return;
+        }
+
         if (!_closeReady)
         {
             _isClosing = true;
@@ -282,7 +295,7 @@ public partial class GradeWeaveWindow : Window
         }
         catch (Exception ex)
         {
-            ViewModel.SetAutosaveStatus("自动保存失败", ex.Message, true, false);
+            ViewModel.SetAutosaveStatus("自动保存失败", ErrorText.Describe(ex, "保存工程"), true, false);
             return;
         }
 
@@ -327,7 +340,7 @@ public partial class GradeWeaveWindow : Window
         }
         catch (Exception ex)
         {
-            if (!_isClosing) ViewModel.SetAutosaveStatus("自动保存失败", ex.Message, true, false);
+            if (!_isClosing) ViewModel.SetAutosaveStatus("自动保存失败", ErrorText.Describe(ex, "保存工程"), true, false);
         }
         finally
         {
@@ -1288,6 +1301,13 @@ public partial class GradeWeaveWindow : Window
         _dragState = DragState.Candidate;
         _dragSource = null;
 
+        // 记录抓取偏移与源格尺寸：拖拽时幽灵跟手，而不是居中吸附。
+        if (border is not null)
+        {
+            _grabOffset = e.GetPosition(border);
+            _dragSourceSize = border.Bounds.Size;
+        }
+
         if (!ViewModel.IsClassView) return;
 
         var lesson = ViewModel.Project.LessonAt(cellTag.ClassId, cellTag.DayIndex, cellTag.Period);
@@ -1307,7 +1327,7 @@ public partial class GradeWeaveWindow : Window
         {
             var dx = position.X - _pressPoint.X;
             var dy = position.Y - _pressPoint.Y;
-            if (dx * dx + dy * dy < 36) return;
+            if (dx * dx + dy * dy < 100) return;
             BeginDrag();
         }
 
@@ -1522,8 +1542,8 @@ public partial class GradeWeaveWindow : Window
 
         _dragGhost = new Border
         {
-            Width = 112,
-            Height = 58,
+            Width = _dragSourceSize.Width > 1 ? _dragSourceSize.Width : 112,
+            Height = _dragSourceSize.Height > 1 ? _dragSourceSize.Height : 58,
             Background = CardBrush,
             BorderBrush = InkBrush,
             BorderThickness = new Thickness(1.5),
@@ -1562,8 +1582,8 @@ public partial class GradeWeaveWindow : Window
         if (_dragGhost is { } ghost)
         {
             var layerPosition = this.TranslatePoint(windowPosition, ScheduleDragLayer) ?? windowPosition;
-            Canvas.SetLeft(ghost, layerPosition.X - ghost.Width / 2);
-            Canvas.SetTop(ghost, layerPosition.Y - ghost.Height / 2);
+            Canvas.SetLeft(ghost, layerPosition.X - _grabOffset.X);
+            Canvas.SetTop(ghost, layerPosition.Y - _grabOffset.Y);
         }
 
         var hit = this.InputHitTest(windowPosition) as Visual;
@@ -1705,6 +1725,22 @@ public partial class GradeWeaveWindow : Window
 
     // ----------------------------- 顶栏动作 -----------------------------
 
+    /// <summary>
+    /// 切换工程前的确认。无路径工程的实体只存在于恢复文件里，而各入口都会 clearRecovery，
+    /// 所以这里必须拦一次，否则误点「载入示例数据」会连恢复副本一起抹掉。
+    /// </summary>
+    private async Task<bool> ConfirmSwitchProjectAsync(string action)
+    {
+        if (!ViewModel.HasProject) return true;
+
+        var detail = string.IsNullOrEmpty(_currentProjectPath)
+            ? "当前工程还没有保存到文件，切换后只留在恢复文件里，且会被新工程覆盖。"
+            : $"当前工程未保存的改动会丢失。已保存的部分在：{_currentProjectPath}";
+
+        return await ConfirmDialog.ShowAsync(
+            this, $"切换到「{action}」？", detail, "继续切换", "留在当前工程", danger: true);
+    }
+
     private async void OnImport(object? sender, RoutedEventArgs e)
     {
         var path = await PickOpenAsync("导入课表", new FilePickerFileType("Excel 工作簿")
@@ -1713,12 +1749,15 @@ public partial class GradeWeaveWindow : Window
         });
         if (path is null) return;
 
+        if (!await ConfirmSwitchProjectAsync("导入课表")) return;
+
         await ImportProjectAsync(path);
     }
 
     private async void OnNewProject(object? sender, RoutedEventArgs e)
     {
         if (ViewModel.IsBusy) return;
+        if (!await ConfirmSwitchProjectAsync("全新制作")) return;
 
         var dialog = new NewProjectWindow();
         var config = await dialog.ShowDialog<NewProjectConfig?>(this);
@@ -1760,7 +1799,11 @@ public partial class GradeWeaveWindow : Window
         BuildCurrentStep();
     }
 
-    private void OnLoadDemo(object? sender, RoutedEventArgs e) => LoadDemoProject();
+    private async void OnLoadDemo(object? sender, RoutedEventArgs e)
+    {
+        if (!await ConfirmSwitchProjectAsync("载入示例数据")) return;
+        LoadDemoProject();
+    }
 
     private async void OnAddActivity(object? sender, RoutedEventArgs e)
     {
@@ -1825,6 +1868,8 @@ public partial class GradeWeaveWindow : Window
             Patterns = new[] { "*.weave.json", "*.json" },
         });
         if (path is null) return;
+
+        if (!await ConfirmSwitchProjectAsync("打开工程")) return;
 
         ViewModel.IsBusy = true;
         try
@@ -2273,6 +2318,7 @@ public partial class GradeWeaveWindow : Window
                 SuggestedFileName = suggestedName,
                 DefaultExtension = extension,
                 FileTypeChoices = new[] { fileType },
+                ShowOverwritePrompt = true,
             });
 
             return file?.TryGetLocalPath();

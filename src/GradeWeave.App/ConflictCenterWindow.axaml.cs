@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using GradeWeave.Core.Models;
+using TeachCraft.Shared;
 
 namespace GradeWeave.App;
 
@@ -14,6 +15,7 @@ public partial class ConflictCenterWindow : Window
     public ConflictCenterWindow()
     {
         InitializeComponent();
+        Opened += (_, _) => WindowFit.Clamp(this);
     }
 
     public ConflictCenterWindow(GradeWeaveViewModel owner, Action<WeaveConflict> locate) : this()

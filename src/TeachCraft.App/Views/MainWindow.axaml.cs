@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,10 +14,12 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using SeatGrid.App;
 using ClassBlock.App;
 using TeachCraft.App.ViewModels;
 using TeachCraft.Core.Tools;
+using TeachCraft.Shared;
 
 namespace TeachCraft.App.Views;
 
@@ -29,6 +32,7 @@ public partial class MainWindow : Window
     private ClassBlockWindow? _classBlockWindow;
     private GradeWeave.App.GradeWeaveWindow? _gradeWeaveWindow;
     private GradeStrip.App.Views.MainWindow? _gradeStripWindow;
+    private bool _runDialogOpen;   // 输出对话框 / 任务运行期间的重入守卫
     public MainWindow()
     {
         InitializeComponent();
@@ -68,117 +72,108 @@ public partial class MainWindow : Window
 
     // ----------------------------- 抽屉动效 -----------------------------
 
-    private async Task ShowPanelAsync(bool wasOpen)
+    private Task ShowPanelAsync(bool wasOpen)
     {
-        if (wasOpen) return;
+        PanelHost.IsVisible = true;
+        Backdrop.IsVisible = true;
 
-        if (PanelHost.RenderTransform is TranslateTransform transform) transform.X = 452;
-        PanelHost.Opacity = 0;
-        Backdrop.Opacity = 0;
-        await Task.Yield();
-        await AnimateOpenAsync();
+        if (PanelHost.RenderTransform is TranslateTransform transform)
+        {
+            if (!wasOpen && transform.X >= PanelWidth - 0.5)
+            {
+                transform.X = PanelWidth;
+                PanelHost.Opacity = 0;
+                Backdrop.Opacity = 0;
+            }
+        }
+
+        // 上一次关闭还在跑：先放行它的等待方，再把目标改回 0。
+        // 面板会从当前位置直接反向，不回跳到全开位。
+        var pending = _panelTcs;
+        _panelTcs = null;
+        pending?.TrySetResult();
+
+        StartPanelAnimation(0);
+        return Task.CompletedTask;
     }
 
-    private async Task HidePanelAsync()
+    private Task HidePanelAsync()
     {
-        if (!ViewModel.IsPanelOpen) return;
+        if (!ViewModel.IsPanelOpen) return Task.CompletedTask;
 
-        await AnimateCloseAsync();
+        if (_panelTcs is null || _panelTcs.Task.IsCompleted)
+            _panelTcs = new TaskCompletionSource();
+
+        StartPanelAnimation(PanelWidth);
+        return _panelTcs.Task;
+    }
+
+    // 单一进度模型：只改 TranslateTransform.X 与 Opacity，开关共用一条指数曲线。
+    // 旧实现把关闭动画的 0% 关键帧写死成 X=0、Opacity=1，面板滑到一半再按 Esc 会先弹回全开位。
+    private const double PanelWidth = 452;
+    private double _panelTargetX = PanelWidth;
+    private double _panelLastTime;
+    private DispatcherTimer? _panelTimer;
+    private Stopwatch? _panelClock;
+    private TaskCompletionSource? _panelTcs;
+
+    private void StartPanelAnimation(double targetX)
+    {
+        _panelTargetX = targetX;
+
+        if (_panelTimer is null)
+        {
+            _panelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            _panelTimer.Tick += OnPanelTick;
+            _panelClock = Stopwatch.StartNew();
+        }
+
+        if (!_panelTimer.IsEnabled)
+        {
+            _panelLastTime = _panelClock!.Elapsed.TotalSeconds;
+            _panelTimer.Start();
+        }
+    }
+
+    private void StopPanelAnimation() => _panelTimer?.Stop();
+
+    private void OnPanelTick(object? sender, EventArgs e)
+    {
+        if (PanelHost.RenderTransform is not TranslateTransform transform)
+        {
+            StopPanelAnimation();
+            return;
+        }
+
+        var now = _panelClock!.Elapsed.TotalSeconds;
+        var dt = Math.Clamp(now - _panelLastTime, 0.001, 0.05);
+        _panelLastTime = now;
+
+        // 指数趋近（约等于临界阻尼，response ≈ 0.09s）：每帧按比例靠近目标。
+        // 目标随时可改，运动始终从当前屏幕位置续接，不会出现「砖墙」。
+        var k = 1 - Math.Exp(-dt / 0.09);
+        transform.X += (_panelTargetX - transform.X) * k;
+
+        var progress = Math.Clamp(1 - transform.X / PanelWidth, 0, 1);
+        PanelHost.Opacity = progress;
+        Backdrop.Opacity = progress;
+
+        if (Math.Abs(transform.X - _panelTargetX) > 0.7) return;
+
+        transform.X = _panelTargetX;
+        var settled = _panelTargetX <= 0.5 ? 1d : 0d;
+        PanelHost.Opacity = settled;
+        Backdrop.Opacity = settled;
+        StopPanelAnimation();
+
+        if (_panelTargetX < PanelWidth) return; // 停在打开态，无需收尾
+
         ViewModel.ClosePanels();
-
-        if (PanelHost.RenderTransform is TranslateTransform transform) transform.X = 452;
-        PanelHost.Opacity = 1;
-        Backdrop.Opacity = 1;
-    }
-
-    private async Task AnimateOpenAsync()
-    {
-        var slide = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(320),
-            Easing = new CubicEaseOut(),
-            FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame
-                {
-                    Cue = new Cue(0d),
-                    Setters =
-                    {
-                        new Setter(TranslateTransform.XProperty, 452d),
-                        new Setter(Visual.OpacityProperty, 0d),
-                    },
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(1d),
-                    Setters =
-                    {
-                        new Setter(TranslateTransform.XProperty, 0d),
-                        new Setter(Visual.OpacityProperty, 1d),
-                    },
-                },
-            },
-        };
-
-        var fade = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(260),
-            Easing = new CubicEaseOut(),
-            FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(Visual.OpacityProperty, 0d) } },
-                new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(Visual.OpacityProperty, 1d) } },
-            },
-        };
-
-        await Task.WhenAll(slide.RunAsync(PanelHost), fade.RunAsync(Backdrop));
-    }
-
-    private async Task AnimateCloseAsync()
-    {
-        var slide = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(240),
-            Easing = new CubicEaseIn(),
-            FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame
-                {
-                    Cue = new Cue(0d),
-                    Setters =
-                    {
-                        new Setter(TranslateTransform.XProperty, 0d),
-                        new Setter(Visual.OpacityProperty, 1d),
-                    },
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(1d),
-                    Setters =
-                    {
-                        new Setter(TranslateTransform.XProperty, 452d),
-                        new Setter(Visual.OpacityProperty, 0d),
-                    },
-                },
-            },
-        };
-
-        var fade = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(200),
-            Easing = new CubicEaseOut(),
-            FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame { Cue = new Cue(0d), Setters = { new Setter(Visual.OpacityProperty, 1d) } },
-                new KeyFrame { Cue = new Cue(1d), Setters = { new Setter(Visual.OpacityProperty, 0d) } },
-            },
-        };
-
-        await Task.WhenAll(slide.RunAsync(PanelHost), fade.RunAsync(Backdrop));
+        PanelHost.IsVisible = false;
+        Backdrop.IsVisible = false;
+        var tcs = _panelTcs;
+        _panelTcs = null;
+        tcs?.TrySetResult();
     }
 
     // ----------------------------- 导航 -----------------------------
@@ -258,7 +253,7 @@ public partial class MainWindow : Window
     private async void OnRunTool(object? sender, EventArgs e)
     {
         var tool = ViewModel.SelectedTool;
-        if (tool is null || tool.IsBusy) return;
+        if (tool is null || tool.IsBusy || _runDialogOpen) return;
 
         if (!tool.HasFiles)
         {
@@ -266,10 +261,20 @@ public partial class MainWindow : Window
             return;
         }
 
-        var output = await PickOutputAsync(tool);
-        if (string.IsNullOrEmpty(output)) return;
+        // 输出对话框弹出期间按钮仍是启用态，快速双击会叠出两个保存框、同任务跑两遍。
+        // 用一个独立的对话标志兜住入口，而不是等到 RunToolAsync 才置 IsBusy。
+        _runDialogOpen = true;
+        try
+        {
+            var output = await PickOutputAsync(tool);
+            if (string.IsNullOrEmpty(output)) return;
 
-        await RunToolAsync(tool, output);
+            await RunToolAsync(tool, output);
+        }
+        finally
+        {
+            _runDialogOpen = false;
+        }
     }
 
     /// <summary>设计走查 / 自测：跳过系统文件对话框，直接跑一遍完整 UI 流程。</summary>
@@ -315,7 +320,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            var message = "处理失败：" + ex.Message;
+            var message = ErrorText.Describe(ex, "处理");
             tool.ResultText = message;
             tool.HasResult = true;
             tool.ResultIsError = true;
@@ -479,6 +484,17 @@ public partial class MainWindow : Window
     private void OnSearchKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key != Key.Enter) return;
+
+        // 搜索框回车 = 打开第一个命中工具，而不是把按键吞掉什么也不做。
+        var first = ViewModel.VisibleImageTools.FirstOrDefault()
+                    ?? ViewModel.VisibleFileTools.FirstOrDefault();
+        if (first is not null)
+        {
+            var wasOpen = ViewModel.IsPanelOpen;
+            ViewModel.OpenTool(first);
+            _ = ShowPanelAsync(wasOpen);
+        }
+
         e.Handled = true;
     }
 

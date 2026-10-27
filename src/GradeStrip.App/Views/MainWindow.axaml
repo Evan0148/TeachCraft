@@ -8,7 +8,7 @@
         x:Class="GradeStrip.App.Views.MainWindow"
         x:Name="RootWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/gradestrip.ico"
+        Icon="avares://GradeStrip.App/Assets/gradestrip.ico"
         Title="分晓 · GradeStrip"
         Width="1080" Height="700"
         MinWidth="1040" MinHeight="640"
@@ -169,7 +169,8 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                     <Button Classes="ghost" Content="选择成绩表" Click="OnPickFile"
                             IsVisible="{Binding !HasData}" IsEnabled="{Binding !IsBusy}" />
-                    <Button Classes="ghost" Content="📚 考试管理" Click="OnOpenExamManager" IsVisible="{Binding HasData}" />
+                    <Button Classes="ghost" Content="考试管理" Click="OnOpenExamManager" IsVisible="{Binding HasData}"
+                            AutomationProperties.Name="考试管理，管理已导入的多场考试" />
                     <Button Classes="primary" Content="导出成绩条"
                             IsEnabled="{Binding CanExport}" Click="OnExport" />
                 </StackPanel>
@@ -228,15 +229,18 @@
                 <StackPanel Spacing="14">
 
                     <!-- 提示横幅 (当表格为简表或数据不完整时展示) -->
-                    <Border Background="#FBF3EC" BorderBrush="#E5C7B3" BorderThickness="1"
+                    <Border Background="#FDF6F2" BorderBrush="#E9C4B6" BorderThickness="1"
                             CornerRadius="8" Padding="14,10"
                             IsVisible="{Binding HasImportNotice}">
                         <Grid ColumnDefinitions="Auto,*,Auto">
-                            <TextBlock Grid.Column="0" Text="💡" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <Border Grid.Column="0" Width="6" Height="6" CornerRadius="3"
+                                    Background="{StaticResource AccentDeepBrush}"
+                                    VerticalAlignment="Center" Margin="0,0,10,0" />
                             <TextBlock Grid.Column="1" Text="{Binding ImportNotice}" FontSize="12"
-                                       Foreground="#A04A28" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                       Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" TextWrapping="Wrap" />
                             <Button Grid.Column="2" Classes="ghost" Content="✕" Padding="6,2" FontSize="11"
-                                    Click="OnDismissNotice" ToolTip.Tip="关闭提示" />
+                                    Click="OnDismissNotice" ToolTip.Tip="关闭提示"
+                                    AutomationProperties.Name="关闭导入提示" />
                         </Grid>
                     </Border>
 
@@ -259,7 +263,9 @@
                         </Border>
                         <Border Grid.Column="1" Classes="card clickable" Padding="16,13" DataContext="{Binding Kpis[1]}"
                                 PointerPressed="OnToggleAbsent"
-                                ToolTip.Tip="点击切换：总分统计是否剔除缺考学生">
+                                Focusable="True" KeyDown="OnKpiKeyDown"
+                                AutomationProperties.Name="总分均分：切换是否剔除缺考学生"
+                                ToolTip.Tip="点击或按回车切换：总分统计是否剔除缺考学生">
                             <StackPanel Spacing="5">
                                 <TextBlock Text="{Binding Label}" Classes="label" />
                                 <StackPanel Orientation="Horizontal" Spacing="5">
@@ -1082,7 +1088,14 @@
                             <Grid ColumnDefinitions="Auto,*,Auto">
                                 <Border Width="38" Height="38" CornerRadius="8" Background="#F0EDE3"
                                         VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBlock Text="📈" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Canvas Width="18" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Rectangle Canvas.Left="0" Canvas.Top="8" Width="4" Height="6" RadiusX="1" RadiusY="1"
+                                                   Fill="{StaticResource AccentBrush}" />
+                                        <Rectangle Canvas.Left="7" Canvas.Top="4" Width="4" Height="10" RadiusX="1" RadiusY="1"
+                                                   Fill="{StaticResource AccentDeepBrush}" />
+                                        <Rectangle Canvas.Left="14" Canvas.Top="0" Width="4" Height="14" RadiusX="1" RadiusY="1"
+                                                   Fill="{StaticResource AccentBrush}" />
+                                    </Canvas>
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="14,0,16,0" VerticalAlignment="Center" Spacing="3">
                                     <TextBlock Text="历次统考综合走势与学科矩阵（导入满 3 次考试自动解锁）"

@@ -14,9 +14,11 @@
         <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="LineBrush" Color="#E7E3D8" />
         <SolidColorBrush x:Key="AccentBrush" Color="#D97757" />
-        <SolidColorBrush x:Key="AccentDeepBrush" Color="#C6613F" />
+        <!-- AccentDeep 同时承担编号与错误文字：取 #A34A36（on Paper 5.55:1）而非原来的 #C6613F（3.85:1），
+             满足 9–11px 小字 WCAG AA。纯点缀仍用 AccentBrush。 -->
+        <SolidColorBrush x:Key="AccentDeepBrush" Color="#A34A36" />
         <SolidColorBrush x:Key="MossBrush" Color="#5A7A4B" />
-        <SolidColorBrush x:Key="SealBrush" Color="#C6613F" />
+        <SolidColorBrush x:Key="SealBrush" Color="#A34A36" />
         <SolidColorBrush x:Key="SidebarBrush" Color="#F8F6F0" />
         <SolidColorBrush x:Key="PinnedBrush" Color="#F7F4EB" />
         <SolidColorBrush x:Key="OverlayBrush" Color="#33141413" />
@@ -38,7 +40,7 @@
         <Color x:Key="SystemAccentColorLight3">#EFC0AF</Color>
 
         <FontFamily x:Key="SerifFont">avares://TeachCraft/Assets/Fonts#Anthropic Serif, SimSun, Songti SC, STSong, Noto Serif CJK SC, serif</FontFamily>
-        <FontFamily x:Key="MonoFont">avares://TeachCraft/Assets/Fonts#Anthropic Mono</FontFamily>
+        <FontFamily x:Key="MonoFont">avares://TeachCraft/Assets/Fonts#Anthropic Mono, Consolas, SFMono-Regular, Menlo, monospace</FontFamily>
     </Application.Resources>
 
     <Application.Styles>
@@ -318,9 +320,6 @@
             <Setter Property="BorderBrush" Value="#CFC8B6" />
             <Setter Property="Background" Value="#FEFCF7" />
         </Style>
-        <Style Selector="Border.card.clickable:pressed">
-            <Setter Property="RenderTransform" Value="scale(0.992)" />
-        </Style>
 
         <Style Selector="Button.link">
             <Setter Property="Background" Value="Transparent" />
@@ -387,10 +386,14 @@
         <Style Selector="Button.tool-card:pointerover TextBlock.tool-glyph-text">
             <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
-        <Style Selector="Button.tool-card:pointerover Path.tool-arrow">
-            <Setter Property="Opacity" Value="1" />
+        <Style Selector="Path.tool-arrow">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.14" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
         </Style>
-        <Style Selector="Button.tool-card:pointerover TextBlock.arrow-glyph">
+        <Style Selector="Button.tool-card:pointerover Path.tool-arrow">
             <Setter Property="Opacity" Value="1" />
         </Style>
         <!-- 键盘聚焦：1px 陶土描边（置于 pointerover 之后，聚焦优先显示） -->
@@ -491,8 +494,8 @@
         </Style>
 
         <Style Selector="Button.mini">
-            <Setter Property="Width" Value="20" />
-            <Setter Property="Height" Value="20" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -631,9 +634,6 @@
         </Style>
         <Style Selector="Border.rank-row:pointerover">
             <Setter Property="Background" Value="#FBF9F3" />
-        </Style>
-        <Style Selector="Border.rank-row:pressed">
-            <Setter Property="Background" Value="#F2EEE2" />
         </Style>
 
         <Style Selector="Button.rank-seg-btn">

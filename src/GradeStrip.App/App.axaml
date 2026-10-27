@@ -13,17 +13,17 @@
         <!-- Anthropic 品牌色板 -->
         <SolidColorBrush x:Key="InkBrush" Color="#141413" />
         <SolidColorBrush x:Key="InkSoftBrush" Color="#3D3B36" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#85806F" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#6F6A5E" />
         <SolidColorBrush x:Key="PaperBrush" Color="#FAF9F5" />
         <SolidColorBrush x:Key="PaperDeepBrush" Color="#F4F2EC" />
         <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="LineBrush" Color="#E7E3D8" />
         <SolidColorBrush x:Key="AccentBrush" Color="#D97757" />
-        <SolidColorBrush x:Key="AccentDeepBrush" Color="#C6613F" />
+        <SolidColorBrush x:Key="AccentDeepBrush" Color="#A34A36" />
         <SolidColorBrush x:Key="MossBrush" Color="#5A7A4B" />
 
         <FontFamily x:Key="SerifFont">avares://GradeStrip.App/Assets/Fonts#Anthropic Serif</FontFamily>
-        <FontFamily x:Key="MonoFont">avares://GradeStrip.App/Assets/Fonts#Anthropic Mono</FontFamily>
+        <FontFamily x:Key="MonoFont">avares://GradeStrip.App/Assets/Fonts#Anthropic Mono, Consolas, SFMono-Regular, Menlo, monospace</FontFamily>
     </Application.Resources>
 
     <Application.Styles>

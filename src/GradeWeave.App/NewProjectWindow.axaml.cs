@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using TeachCraft.Shared;
 
 namespace GradeWeave.App;
 
@@ -14,6 +15,7 @@ public partial class NewProjectWindow : Window
     {
         InitializeComponent();
         DataContext = _viewModel;
+        Opened += (_, _) => WindowFit.Clamp(this);
     }
 
     private void OnCreate(object? sender, RoutedEventArgs e)

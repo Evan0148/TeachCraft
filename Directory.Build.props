@@ -1,10 +1,17 @@
 <Project>
   <PropertyGroup>
-    <Version>1.10.2</Version>
+    <Version>1.11.2</Version>
     <Product>知微 · TeachCraft</Product>
     <Company>Evan0148</Company>
     <Authors>Evan0148</Authors>
     <Copyright>© 2026 Evan0148</Copyright>
     <NeutralLanguage>zh-CN</NeutralLanguage>
   </PropertyGroup>
+
+  <!-- 共享 UI 工具：以链接文件编入各 App 项目（internal 类型，各程序集独立，不产生跨程序集冲突） -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TeachCraft.App' Or '$(MSBuildProjectName)' == 'SeatGrid.App' Or '$(MSBuildProjectName)' == 'ClassBlock.App' Or '$(MSBuildProjectName)' == 'GradeWeave.App' Or '$(MSBuildProjectName)' == 'GradeStrip.App'">
+    <Compile Include="$(MSBuildThisFileDirectory)src/Shared/WindowFit.cs" Link="Shared/WindowFit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)src/Shared/ErrorText.cs" Link="Shared/ErrorText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)src/Shared/ConfirmDialog.cs" Link="Shared/ConfirmDialog.cs" />
+  </ItemGroup>
 </Project>

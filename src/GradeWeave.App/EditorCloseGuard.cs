@@ -30,6 +30,8 @@ public static class EditorCloseGuard
             Padding = new Avalonia.Thickness(14, 7),
             FontSize = 11.5,
         };
+        // 「继续编辑」同时占了 Enter 与 Esc，键盘用户需要一条到达「放弃关闭」的路径。
+        Avalonia.Automation.AutomationProperties.SetAccessKey(discardButton, "Alt+A");
 
         var window = new Window
         {

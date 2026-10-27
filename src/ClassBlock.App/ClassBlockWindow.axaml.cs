@@ -12,6 +12,7 @@ using ClassBlock.Core;
 using ClassBlock.Core.Import;
 using ClassBlock.Core.Rendering;
 using ClassBlock.Core.Timetable;
+using TeachCraft.Shared;
 
 namespace ClassBlock.App;
 
@@ -27,6 +28,7 @@ public partial class ClassBlockWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        Opened += (_, _) => WindowFit.Clamp(this);
     }
 
     private ClassBlockViewModel ViewModel => (ClassBlockViewModel)DataContext!;
@@ -200,6 +202,7 @@ public partial class ClassBlockWindow : Window
             SuggestedFileName = suggestedName,
             DefaultExtension = extension.TrimStart('.'),
             FileTypeChoices = new[] { fileType },
+            ShowOverwritePrompt = true,
         });
 
         return file?.TryGetLocalPath();

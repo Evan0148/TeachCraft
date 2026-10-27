@@ -6,7 +6,7 @@
         x:DataType="app:GradeWeaveViewModel"
         Title="织序 · GradeWeave"
         Width="1440" Height="920"
-        MinWidth="1200" MinHeight="760"
+        MinWidth="1120" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource PaperBrush}">
     <Design.DataContext>
@@ -569,8 +569,10 @@
 
                             <Border Grid.Row="2" Background="{StaticResource LineBrush}" BorderBrush="{StaticResource LineBrush}"
                                     BorderThickness="1" CornerRadius="8" ClipToBounds="True">
-                                <Grid x:Name="ResearchGridHost" Background="{StaticResource LineBrush}"
-                                      RowSpacing="1" ColumnSpacing="1" Margin="1" />
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                    <Grid x:Name="ResearchGridHost" Background="{StaticResource LineBrush}"
+                                          RowSpacing="1" ColumnSpacing="1" Margin="1" />
+                                </ScrollViewer>
                             </Border>
 
                             <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="7">
@@ -802,8 +804,10 @@
                             <Border Grid.Row="2" Height="290" VerticalAlignment="Top"
                                     Background="{StaticResource LineBrush}" BorderBrush="{StaticResource LineBrush}"
                                     BorderThickness="1" CornerRadius="7" ClipToBounds="True">
-                                <Grid x:Name="LayeredPreviewGridHost" Background="{StaticResource LineBrush}"
-                                      RowSpacing="1" ColumnSpacing="1" Margin="1" />
+                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                    <Grid x:Name="LayeredPreviewGridHost" Background="{StaticResource LineBrush}"
+                                          RowSpacing="1" ColumnSpacing="1" Margin="1" />
+                                </ScrollViewer>
                             </Border>
                             <TextBlock Grid.Row="3" Classes="helper"
                                        Text="参与班在该时段的其他课程会被冲突检查标出。" />
@@ -1045,7 +1049,8 @@
                             </Grid>
 
                             <TextBox Grid.Row="2" Classes="search-mini" Text="{Binding SearchText, Mode=TwoWay}"
-                                     PlaceholderText="搜索班级 / 班主任" IsVisible="{Binding IsClassView}" />
+                                     PlaceholderText="搜索班级 / 班主任" IsVisible="{Binding IsClassView}"
+                                     AutomationProperties.Name="搜索班级或班主任" />
 
                             <Grid Grid.Row="3">
                                 <ListBox Classes="pick" ItemsSource="{Binding FilteredClasses}"
@@ -1221,9 +1226,11 @@
                                     BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                                     CornerRadius="8" ClipToBounds="True">
                                 <Grid>
-                                    <Grid x:Name="ScheduleGridHost" Margin="1"
-                                          Background="{StaticResource LineBrush}"
-                                          RowSpacing="1" ColumnSpacing="1" />
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                        <Grid x:Name="ScheduleGridHost" Margin="1"
+                                              Background="{StaticResource LineBrush}"
+                                              RowSpacing="1" ColumnSpacing="1" />
+                                    </ScrollViewer>
                                     <ScrollViewer x:Name="MasterViewport" IsVisible="False"
                                                   HorizontalScrollBarVisibility="Auto"
                                                   VerticalScrollBarVisibility="Auto"

@@ -62,9 +62,29 @@ public static class SeatChartRenderer
     {
         var directory = Path.Combine(Path.GetTempPath(), "TeachCraft", "SeatGrid");
         Directory.CreateDirectory(directory);
+
+        // 正常路径由预览窗口关窗时删除；异常退出会留下残留，这里兜底清一天前的。
+        CleanStalePreviews(directory);
+
         var path = Path.Combine(directory, $"seatgrid-{Guid.NewGuid():N}.png");
         RenderPng(document, path, scale);
         return path;
+    }
+
+    private static void CleanStalePreviews(string directory)
+    {
+        try
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-1);
+            foreach (var file in Directory.EnumerateFiles(directory, "seatgrid-*.png"))
+            {
+                if (File.GetLastWriteTimeUtc(file) < cutoff) File.Delete(file);
+            }
+        }
+        catch
+        {
+            // 清理失败不影响本次预览。
+        }
     }
 
     /// <summary>

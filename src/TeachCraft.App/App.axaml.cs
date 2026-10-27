@@ -28,6 +28,7 @@ public partial class App : Application
             if (!CaptureGradeStripIfRequested(desktop) && !CaptureSeatGridIfRequested(desktop) &&
                 !CaptureClassBlockIfRequested(desktop) && !CaptureGradeWeaveIfRequested(desktop) &&
                 !CaptureGradeWeaveTimetableIfRequested(desktop) &&
+                !CaptureGradeWeaveAssignmentIfRequested(desktop) &&
                 !CaptureGradeWeaveConflictIfRequested(desktop) &&
                 !ShowSeatGridDemoIfRequested(desktop))
                 CaptureIfRequested(desktop, window);
@@ -193,6 +194,76 @@ public partial class App : Application
                     WindowStartupLocation = WindowStartupLocation.CenterScreen,
                 };
                 window.Show();
+                await Task.Delay(900);
+                window.UpdateLayout();
+
+                var pixelSize = new PixelSize(
+                    (int)Math.Max(1, window.Bounds.Width),
+                    (int)Math.Max(1, window.Bounds.Height));
+                using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+                bitmap.Render(window);
+
+                using var stream = File.Create(target);
+                bitmap.Save(stream, new PngBitmapEncoderOptions());
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
+    }
+
+    /// <summary>设计走查：打开织序「教师分工」窗口并截图。</summary>
+    private static bool CaptureGradeWeaveAssignmentIfRequested(
+        IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--gradeweave-assignment-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var source = index + 2 < args.Length && args[index + 2] != "-" ? args[index + 2] : null;
+        var viewText = index + 3 < args.Length ? args[index + 3] : null;
+        var teacherName = index + 4 < args.Length ? args[index + 4] : null;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+
+                GradeWeave.Core.Models.WeaveProject project;
+                if (source is null)
+                {
+                    project = GradeWeave.Core.Models.WeaveSamples.CreateDemo();
+                }
+                else if (string.Equals(Path.GetExtension(source), ".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    project = GradeWeave.Core.Project.WeaveProjectIO.Load(source);
+                }
+                else
+                {
+                    project = new GradeWeave.Core.Import.WeaveWorkbookImporter().Import(source).Project;
+                }
+
+                var window = new GradeWeave.App.AssignmentEditorWindow(project)
+                {
+                    Width = 1120,
+                    Height = 760,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                };
+                window.Show();
+                await Task.Delay(300);
+                if (int.TryParse(viewText, out var viewMode))
+                    window.SetViewForCapture(viewMode, teacherName);
+
                 await Task.Delay(900);
                 window.UpdateLayout();
 

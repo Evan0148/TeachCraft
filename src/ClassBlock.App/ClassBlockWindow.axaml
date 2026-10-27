@@ -6,7 +6,7 @@
         x:DataType="app:ClassBlockViewModel"
         Title="时序 · ClassBlock"
         Width="1440" Height="920"
-        MinWidth="1200" MinHeight="760"
+        MinWidth="1120" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource PaperBrush}">
     <Design.DataContext>
@@ -203,7 +203,8 @@
                     </Border>
 
                     <TextBox Grid.Row="3" Classes="search" Text="{Binding SearchText, Mode=TwoWay}"
-                             PlaceholderText="搜索班级 / 班主任" />
+                             PlaceholderText="搜索班级 / 班主任"
+                             AutomationProperties.Name="搜索班级或班主任" />
 
                     <Grid Grid.Row="4">
                         <ListBox Classes="classes" ItemsSource="{Binding FilteredClasses}"

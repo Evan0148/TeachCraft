@@ -319,7 +319,7 @@
 
                                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,12,0,10">
                                     <TextBlock Text="知微" FontFamily="{StaticResource SerifFont}" FontSize="52"
-                                               LetterSpacing="5" Foreground="{StaticResource InkBrush}" />
+                                               LetterSpacing="-1" Foreground="{StaticResource InkBrush}" />
                                     <TextBlock Text="TeachCraft" FontFamily="{StaticResource SerifFont}" FontSize="15"
                                                Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom"
                                                Margin="0,0,0,12" />
@@ -346,7 +346,8 @@
                                 <Panel>
                                     <TextBox x:Name="SearchBox" Classes="search"
                                              Text="{Binding SearchText, Mode=TwoWay}"
-                                             PlaceholderText="搜索工具或格式" />
+                                             PlaceholderText="搜索工具或格式"
+                                             AutomationProperties.Name="搜索工具或格式" />
                                     <Path Width="13" Height="13" Stretch="Uniform" Margin="12,0,0,0"
                                           HorizontalAlignment="Left" VerticalAlignment="Center"
                                           Data="M6 1.4 A4.6 4.6 0 1 1 6 10.6 A4.6 4.6 0 1 1 6 1.4 M9.6 9.6 L13 13"
@@ -374,7 +375,7 @@
                             <TextBlock Text="01" FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="1" Text="案头常备" FontFamily="{StaticResource SerifFont}"
-                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       FontSize="19" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}"
                                        Margin="12,0,0,0" />
                             <TextBlock Grid.Column="2" Text="PINNED" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                        LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
@@ -422,9 +423,9 @@
 
                                     <StackPanel Orientation="Horizontal" Spacing="4">
                                         <TextBlock Text="分晓" FontFamily="{StaticResource SerifFont}" FontSize="30"
-                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                                   LetterSpacing="0" Foreground="{StaticResource InkBrush}" />
                                         <TextBlock Text="· GradeStrip" FontFamily="{StaticResource SerifFont}" FontSize="18"
-                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,4" />
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,4" />
                                     </StackPanel>
 
                                     <TextBlock Text="把智学网导出的成绩总表，变成一叠可以裁开的成绩条。多考进退、学科诊断、学生画像，都在同一张纸上。"
@@ -488,10 +489,9 @@
                                     <TextBlock Text="SEATGRID / 归位" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="归位" FontFamily="{StaticResource SerifFont}" FontSize="21"
-                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="归位" FontFamily="{StaticResource SerifFont}" FontSize="21" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}" />
                                         <TextBlock Text="· SeatGrid" FontFamily="{StaticResource SerifFont}" FontSize="14"
-                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                     </StackPanel>
                                     <TextBlock Text="导入名单，自动识别姓名与性别；排座、预览、打印与导出一次完成。"
                                                FontSize="11.5" Foreground="{StaticResource MutedBrush}"
@@ -534,10 +534,9 @@
                                     <TextBlock Text="CLASSBLOCK / 时序" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="时序" FontFamily="{StaticResource SerifFont}" FontSize="21"
-                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="时序" FontFamily="{StaticResource SerifFont}" FontSize="21" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}" />
                                         <TextBlock Text="· ClassBlock" FontFamily="{StaticResource SerifFont}" FontSize="14"
-                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                     </StackPanel>
                                     <TextBlock Text="导入课程总表，自动识别年级与班级；选中班级即可得到可直接打印的课程表。"
                                                FontSize="11.5" Foreground="{StaticResource MutedBrush}"
@@ -583,10 +582,9 @@
                                     <TextBlock Text="GRADEWEAVE / 织序" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="织序" FontFamily="{StaticResource SerifFont}" FontSize="21"
-                                                   LetterSpacing="1" Foreground="{StaticResource InkBrush}" />
+                                        <TextBlock Text="织序" FontFamily="{StaticResource SerifFont}" FontSize="21" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}" />
                                         <TextBlock Text="· GradeWeave" FontFamily="{StaticResource SerifFont}" FontSize="14"
-                                                   Foreground="#8E8776" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                     </StackPanel>
                                     <TextBlock Text="全年级课表编排：教研、走班、会议先定，再一次排清冲突。"
                                                FontSize="11.5" Foreground="{StaticResource MutedBrush}"
@@ -610,7 +608,7 @@
                             <TextBlock Text="02" FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="1" Text="图片处理" FontFamily="{StaticResource SerifFont}"
-                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       FontSize="19" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}"
                                        Margin="12,0,0,0" />
                             <TextBlock Grid.Column="2" Text="IMAGE" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                        LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
@@ -657,9 +655,12 @@
                                                            Foreground="{StaticResource MutedBrush}"
                                                            TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="↗" Classes="arrow-glyph" FontSize="14"
-                                                       Foreground="{StaticResource MutedBrush}" Opacity="0"
-                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                            <Path Grid.Column="2" Classes="tool-arrow"
+                                                  Data="M 3.5 10.5 L 10.5 3.5 M 5 3.5 L 10.5 3.5 L 10.5 9"
+                                                  Stroke="{StaticResource MutedBrush}" StrokeThickness="1.2"
+                                                  StrokeLineCap="Round" StrokeJoin="Round"
+                                                  Width="13" Height="13" Opacity="0"
+                                                  HorizontalAlignment="Right" VerticalAlignment="Center" />
                                         </Grid>
                                     </Button>
                                 </DataTemplate>
@@ -672,7 +673,7 @@
                             <TextBlock Text="03" FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="1" Text="格式工厂" FontFamily="{StaticResource SerifFont}"
-                                       FontSize="19" LetterSpacing="2" Foreground="{StaticResource InkBrush}"
+                                       FontSize="19" LetterSpacing="0.2" Foreground="{StaticResource InkBrush}"
                                        Margin="12,0,0,0" />
                             <TextBlock Grid.Column="2" Text="FILE / PDF" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                        LetterSpacing="2" Foreground="{StaticResource MutedBrush}"
@@ -719,9 +720,12 @@
                                                            Foreground="{StaticResource MutedBrush}"
                                                            TextTrimming="CharacterEllipsis" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="↗" Classes="arrow-glyph" FontSize="14"
-                                                       Foreground="{StaticResource MutedBrush}" Opacity="0"
-                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                            <Path Grid.Column="2" Classes="tool-arrow"
+                                                  Data="M 3.5 10.5 L 10.5 3.5 M 5 3.5 L 10.5 3.5 L 10.5 9"
+                                                  Stroke="{StaticResource MutedBrush}" StrokeThickness="1.2"
+                                                  StrokeLineCap="Round" StrokeJoin="Round"
+                                                  Width="13" Height="13" Opacity="0"
+                                                  HorizontalAlignment="Right" VerticalAlignment="Center" />
                                         </Grid>
                                     </Button>
                                 </DataTemplate>

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using GradeWeave.Core.Models;
+using TeachCraft.Shared;
 
 namespace GradeWeave.App;
 
@@ -27,6 +28,7 @@ public partial class LessonEditorWindow : Window
         InitializeComponent();
         _viewModel = new LessonEditorViewModel(project, classId, dayIndex, period);
         DataContext = _viewModel;
+        Opened += (_, _) => WindowFit.Clamp(this);
     }
 
     private void OnChoose(object? sender, RoutedEventArgs e)
