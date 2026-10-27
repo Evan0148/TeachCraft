@@ -113,6 +113,50 @@ public sealed class SeatGridTests : IDisposable
     }
 
     [Fact]
+    public void SeatingEngine_GenderPairGroupsSameGenderDeskmates()
+    {
+        var students = new List<Student>
+        {
+            new() { Name = "男1", Gender = Gender.Male },
+            new() { Name = "女1", Gender = Gender.Female },
+            new() { Name = "男2", Gender = Gender.Male },
+            new() { Name = "女2", Gender = Gender.Female },
+            new() { Name = "未知1" },
+        };
+
+        var layout = new SeatChartLayout(1, 3, 2);
+        var seats = SeatingEngine.Arrange(students, layout, ArrangeMode.GenderPair);
+        var ordered = layout.FillOrder().Take(students.Count).Select(p => seats[p].Gender).ToList();
+
+        // 男男成对 → 女女成对 → 性别未知排在最后
+        Assert.Equal(
+            new[] { Gender.Male, Gender.Male, Gender.Female, Gender.Female, Gender.Unknown },
+            ordered);
+    }
+
+    [Fact]
+    public void SeatingEngine_GenderPairKeepsRunningWhenOneSideRunsOut()
+    {
+        var students = new List<Student>
+        {
+            new() { Name = "男1", Gender = Gender.Male },
+            new() { Name = "男2", Gender = Gender.Male },
+            new() { Name = "男3", Gender = Gender.Male },
+            new() { Name = "女1", Gender = Gender.Female },
+            new() { Name = "女2", Gender = Gender.Female },
+        };
+
+        var layout = new SeatChartLayout(1, 3, 2);
+        var seats = SeatingEngine.Arrange(students, layout, ArrangeMode.GenderPair);
+        var ordered = layout.FillOrder().Take(students.Count).Select(p => seats[p].Gender).ToList();
+
+        // 男 3 人 / 女 2 人：男男 → 女女 → 剩下 1 名男生连排
+        Assert.Equal(
+            new[] { Gender.Male, Gender.Male, Gender.Female, Gender.Female, Gender.Male },
+            ordered);
+    }
+
+    [Fact]
     public void Config_RoundTripsSettingsStudentsAndSeats()
     {
         var settings = new SeatChartSettings

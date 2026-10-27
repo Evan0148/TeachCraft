@@ -1855,7 +1855,7 @@
                     <ScaleTransform ScaleX="1" ScaleY="1" />
                 </Border.RenderTransform>
                 <StackPanel Spacing="18" HorizontalAlignment="Center">
-                    <Canvas Width="34" Height="34" HorizontalAlignment="Center"
+                    <Canvas x:Name="BusySpinner" Width="34" Height="34" HorizontalAlignment="Center"
                             Classes.busy-spin="{Binding IsBusy}">
                         <Canvas.RenderTransform>
                             <RotateTransform Angle="0" />
@@ -1867,6 +1867,9 @@
                               Stroke="{StaticResource AccentBrush}"
                               StrokeThickness="2.5" StrokeLineCap="Round" />
                     </Canvas>
+                    <!-- 减弱动效：旋转弧停用，换成不确定进度条（见 ctor 的 MotionPreference 分支） -->
+                    <ProgressBar x:Name="BusyIndeterminate" IsIndeterminate="True" Width="220"
+                                 IsVisible="False" HorizontalAlignment="Center" />
                     <StackPanel Spacing="6" HorizontalAlignment="Center">
                         <TextBlock Text="{Binding BusyText}" Classes="display" FontSize="15"
                                    HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />

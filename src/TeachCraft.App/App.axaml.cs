@@ -30,6 +30,9 @@ public partial class App : Application
                 !CaptureGradeWeaveTimetableIfRequested(desktop) &&
                 !CaptureGradeWeaveAssignmentIfRequested(desktop) &&
                 !CaptureGradeWeaveConflictIfRequested(desktop) &&
+                !CaptureMeetRosterIfRequested(desktop) &&
+                !RunSliderBenchIfRequested(desktop) &&
+                !ShowGradeWeaveDemoIfRequested(desktop) &&
                 !ShowSeatGridDemoIfRequested(desktop))
                 CaptureIfRequested(desktop, window);
         }
@@ -359,6 +362,90 @@ public partial class App : Application
         return true;
     }
 
+    /// <summary>设计走查：打开「竞名」并截取报名界面。</summary>
+    private static bool CaptureMeetRosterIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--meetroster-shot");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+        var view = index + 2 < args.Length ? args[index + 2] : null;
+        var dayText = index + 3 < args.Length ? args[index + 3] : null;
+        var category = index + 4 < args.Length ? args[index + 4] : null;
+        var widthIndex = Array.IndexOf(args, "--meetroster-width");
+        var heightIndex = Array.IndexOf(args, "--meetroster-height");
+        var width = widthIndex >= 0 && widthIndex + 1 < args.Length &&
+                    int.TryParse(args[widthIndex + 1], out var parsedWidth)
+            ? parsedWidth
+            : 1400;
+        var height = heightIndex >= 0 && heightIndex + 1 < args.Length &&
+                     int.TryParse(args[heightIndex + 1], out var parsedHeight)
+            ? parsedHeight
+            : 900;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await Task.Delay(500);
+                var window = new MeetRoster.App.MeetRosterWindow
+                {
+                    Width = width,
+                    Height = height,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                };
+                window.Show();
+                await Task.Delay(400);
+
+                if (string.Equals(view, "schedule", StringComparison.OrdinalIgnoreCase))
+                {
+                    var dayIndex = int.TryParse(dayText, out var parsedDay) ? parsedDay : 1;
+                    window.ShowScheduleForCapture(dayIndex, category);
+                }
+
+                await Task.Delay(1000);
+                window.UpdateLayout();
+                window.CaptureTo(target);
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
+        });
+
+        return true;
+    }
+
+    /// <summary>本地走查：打开一个已生成课表的织序窗口，便于人工检查拖拽与冲突（P1-B 取证）。</summary>
+    private static bool ShowGradeWeaveDemoIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        if (!args.Contains("--gradeweave-demo")) return false;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            await Task.Delay(450);
+            var window = new GradeWeave.App.GradeWeaveWindow
+            {
+                Width = 1440,
+                Height = 920,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            };
+            window.LoadDemoProject();
+            window.SetStepForCapture(5);
+            window.Show();
+            await window.GenerateForCaptureAsync();
+        });
+
+        return true;
+    }
+
     /// <summary>本地走查：打开一个带演示名单的归位窗口，便于人工检查交互。</summary>
     private static bool ShowSeatGridDemoIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
     {
@@ -371,6 +458,37 @@ public partial class App : Application
             var window = new SeatGrid.App.SeatGridWindow();
             window.LoadDemoData();
             window.Show();
+        });
+
+        return true;
+    }
+
+    /// <summary>
+    /// 滑块手感取证（P1-C）：--slider-bench &lt;md路径&gt;。在真实 Avalonia 运行时里
+    /// 连续拖动布局滑块 60 帧，把每次实时刷新的 p50/p95 写入给定文件后退出。
+    /// </summary>
+    private static bool RunSliderBenchIfRequested(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var args = desktop.Args ?? Array.Empty<string>();
+        var index = Array.IndexOf(args, "--slider-bench");
+        if (index < 0 || index + 1 >= args.Length) return false;
+
+        var target = args[index + 1];
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                File.WriteAllText(target, await SeatGrid.App.SeatGridDiagnostics.RunLayoutBenchAsync());
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText(target + ".error.txt", ex.ToString());
+            }
+            finally
+            {
+                desktop.Shutdown();
+            }
         });
 
         return true;
@@ -536,6 +654,14 @@ public partial class App : Application
                 {
                     viewModel.SearchText = args[searchIndex + 1];
                     await Task.Delay(250);
+                }
+
+                if (args.Contains("--shot-bottom") &&
+                    window.FindControl<ScrollViewer>("MainScroll") is { } scroll)
+                {
+                    scroll.UpdateLayout();
+                    scroll.Offset = new Vector(0, scroll.Extent.Height);
+                    await Task.Delay(300);
                 }
 
                 window.CaptureTo(target);

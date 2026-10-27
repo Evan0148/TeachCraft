@@ -26,6 +26,7 @@
     <ProjectReference Include="..\SeatGrid.App\SeatGrid.App.csproj" />
     <ProjectReference Include="..\ClassBlock.App\ClassBlock.App.csproj" />
     <ProjectReference Include="..\GradeWeave.App\GradeWeave.App.csproj" />
+    <ProjectReference Include="..\MeetRoster.App\MeetRoster.App.csproj" />
     <ProjectReference Include="..\GradeStrip.App\GradeStrip.App.csproj" />
   </ItemGroup>
 

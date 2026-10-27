@@ -18,6 +18,19 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        // 系统开了「减弱动效」：入场缩放与忙碌旋转不再挂载（样式挂在 Window.allow-motion 下），
+        // 旋转弧换成不确定进度条。探测失败按正常动效处理。
+        if (TeachCraft.Shared.MotionPreference.ReduceMotion)
+        {
+            Classes.Remove("allow-motion");
+            BusySpinner.IsVisible = false;
+            BusyIndeterminate.IsVisible = true;
+        }
+        else
+        {
+            Classes.Add("allow-motion");
+        }
     }
 
     /// <summary>把窗口内容渲染成 PNG，用于设计走查（--shot 参数触发）。</summary>

@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>1.11.2</Version>
+    <Version>1.13.0</Version>
     <Product>知微 · TeachCraft</Product>
     <Company>Evan0148</Company>
     <Authors>Evan0148</Authors>
@@ -9,9 +9,11 @@
   </PropertyGroup>
 
   <!-- 共享 UI 工具：以链接文件编入各 App 项目（internal 类型，各程序集独立，不产生跨程序集冲突） -->
-  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TeachCraft.App' Or '$(MSBuildProjectName)' == 'SeatGrid.App' Or '$(MSBuildProjectName)' == 'ClassBlock.App' Or '$(MSBuildProjectName)' == 'GradeWeave.App' Or '$(MSBuildProjectName)' == 'GradeStrip.App'">
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TeachCraft.App' Or '$(MSBuildProjectName)' == 'SeatGrid.App' Or '$(MSBuildProjectName)' == 'ClassBlock.App' Or '$(MSBuildProjectName)' == 'GradeWeave.App' Or '$(MSBuildProjectName)' == 'GradeStrip.App' Or '$(MSBuildProjectName)' == 'MeetRoster.App'">
     <Compile Include="$(MSBuildThisFileDirectory)src/Shared/WindowFit.cs" Link="Shared/WindowFit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)src/Shared/ErrorText.cs" Link="Shared/ErrorText.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)src/Shared/ConfirmDialog.cs" Link="Shared/ConfirmDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)src/Shared/DragPhysics.cs" Link="Shared/DragPhysics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)src/Shared/MotionPreference.cs" Link="Shared/MotionPreference.cs" />
   </ItemGroup>
 </Project>

@@ -1222,7 +1222,7 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Border Grid.Row="1" Background="{StaticResource CardBrush}"
+                            <Border Grid.Row="1" x:Name="ScheduleCard" Background="{StaticResource CardBrush}"
                                     BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                                     CornerRadius="8" ClipToBounds="True">
                                 <Grid>
@@ -1249,7 +1249,6 @@
                                                    FontSize="9.5" Foreground="{StaticResource MutedBrush}"
                                                    HorizontalAlignment="Center" />
                                     </StackPanel>
-                                    <Canvas x:Name="ScheduleDragLayer" IsHitTestVisible="False" ZIndex="99" />
                                 </Grid>
                             </Border>
                         </Grid>
@@ -1425,5 +1424,9 @@
                            VerticalAlignment="Center" />
             </Grid>
         </Border>
+
+        <!-- 拖拽浮层：跨出课表卡片也可见（原来在 ClipToBounds 卡片内，拖出即被裁掉）。
+             覆盖整个内容行；窗口坐标经 TranslatePoint 换算到本层。 -->
+        <Canvas x:Name="ScheduleDragLayer" Grid.Row="1" IsHitTestVisible="False" ZIndex="99" />
     </Grid>
 </Window>

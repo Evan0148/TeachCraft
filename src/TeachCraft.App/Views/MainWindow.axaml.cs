@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private SeatGridWindow? _seatGridWindow;
     private ClassBlockWindow? _classBlockWindow;
     private GradeWeave.App.GradeWeaveWindow? _gradeWeaveWindow;
+    private MeetRoster.App.MeetRosterWindow? _meetRosterWindow;
     private GradeStrip.App.Views.MainWindow? _gradeStripWindow;
     private bool _runDialogOpen;   // 输出对话框 / 任务运行期间的重入守卫
     public MainWindow()
@@ -121,6 +122,31 @@ public partial class MainWindow : Window
     {
         _panelTargetX = targetX;
 
+        // 系统开了「减弱动效」：不做横移，打开改为 120ms 纯 Opacity 淡入（X 直接落位），
+        // 关闭保持当前位置淡出。依旧可打断，每次都从当前透明度续接。
+        if (TeachCraft.Shared.MotionPreference.ReduceMotion)
+        {
+            var opening = targetX < PanelWidth - 0.5;
+            if (opening && PanelHost.RenderTransform is TranslateTransform snapTransform)
+                snapTransform.X = targetX;
+
+            _reducedFadeActive = true;
+            _reducedFadeClosing = !opening;
+            _reducedFadeFrom = PanelHost.Opacity;
+            _reducedFadeTarget = opening ? 1 : 0;
+
+            if (_panelTimer is null)
+            {
+                _panelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                _panelTimer.Tick += OnPanelTick;
+                _panelClock = Stopwatch.StartNew();
+            }
+
+            _reducedFadeStart = _panelClock!.Elapsed.TotalSeconds;
+            _panelTimer.Start();
+            return;
+        }
+
         if (_panelTimer is null)
         {
             _panelTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
@@ -137,8 +163,44 @@ public partial class MainWindow : Window
 
     private void StopPanelAnimation() => _panelTimer?.Stop();
 
+    private bool _reducedFadeActive;
+    private bool _reducedFadeClosing;
+    private double _reducedFadeStart;
+    private double _reducedFadeFrom;
+    private double _reducedFadeTarget;
+
+    private void OnReducedPanelFadeTick()
+    {
+        var progress = Math.Clamp((_panelClock!.Elapsed.TotalSeconds - _reducedFadeStart) / 0.12, 0, 1);
+        var opacity = _reducedFadeFrom + (_reducedFadeTarget - _reducedFadeFrom) * progress;
+        PanelHost.Opacity = opacity;
+        Backdrop.Opacity = opacity;
+
+        if (progress < 1) return;
+
+        StopPanelAnimation();
+        _reducedFadeActive = false;
+        PanelHost.Opacity = _reducedFadeTarget;
+        Backdrop.Opacity = _reducedFadeTarget;
+
+        if (!_reducedFadeClosing) return; // 停在打开态
+
+        ViewModel.ClosePanels();
+        PanelHost.IsVisible = false;
+        Backdrop.IsVisible = false;
+        var tcs = _panelTcs;
+        _panelTcs = null;
+        tcs?.TrySetResult();
+    }
+
     private void OnPanelTick(object? sender, EventArgs e)
     {
+        if (_reducedFadeActive)
+        {
+            OnReducedPanelFadeTick();
+            return;
+        }
+
         if (PanelHost.RenderTransform is not TranslateTransform transform)
         {
             StopPanelAnimation();
@@ -448,6 +510,29 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             ViewModel.SetStatus("打开 织序 失败：" + ex.Message, true);
+        }
+    }
+
+    // ----------------------------- 竞名 · MeetRoster -----------------------------
+
+    private void OnLaunchMeetRoster(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_meetRosterWindow is { IsVisible: true })
+            {
+                _meetRosterWindow.Activate();
+                return;
+            }
+
+            _meetRosterWindow = new MeetRoster.App.MeetRosterWindow();
+            _meetRosterWindow.Closed += (_, _) => _meetRosterWindow = null;
+            _meetRosterWindow.Show();
+            ViewModel.SetStatus("已打开 竞名 · MeetRoster");
+        }
+        catch (Exception ex)
+        {
+            ViewModel.SetStatus("打开 竞名 失败：" + ex.Message, true);
         }
     }
 

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using SeatGrid.Core.Export;
 using SeatGrid.Core.Models;
@@ -27,6 +28,7 @@ public partial class SeatGridViewModel : ObservableObject
     private bool _interactiveLayoutEdit;
     private bool _structureDirty;
     private bool _scaleDirty;
+    private bool _layoutRefreshQueued;
 
     // 画刷是绑定高频读取的属性，按颜色缓存，颜色变化时统一失效。
     private IBrush? _seatBackgroundBrush;
@@ -45,7 +47,7 @@ public partial class SeatGridViewModel : ObservableObject
 
     public IReadOnlyList<string> ArrangeModes { get; } = new[]
     {
-        "名单顺序", "男女交替", "随机", "按身高", "按视力",
+        "名单顺序", "男女交替", "同性同桌", "随机", "按身高", "按视力",
     };
 
     public IReadOnlyList<string> GenderOptions { get; } = new[] { "未知", "男", "女" };
@@ -185,18 +187,59 @@ public partial class SeatGridViewModel : ObservableObject
 
     // ----------------------------- 设置变更 -----------------------------
 
-    /// <summary>滑块按下时暂停重建，松手后再一次性刷新，避免拖动过程中逐 tick 重建整张座位表。</summary>
+    /// <summary>
+    /// 滑块按下时进入交互编辑。压测（P1-C，2026-10-27）实测 130 人名单 / 96 座（96 人入座）：
+    /// 尺寸刷新 p50 2.2ms / p95 3.1ms，BuildGrid p50 2.2ms / p95 2.8ms，
+    /// 远低于 8ms 阈值——拖动中实时跟随的代价可以接受，不再悬置到松手。
+    /// 中间刷新按输入批合并（同批多次改动只刷一次），收尾时再做一次确定性刷新。
+    /// </summary>
     public void BeginInteractiveLayoutChange()
     {
         _interactiveLayoutEdit = true;
         _structureDirty = false;
         _scaleDirty = false;
+        _layoutRefreshQueued = false;
     }
 
     public void EndInteractiveLayoutChange()
     {
         if (!_interactiveLayoutEdit) return;
         _interactiveLayoutEdit = false;
+        _layoutRefreshQueued = false; // 待执行的合并刷新由下面的收尾刷新覆盖
+
+        if (_structureDirty)
+        {
+            _structureDirty = false;
+            _scaleDirty = false;
+            BuildGrid();
+            NotifyCounts();
+            return;
+        }
+
+        if (_scaleDirty)
+        {
+            _scaleDirty = false;
+            RefreshSeatVisuals();
+            UpdatePodium();
+        }
+    }
+
+    /// <summary>拖动中的合并刷新：同一输入批内的多次改动只排一次后台优先级刷新。</summary>
+    private void QueueInteractiveRefresh(bool structure)
+    {
+        if (!_interactiveLayoutEdit) return;
+        if (structure) _structureDirty = true;
+        else _scaleDirty = true;
+        if (_layoutRefreshQueued) return;
+
+        _layoutRefreshQueued = true;
+        Dispatcher.UIThread.Post(ApplyInteractiveRefresh, DispatcherPriority.Background);
+    }
+
+    private void ApplyInteractiveRefresh()
+    {
+        _layoutRefreshQueued = false;
+        if (!_interactiveLayoutEdit) return; // 松手后的收尾刷新已覆盖
 
         if (_structureDirty)
         {
@@ -221,7 +264,7 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(GroupCountLabel));
         if (_interactiveLayoutEdit)
         {
-            _structureDirty = true;
+            QueueInteractiveRefresh(structure: true);
             return;
         }
         BuildGrid();
@@ -234,7 +277,7 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(RowCountLabel));
         if (_interactiveLayoutEdit)
         {
-            _structureDirty = true;
+            QueueInteractiveRefresh(structure: true);
             return;
         }
         BuildGrid();
@@ -247,7 +290,7 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(ColumnCountLabel));
         if (_interactiveLayoutEdit)
         {
-            _structureDirty = true;
+            QueueInteractiveRefresh(structure: true);
             return;
         }
         BuildGrid();
@@ -269,7 +312,7 @@ public partial class SeatGridViewModel : ObservableObject
         OnPropertyChanged(nameof(CellSizeLabel));
         if (_interactiveLayoutEdit)
         {
-            _scaleDirty = true;
+            QueueInteractiveRefresh(structure: false);
             return;
         }
         RefreshSeatVisuals();
@@ -606,7 +649,7 @@ public partial class SeatGridViewModel : ObservableObject
             return;
         }
 
-        var mode = (ArrangeMode)Math.Clamp(ArrangeModeIndex, 0, 4);
+        var mode = (ArrangeMode)Math.Clamp(ArrangeModeIndex, 0, 5);
         var models = _students.Select(s => s.Model).ToList();
         var arranged = SeatingEngine.Arrange(models, CurrentLayout, mode);
         var byId = _students.ToDictionary(s => s.Model.Id);

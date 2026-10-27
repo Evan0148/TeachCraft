@@ -32,6 +32,7 @@ public static class SeatingEngine
         return mode switch
         {
             ArrangeMode.GenderAlternate => AlternateGender(students),
+            ArrangeMode.GenderPair => PairGender(students),
             ArrangeMode.Random => students.OrderBy(_ => Random.Shared.Next()).ToList(),
             ArrangeMode.Height => students
                 .OrderBy(s => s.Height is null ? 1 : 0)
@@ -72,6 +73,40 @@ public static class SeatingEngine
             if (result[^1].Gender == Gender.Male) males.RemoveAt(0);
             else females.RemoveAt(0);
 
+            maleTurn = !maleTurn;
+        }
+
+        result.AddRange(unknowns);
+        return result;
+    }
+
+    /// <summary>
+    /// 同性同桌：按「男男 女女 男男 女女 …」两两成对填充，性别未知的学生排在末尾；
+    /// 一侧用尽后另一侧连排，人数落单时允许末尾出现不成对的混合对。
+    /// </summary>
+    private static List<Student> PairGender(IReadOnlyList<Student> students)
+    {
+        var males = students.Where(s => s.Gender == Gender.Male).ToList();
+        var females = students.Where(s => s.Gender == Gender.Female).ToList();
+        var unknowns = students.Where(s => s.Gender == Gender.Unknown).ToList();
+
+        if (males.Count == 0 && females.Count == 0) return students.ToList();
+
+        var result = new List<Student>(students.Count);
+        var maleTurn = students[0].Gender != Gender.Female;
+
+        while (males.Count > 0 || females.Count > 0)
+        {
+            var current = maleTurn ? males : females;
+            if (current.Count == 0)
+            {
+                maleTurn = !maleTurn;
+                current = maleTurn ? males : females;
+            }
+
+            var take = Math.Min(2, current.Count);
+            result.AddRange(current.Take(take));
+            current.RemoveRange(0, take);
             maleTurn = !maleTurn;
         }
 

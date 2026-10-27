@@ -18,18 +18,19 @@ public partial class MainViewModel : ObservableObject
     public string VersionText { get; } =
         $"V{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0"}";
 
-    public string VersionLine => $"{VersionText} · 10 TOOLS · 4 APPS";
+    public string VersionLine => $"{VersionText} · 10 TOOLS · 5 APPS";
 
     public ObservableCollection<ToolItemViewModel> VisibleImageTools { get; } = new();
     public ObservableCollection<ToolItemViewModel> VisibleFileTools { get; } = new();
 
-    /// <summary>案头常备四张卡的检索文本（应用名 + 英文名 + 描述），与工具卡走同一套匹配规则。顺序：分晓 / 归位 / 时序 / 织序。</summary>
+    /// <summary>案头常备卡的检索文本（应用名 + 英文名 + 描述），与工具卡走同一套匹配规则。顺序：分晓 / 归位 / 时序 / 织序 / 竞名。</summary>
     private static readonly string[] AppCards =
     {
         "gradestrip 分晓 把智学网导出的成绩总表，变成一叠可以裁开的成绩条。多考进退、学科诊断、学生画像，都在同一张纸上。",
         "seatgrid 归位 座位表 导入名单，自动识别姓名与性别；排座、预览、打印与导出一次完成。",
         "classblock 时序 课程表 导入课程总表，自动识别年级与班级；选中班级即可得到可直接打印的课程表。",
         "gradeweave 织序 课表编排 全年级课表编排：教研、走班、会议先定，再一次排清冲突。",
+        "meetroster 竞名 运动会 报名 赛程 导入班级报名表，按模板录入运动员与项目；赛程表按日期与项目速览。",
     };
 
     private int _visibleAppCardCount = AppCards.Length;
@@ -38,6 +39,7 @@ public partial class MainViewModel : ObservableObject
     public bool IsSeatGridVisible { get; private set; } = true;
     public bool IsClassBlockVisible { get; private set; } = true;
     public bool IsGradeWeaveVisible { get; private set; } = true;
+    public bool IsMeetRosterVisible { get; private set; } = true;
     public bool HasPinnedResults { get; private set; } = true;
 
     public MainViewModel()
@@ -193,14 +195,19 @@ public partial class MainViewModel : ObservableObject
         IsSeatGridVisible = Matches(AppCards[1], query);
         IsClassBlockVisible = Matches(AppCards[2], query);
         IsGradeWeaveVisible = Matches(AppCards[3], query);
-        HasPinnedResults = IsGradeStripVisible || IsSeatGridVisible || IsClassBlockVisible || IsGradeWeaveVisible;
-        _visibleAppCardCount = new[] { IsGradeStripVisible, IsSeatGridVisible, IsClassBlockVisible, IsGradeWeaveVisible }
-            .Count(visible => visible);
+        IsMeetRosterVisible = Matches(AppCards[4], query);
+        HasPinnedResults = IsGradeStripVisible || IsSeatGridVisible || IsClassBlockVisible ||
+                           IsGradeWeaveVisible || IsMeetRosterVisible;
+        _visibleAppCardCount = new[]
+        {
+            IsGradeStripVisible, IsSeatGridVisible, IsClassBlockVisible, IsGradeWeaveVisible, IsMeetRosterVisible,
+        }.Count(visible => visible);
 
         OnPropertyChanged(nameof(IsGradeStripVisible));
         OnPropertyChanged(nameof(IsSeatGridVisible));
         OnPropertyChanged(nameof(IsClassBlockVisible));
         OnPropertyChanged(nameof(IsGradeWeaveVisible));
+        OnPropertyChanged(nameof(IsMeetRosterVisible));
         OnPropertyChanged(nameof(HasPinnedResults));
         OnPropertyChanged(nameof(PinnedCountLabel));
     }

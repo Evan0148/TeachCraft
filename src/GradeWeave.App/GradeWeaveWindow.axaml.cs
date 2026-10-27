@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -80,6 +81,20 @@ public partial class GradeWeaveWindow : Window
     private Point _grabOffset;          // 按下点相对源格左上角的偏移
     private Size _dragSourceSize;       // 源格实际尺寸，幽灵不再用固定 112×58
     private Border? _dragGhost;
+    private readonly VelocitySampler _dragVelocity = new();
+
+    // 松手后的幽灵飞行：120–200ms 临界阻尼飞向落点格中心，到位后同一帧提交数据。
+    private bool _ghostFlying;
+    private Point _flyCurrent;          // 幽灵当前左上角（DragLayer 层坐标）
+    private Point _flyTarget;           // 幽灵目标左上角（DragLayer 层坐标）
+    private TimeSpan _flyDuration;
+    private double _flyLastTime;
+    private DispatcherTimer? _flyTimer;
+    private Stopwatch? _flyClock;
+    private Action? _flyCommit;
+
+    private static double NowSeconds() => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
+
     private bool _suppressClick;
     private bool _lessonEditorOpen;
     private ConflictCenterWindow? _conflictCenter;
@@ -1272,6 +1287,8 @@ public partial class GradeWeaveWindow : Window
 
     private void OnGridPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (_ghostFlying) FinalizeGhostFly(); // 飞行中被再次按下：先立刻到位提交，手感不留断点
+
         _suppressClick = false;
         var pointer = e.GetCurrentPoint(this);
         var source = e.Source;
@@ -1300,6 +1317,7 @@ public partial class GradeWeaveWindow : Window
         _pressPoint = e.GetPosition(this);
         _dragState = DragState.Candidate;
         _dragSource = null;
+        _dragVelocity.Begin();
 
         // 记录抓取偏移与源格尺寸：拖拽时幽灵跟手，而不是居中吸附。
         if (border is not null)
@@ -1319,10 +1337,15 @@ public partial class GradeWeaveWindow : Window
 
     private void OnGridPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_dragState != DragState.Candidate || _dragSource is null || ViewModel.IsBusy) return;
+        // Candidate=尚未过 10px 迟滞，Dragging=已起拖。两者都要放行：
+        // 只认 Candidate 的话，BeginDrag 切到 Dragging 后后续移动全被吞掉，
+        // 幽灵永远停在第一次 UpdateDrag 的位置（实测发现的既有缺陷）。
+        if (_dragState is not (DragState.Candidate or DragState.Dragging)) return;
+        if (_dragSource is null || ViewModel.IsBusy) return;
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
 
         var position = e.GetPosition(this);
+        _dragVelocity.Add(position, NowSeconds());
         if (_dragState == DragState.Candidate)
         {
             var dx = position.X - _pressPoint.X;
@@ -1340,29 +1363,13 @@ public partial class GradeWeaveWindow : Window
         if (_dragState == DragState.Dragging)
         {
             var sourceTag = _dragSource;
-            var targetTag = _dropTargetTag;
-            var wasDragging = _dragState == DragState.Dragging;
-            EndDragVisuals();
-            _dragState = DragState.None;
-            _dragSource = null;
-            _pendingSelectTag = null;
-            _pendingSelectBorder = null;
+            var releasePoint = e.GetPosition(this);
+            var velocity = _dragVelocity.Velocity(NowSeconds());
+            var bounds = ScheduleCardBounds();
+
+            EndDragTracking();
             _suppressClick = true;
-
-            if (wasDragging && sourceTag is not null && targetTag is not null)
-            {
-                ViewModel.MoveLesson(
-                    sourceTag.ClassId,
-                    sourceTag.DayIndex,
-                    sourceTag.Period,
-                    targetTag.DayIndex,
-                    targetTag.Period);
-            }
-            else if (wasDragging)
-            {
-                ViewModel.SetStatus("拖拽未落在课程格上，未移动。");
-            }
-
+            BeginLessonDropFlight(sourceTag, releasePoint, velocity, bounds);
             return;
         }
 
@@ -1581,9 +1588,11 @@ public partial class GradeWeaveWindow : Window
     {
         if (_dragGhost is { } ghost)
         {
-            var layerPosition = this.TranslatePoint(windowPosition, ScheduleDragLayer) ?? windowPosition;
-            Canvas.SetLeft(ghost, layerPosition.X - _grabOffset.X);
-            Canvas.SetTop(ghost, layerPosition.Y - _grabOffset.Y);
+            // 界内「抓哪儿是哪儿」；拖出课表卡片后幽灵中心受橡皮筋阻力。
+            // 浮层已移到窗口根（P1-B），拖出卡片 Border 也不会被裁掉。
+            _flyCurrent = ToLayerPoint(RubberbandedGhostTopLeft(windowPosition, ScheduleCardBounds()));
+            Canvas.SetLeft(ghost, _flyCurrent.X);
+            Canvas.SetTop(ghost, _flyCurrent.Y);
         }
 
         var hit = this.InputHitTest(windowPosition) as Visual;
@@ -1592,6 +1601,210 @@ public partial class GradeWeaveWindow : Window
             tag = null;
 
         SetDropTarget(tag, border);
+    }
+
+    // ----------------------------- 落点投影与幽灵飞行（P1-B，与归位同套物理） -----------------------------
+
+    /// <summary>课表卡片在窗口坐标系里的范围，投影与橡皮筋都以它为界。</summary>
+    private Rect ScheduleCardBounds()
+    {
+        if (ScheduleCard is not { } host) return default;
+        if (host.TranslatePoint(new Point(0, 0), this) is not Point origin) return default;
+        return new Rect(origin, host.Bounds.Size);
+    }
+
+    /// <summary>窗口坐标 → 拖拽浮层坐标。</summary>
+    private Point ToLayerPoint(Point windowPoint) =>
+        this.TranslatePoint(windowPoint, ScheduleDragLayer) ?? windowPoint;
+
+    /// <summary>拖出卡片才有的阻力：幽灵中心被橡皮筋压回边界，左上角随之收拢。</summary>
+    private Point RubberbandedGhostTopLeft(Point position, Rect bounds)
+    {
+        var raw = new Point(position.X - _grabOffset.X, position.Y - _grabOffset.Y);
+        if (bounds.Width <= 0 || bounds.Height <= 0) return raw;
+
+        var half = new Vector(_dragSourceSize.Width / 2, _dragSourceSize.Height / 2);
+        var center = raw + half;
+        var clamped = DragPhysics.RubberbandPoint(center, bounds);
+        return clamped == center ? raw : clamped - half;
+    }
+
+    /// <summary>投影后的有效落点：界内释放沿速度滑行，滑出边界则被橡皮筋压回。</summary>
+    private static Point EffectiveDropPoint(Rect bounds, Point releasePoint, Vector velocity)
+    {
+        var projected = DragPhysics.ProjectedPoint(releasePoint, velocity);
+        return bounds.Contains(projected) ? projected : DragPhysics.RubberbandPoint(projected, bounds);
+    }
+
+    /// <summary>距离给定点最近的本班课程格及其中心（窗口坐标）。</summary>
+    private (Border Border, ScheduleCellTag Tag, Point Center)? NearestScheduleCellTo(Point windowPoint, string classId)
+    {
+        Border? nearest = null;
+        var nearestTag = default(ScheduleCellTag);
+        var nearestCenter = default(Point);
+        var best = double.MaxValue;
+
+        foreach (var child in ScheduleGridHost.Children)
+        {
+            if (child is not Border cell || cell.Tag is not ScheduleCellTag tag) continue;
+            if (tag.ClassId != classId) continue;
+            if (!cell.IsVisible || cell.Bounds.Width < 1 || cell.Bounds.Height < 1) continue;
+            if (cell.TranslatePoint(new Point(cell.Bounds.Width / 2, cell.Bounds.Height / 2), this) is not Point center) continue;
+
+            var dx = center.X - windowPoint.X;
+            var dy = center.Y - windowPoint.Y;
+            var distance = dx * dx + dy * dy;
+            if (distance >= best) continue;
+
+            best = distance;
+            nearest = cell;
+            nearestTag = tag;
+            nearestCenter = center;
+        }
+
+        return nearest is null ? null : (nearest, nearestTag!, nearestCenter);
+    }
+
+    /// <summary>按标签找源格（取消时让幽灵飞回原位）。</summary>
+    private Point? CellCenter(ScheduleCellTag tag)
+    {
+        foreach (var child in ScheduleGridHost.Children)
+        {
+            if (child is not Border cell || cell.Tag is not ScheduleCellTag cellTag) continue;
+            if (cellTag != tag) continue;
+            if (cell.TranslatePoint(new Point(cell.Bounds.Width / 2, cell.Bounds.Height / 2), this) is Point center)
+                return center;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 课程格松手：按投影落点决定去处，幽灵以 120–200ms 临界阻尼飞向目标格中心，
+    /// 到位后与 MoveLesson 同帧完成。拖出课表卡片或找不到本班格子则飞回源格取消。
+    /// </summary>
+    private void BeginLessonDropFlight(ScheduleCellTag? source, Point releasePoint, Vector velocity, Rect bounds)
+    {
+        if (source is null)
+        {
+            EndDragVisuals();
+            return;
+        }
+
+        var target = bounds.Contains(releasePoint)
+            ? NearestScheduleCellTo(EffectiveDropPoint(bounds, releasePoint, velocity), source.ClassId)
+            : null;
+
+        if (target is not null)
+        {
+            var sourceTag = source;
+            var targetTag = target.Value.Tag;
+            BeginGhostFly(
+                target.Value.Center,
+                velocity.Length,
+                () => ViewModel.MoveLesson(
+                    sourceTag.ClassId,
+                    sourceTag.DayIndex,
+                    sourceTag.Period,
+                    targetTag.DayIndex,
+                    targetTag.Period));
+            return;
+        }
+
+        // 拖出课表卡片（拖出即取消）或投影找不到本班格子：幽灵飞回源格后取消。
+        var sourceCenter = CellCenter(source);
+        if (sourceCenter is Point center)
+        {
+            BeginGhostFly(center, velocity.Length, () => ViewModel.SetStatus("拖拽未落在课程格上，未移动。"));
+            return;
+        }
+
+        EndDragVisuals();
+        ViewModel.SetStatus("拖拽未落在课程格上，未移动。");
+    }
+
+    /// <summary>启动幽灵飞行：速度越快时长越短（快甩 120ms，慢放 200ms）。</summary>
+    private void BeginGhostFly(Point targetCenterWindow, double speed, Action commit)
+    {
+        if (_dragGhost is null)
+        {
+            commit();
+            return;
+        }
+
+        _flyCommit = commit;
+        _flyTarget = ToLayerPoint(targetCenterWindow - new Vector(_dragSourceSize.Width / 2, _dragSourceSize.Height / 2));
+        _flyDuration = TimeSpan.FromMilliseconds(200 - 80 * Math.Clamp(speed / 1500.0, 0, 1));
+        _ghostFlying = true;
+
+        if (_flyTimer is null)
+        {
+            _flyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            _flyTimer.Tick += OnGhostFlyTick;
+            _flyClock = Stopwatch.StartNew();
+        }
+
+        _flyLastTime = 0;
+        _flyTimer.Start();
+    }
+
+    private void OnGhostFlyTick(object? sender, EventArgs e)
+    {
+        if (_dragGhost is null)
+        {
+            StopGhostFly();
+            return;
+        }
+
+        var elapsed = _flyClock!.Elapsed;
+        var dt = Math.Clamp(elapsed.TotalSeconds - _flyLastTime, 0.001, 0.05);
+        _flyLastTime = elapsed.TotalSeconds;
+
+        // 指数趋近 ≈ 临界阻尼（不过冲）：tau 取时长的 1/4.5，到位即收。
+        var tau = _flyDuration.TotalSeconds / 4.5;
+        var remaining = new Vector(_flyTarget.X - _flyCurrent.X, _flyTarget.Y - _flyCurrent.Y);
+        var step = remaining * (1 - Math.Exp(-dt / tau));
+        _flyCurrent = new Point(_flyCurrent.X + step.X, _flyCurrent.Y + step.Y);
+        Canvas.SetLeft(_dragGhost, _flyCurrent.X);
+        Canvas.SetTop(_dragGhost, _flyCurrent.Y);
+
+        if (remaining.Length > 0.7 && elapsed < _flyDuration) return;
+        FinalizeGhostFly();
+    }
+
+    /// <summary>飞行收尾：移除幽灵与数据提交在同一 UI pass 内，不留一帧空白。</summary>
+    private void FinalizeGhostFly()
+    {
+        StopGhostFly();
+        var commit = _flyCommit;
+        _flyCommit = null;
+        EndDragVisuals();
+        commit?.Invoke();
+    }
+
+    private void StopGhostFly()
+    {
+        _flyTimer?.Stop();
+        _ghostFlying = false;
+    }
+
+    /// <summary>结束拖拽跟踪（高亮与拖拽字段），幽灵与飞行动画保留给落点提交。</summary>
+    private void EndDragTracking()
+    {
+        RestoreDropTarget();
+        _dragState = DragState.None;
+        _dragSource = null;
+        _pendingSelectTag = null;
+        _pendingSelectBorder = null;
+    }
+
+    private void EndDragVisuals()
+    {
+        EndDragTracking();
+        ScheduleDragLayer.Children.Clear();
+        _dragGhost = null;
+        _flyCommit = null;
+        StopGhostFly();
     }
 
     private void SetDropTarget(ScheduleCellTag? tag, Border? border)
@@ -1623,18 +1836,13 @@ public partial class GradeWeaveWindow : Window
         _dropTargetThickness = default;
     }
 
-    private void EndDragVisuals()
-    {
-        RestoreDropTarget();
-        ScheduleDragLayer.Children.Clear();
-        _dragGhost = null;
-    }
-
     private void ClearDragVisuals()
     {
         RestoreDropTarget();
         ScheduleDragLayer.Children.Clear();
         _dragGhost = null;
+        _flyCommit = null;
+        StopGhostFly();
     }
 
     private void SelectCell(ScheduleCellTag tag, Border? border)

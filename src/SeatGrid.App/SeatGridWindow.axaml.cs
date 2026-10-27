@@ -42,6 +42,19 @@ public partial class SeatGridWindow : Window
     private Point _grabOffset;          // 按下点相对源卡左上角的偏移，拖拽时保持"抓哪儿是哪儿"
     private Size _dragSourceSize;       // 源卡实际尺寸，幽灵不再用固定 92×56
     private readonly List<SeatCellViewModel> _lineHighlight = new();
+    private readonly VelocitySampler _dragVelocity = new();
+
+    // 松手后的幽灵飞行：120–200ms 临界阻尼飞向落点，到位后同一帧提交数据，不留空档。
+    private bool _ghostFlying;
+    private Point _flyCurrent;          // 幽灵当前左上角（窗口坐标，与 DragLayer 同系）
+    private Point _flyTarget;           // 幽灵目标左上角
+    private TimeSpan _flyDuration;
+    private double _flyLastTime;
+    private DispatcherTimer? _flyTimer;
+    private Stopwatch? _flyClock;
+    private Action? _flyCommit;
+
+    private static double NowSeconds() => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
 
     public SeatGridWindow() : this(new SeatGridViewModel())
     {
@@ -150,7 +163,122 @@ public partial class SeatGridWindow : Window
 
     // ----------------------------- 排座 / 座位操作 -----------------------------
 
-    private void OnAutoArrange(object? sender, RoutedEventArgs e) => ViewModel.AutoArrange();
+    /// <summary>ArrangeModes 中「男女交替」的下标（= ArrangeMode.GenderAlternate）。</summary>
+    private const int GenderAlternateIndex = 1;
+    /// <summary>ArrangeModes 中「同性同桌」的下标（= ArrangeMode.GenderPair）。</summary>
+    private const int GenderPairIndex = 2;
+
+    private enum ArrangeGenderChoice { Opposite, Same, KeepCurrent, Cancel }
+
+    private static readonly IBrush DialogPaper = new SolidColorBrush(Color.Parse("#FAF9F5"));
+    private static readonly IBrush DialogCard = new SolidColorBrush(Color.Parse("#FFFFFF"));
+    private static readonly IBrush DialogLine = new SolidColorBrush(Color.Parse("#E7E3D8"));
+    private static readonly IBrush DialogInk = new SolidColorBrush(Color.Parse("#141413"));
+    private static readonly IBrush DialogInkSoft = new SolidColorBrush(Color.Parse("#3D3B36"));
+    private static readonly IBrush DialogMuted = new SolidColorBrush(Color.Parse("#6F6A5E"));
+    private static readonly IBrush DialogTerracotta = new SolidColorBrush(Color.Parse("#A34A36"));
+
+    private async void OnAutoArrange(object? sender, RoutedEventArgs e)
+    {
+        var choice = await ShowArrangeGenderDialogAsync();
+        switch (choice)
+        {
+            case ArrangeGenderChoice.Opposite:
+                ViewModel.ArrangeModeIndex = GenderAlternateIndex;
+                ViewModel.AutoArrange();
+                break;
+            case ArrangeGenderChoice.Same:
+                ViewModel.ArrangeModeIndex = GenderPairIndex;
+                ViewModel.AutoArrange();
+                break;
+            case ArrangeGenderChoice.KeepCurrent:
+                ViewModel.AutoArrange();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 自动排座先问同桌按异性还是同性安排；名单顺序 / 随机 / 按身高 / 按视力
+    /// 仍保留下拉框入口，此时弹窗里补一条「按当前方式」直达，避免被弹窗堵死。
+    /// </summary>
+    private async Task<ArrangeGenderChoice> ShowArrangeGenderDialogAsync()
+    {
+        var dialog = new Window
+        {
+            Title = "自动排座",
+            Width = 404,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            ShowInTaskbar = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Background = DialogPaper,
+        };
+
+        var result = ArrangeGenderChoice.Cancel;
+
+        Button MakeButton(string text, ArrangeGenderChoice value,
+            IBrush background, IBrush foreground, IBrush? border,
+            bool isDefault = false, bool isCancel = false)
+        {
+            var button = new Button
+            {
+                Content = text,
+                Padding = new Thickness(16, 8),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Background = background,
+                Foreground = foreground,
+                BorderBrush = border,
+                BorderThickness = border is null ? new Thickness(0) : new Thickness(1),
+                IsDefault = isDefault,
+                IsCancel = isCancel,
+            };
+            button.Click += (_, _) =>
+            {
+                result = value;
+                dialog.Close();
+            };
+            return button;
+        }
+
+        var panel = new StackPanel { Margin = new Thickness(24, 20, 24, 20), Spacing = 12 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = "自动排座",
+            FontSize = 17,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = DialogInk,
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "同桌之间按哪种性别方式安排？重新排座会覆盖现有座位安排。",
+            FontSize = 12.5,
+            Foreground = DialogMuted,
+            TextWrapping = TextWrapping.Wrap,
+            LineHeight = 20,
+        });
+
+        var options = new StackPanel { Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
+        options.Children.Add(MakeButton(
+            "异性同桌 · 男女交替", ArrangeGenderChoice.Opposite, DialogInk, DialogPaper, null, isDefault: true));
+        options.Children.Add(MakeButton(
+            "同性同桌 · 男男 / 女女成对", ArrangeGenderChoice.Same, DialogCard, DialogTerracotta, DialogTerracotta));
+
+        if (ViewModel.ArrangeModeIndex is not (GenderAlternateIndex or GenderPairIndex))
+        {
+            options.Children.Add(MakeButton(
+                $"按当前方式「{ViewModel.ArrangeModes[ViewModel.ArrangeModeIndex]}」排座",
+                ArrangeGenderChoice.KeepCurrent, DialogPaper, DialogMuted, DialogLine));
+        }
+
+        options.Children.Add(MakeButton(
+            "取消", ArrangeGenderChoice.Cancel, DialogCard, DialogInkSoft, DialogLine, isCancel: true));
+        panel.Children.Add(options);
+        dialog.Content = panel;
+
+        await dialog.ShowDialog(this);
+        return result;
+    }
 
     private void OnTeacherView(object? sender, RoutedEventArgs e) => ViewModel.IsStudentView = false;
 
@@ -169,6 +297,8 @@ public partial class SeatGridWindow : Window
 
     private void OnSeatPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (_ghostFlying) FinalizeGhostFly(); // 飞行中被再次按下：先立刻到位提交，手感不留断点
+
         _suppressSeatClick = false;
         if (ViewModel.IsBusy) return;
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
@@ -196,6 +326,7 @@ public partial class SeatGridWindow : Window
 
         _dragStarted = false;
         _pressPoint = e.GetPosition(this);
+        _dragVelocity.Begin();
 
         // 记录抓取偏移与源卡尺寸：幽灵跟着手感走，而不是永远居中吸附到指针。
         if (button is not null)
@@ -210,6 +341,7 @@ public partial class SeatGridWindow : Window
         if (_dragMode == DragMode.None || ViewModel.IsBusy) return;
 
         var position = e.GetPosition(this);
+        _dragVelocity.Add(position, NowSeconds());
         if (!_dragStarted)
         {
             var dx = position.X - _pressPoint.X;
@@ -232,31 +364,30 @@ public partial class SeatGridWindow : Window
 
         var mode = _dragMode;
         var sourceSeat = _dragSource;
-        var targetSeat = _dropTarget;
         var sourceRow = _dragRow;
         var sourceGroup = _dragGroup;
         var sourceColumn = _dragColumn;
-        var hover = _hoverLine;
+        var releasePoint = e.GetPosition(this);
+        var velocity = _dragVelocity.Velocity(NowSeconds());
+        var bounds = ChartBounds();
 
-        EndDragVisuals();
-        _dragMode = DragMode.None;
-        _dragSource = null;
-        _dragStarted = false;
+        // 保留幽灵与拖拽态快照，先结束跟踪（清高亮、复位拖拽字段）。
+        EndDragTracking();
         _suppressSeatClick = true;
 
         switch (mode)
         {
-            case DragMode.Row when hover.Row is int targetRow && targetRow != sourceRow:
-                ViewModel.SwapRows(sourceRow, targetRow);
+            case DragMode.Row when ProjectedRowTarget(bounds, releasePoint, velocity) is int targetRow:
+                if (targetRow != sourceRow) ViewModel.SwapRows(sourceRow, targetRow);
+                else ViewModel.SetStatus("已取消整排调整。");
                 break;
-            case DragMode.Column when hover.Group is int group && hover.Column is int column:
-                ViewModel.SwapColumns(sourceGroup, sourceColumn, group, column);
+            case DragMode.Column when ProjectedColumnTarget(bounds, releasePoint, velocity) is (int group, int column):
+                if (group != sourceGroup || column != sourceColumn)
+                    ViewModel.SwapColumns(sourceGroup, sourceColumn, group, column);
+                else ViewModel.SetStatus("已取消整列调整。");
                 break;
             case DragMode.Seat:
-                if (sourceSeat is not null && targetSeat is not null)
-                    ViewModel.MoveSeatStudent(sourceSeat, targetSeat);
-                else
-                    ViewModel.SetStatus("已取消移动。");
+                BeginSeatDropFlight(sourceSeat, releasePoint, velocity, bounds);
                 break;
             default:
                 ViewModel.SetStatus(mode switch
@@ -337,8 +468,10 @@ public partial class SeatGridWindow : Window
         {
             if (_dragGhost is { } ghost)
             {
-                Canvas.SetLeft(ghost, position.X - _grabOffset.X);
-                Canvas.SetTop(ghost, position.Y - _grabOffset.Y);
+                // 界内「抓哪儿是哪儿」；拖出网格后幽灵中心受橡皮筋阻力，暗示落不出去。
+                _flyCurrent = RubberbandedGhostTopLeft(position, ChartBounds());
+                Canvas.SetLeft(ghost, _flyCurrent.X);
+                Canvas.SetTop(ghost, _flyCurrent.Y);
             }
 
             var seat = FindSeatUnder(this.InputHitTest(position) as Visual);
@@ -397,14 +530,211 @@ public partial class SeatGridWindow : Window
     private static SeatCellViewModel? FindSeatFromSource(object? source) =>
         (source as Visual)?.FindAncestorOfType<Button>(true)?.Tag as SeatCellViewModel;
 
-    private void EndDragVisuals()
+    // ----------------------------- 落点投影与幽灵飞行（P1-A） -----------------------------
+
+    /// <summary>座位表网格在窗口坐标系里的范围，投影与橡皮筋都以它为界。</summary>
+    private Rect ChartBounds()
+    {
+        if (SeatChartHost is not { } host) return default;
+        if (host.TranslatePoint(new Point(0, 0), this) is not Point origin) return default;
+        return new Rect(origin, host.Bounds.Size);
+    }
+
+    /// <summary>投影后的有效落点：界内释放沿速度滑行，滑出边界则被橡皮筋压回。</summary>
+    private static Point EffectiveDropPoint(Rect bounds, Point releasePoint, Vector velocity)
+    {
+        var projected = DragPhysics.ProjectedPoint(releasePoint, velocity);
+        return bounds.Contains(projected) ? projected : DragPhysics.RubberbandPoint(projected, bounds);
+    }
+
+    /// <summary>拖出网格才有的阻力：幽灵中心被橡皮筋压回边界，左上角随之收拢。</summary>
+    private Point RubberbandedGhostTopLeft(Point position, Rect bounds)
+    {
+        var raw = new Point(position.X - _grabOffset.X, position.Y - _grabOffset.Y);
+        if (bounds.Width <= 0 || bounds.Height <= 0) return raw;
+
+        var half = new Vector(_dragSourceSize.Width / 2, _dragSourceSize.Height / 2);
+        var center = raw + half;
+        var clamped = DragPhysics.RubberbandPoint(center, bounds);
+        return clamped == center ? raw : clamped - half;
+    }
+
+    /// <summary>距离给定点最近的可见座位及其中心（窗口坐标），找不到返回 null。</summary>
+    private (SeatCellViewModel Seat, Point Center)? NearestSeatTo(Point windowPoint)
+    {
+        SeatCellViewModel? nearest = null;
+        var nearestCenter = default(Point);
+        var best = double.MaxValue;
+
+        foreach (var button in this.GetVisualDescendants().OfType<Button>())
+        {
+            if (button.Tag is not SeatCellViewModel seat) continue;
+            if (!button.IsVisible || button.Bounds.Width < 1 || button.Bounds.Height < 1) continue;
+            if (button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), this) is not Point center) continue;
+
+            var dx = center.X - windowPoint.X;
+            var dy = center.Y - windowPoint.Y;
+            var distance = dx * dx + dy * dy;
+            if (distance >= best) continue;
+
+            best = distance;
+            nearest = seat;
+            nearestCenter = center;
+        }
+
+        return nearest is null ? null : (nearest, nearestCenter);
+    }
+
+    /// <summary>找指定座位卡片的中心（窗口坐标），用于取消时让幽灵飞回原位。</summary>
+    private Point? SeatCenter(SeatCellViewModel seat)
+    {
+        foreach (var button in this.GetVisualDescendants().OfType<Button>())
+        {
+            if (!ReferenceEquals(button.Tag, seat)) continue;
+            if (button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), this) is Point center)
+                return center;
+        }
+
+        return null;
+    }
+
+    /// <summary>整排拖拽的投影落点：指针出界即取消，界内取投影点最近座位所在排。</summary>
+    private int? ProjectedRowTarget(Rect bounds, Point releasePoint, Vector velocity)
+    {
+        if (!bounds.Contains(releasePoint)) return null;
+        return NearestSeatTo(EffectiveDropPoint(bounds, releasePoint, velocity))?.Seat.Position.Row;
+    }
+
+    /// <summary>整列拖拽的投影落点：同上，取投影点最近座位所在的组与列。</summary>
+    private (int Group, int Column)? ProjectedColumnTarget(Rect bounds, Point releasePoint, Vector velocity)
+    {
+        if (!bounds.Contains(releasePoint)) return null;
+        var seat = NearestSeatTo(EffectiveDropPoint(bounds, releasePoint, velocity))?.Seat;
+        return seat is null ? null : (seat.Position.Group, seat.Position.Column);
+    }
+
+    /// <summary>
+    /// 座位卡松手：按投影落点决定去处，幽灵以 120–200ms 临界阻尼飞向目标格中心，
+    /// 到位后与数据提交同帧完成，卡片不再凭空消失。拖出网格或落回原座位则取消。
+    /// </summary>
+    private void BeginSeatDropFlight(SeatCellViewModel? source, Point releasePoint, Vector velocity, Rect bounds)
+    {
+        if (source is null)
+        {
+            EndDragVisuals();
+            return;
+        }
+
+        var target = bounds.Contains(releasePoint)
+            ? NearestSeatTo(EffectiveDropPoint(bounds, releasePoint, velocity))
+            : null;
+
+        if (target is null || ReferenceEquals(target.Value.Seat, source))
+        {
+            // 拖出网格（拖出即取消的既有约定）或落回原座位：幽灵飞回原位后取消。
+            var sourceCenter = SeatCenter(source);
+            if (sourceCenter is Point center)
+            {
+                BeginGhostFly(center, velocity.Length, () => ViewModel.SetStatus("已取消移动。"));
+                return;
+            }
+
+            EndDragVisuals();
+            ViewModel.SetStatus("已取消移动。");
+            return;
+        }
+
+        BeginGhostFly(
+            target.Value.Center,
+            velocity.Length,
+            () => ViewModel.MoveSeatStudent(source, target.Value.Seat));
+    }
+
+    /// <summary>启动幽灵飞行：速度越快时长越短（快甩 120ms，慢放 200ms）。</summary>
+    private void BeginGhostFly(Point targetCenter, double speed, Action commit)
+    {
+        if (_dragGhost is null)
+        {
+            commit();
+            return;
+        }
+
+        _flyCommit = commit;
+        _flyTarget = targetCenter - new Vector(_dragSourceSize.Width / 2, _dragSourceSize.Height / 2);
+        _flyDuration = TimeSpan.FromMilliseconds(200 - 80 * Math.Clamp(speed / 1500.0, 0, 1));
+        _ghostFlying = true;
+
+        if (_flyTimer is null)
+        {
+            _flyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            _flyTimer.Tick += OnGhostFlyTick;
+            _flyClock = Stopwatch.StartNew();
+        }
+
+        _flyLastTime = 0;
+        _flyTimer.Start();
+    }
+
+    private void OnGhostFlyTick(object? sender, EventArgs e)
+    {
+        if (_dragGhost is null)
+        {
+            StopGhostFly();
+            return;
+        }
+
+        var elapsed = _flyClock!.Elapsed;
+        var dt = Math.Clamp(elapsed.TotalSeconds - _flyLastTime, 0.001, 0.05);
+        _flyLastTime = elapsed.TotalSeconds;
+
+        // 指数趋近 ≈ 临界阻尼（不过冲）：tau 取时长的 1/4.5，到位即收。
+        var tau = _flyDuration.TotalSeconds / 4.5;
+        var remaining = new Vector(_flyTarget.X - _flyCurrent.X, _flyTarget.Y - _flyCurrent.Y);
+        var step = remaining * (1 - Math.Exp(-dt / tau));
+        _flyCurrent = new Point(_flyCurrent.X + step.X, _flyCurrent.Y + step.Y);
+        Canvas.SetLeft(_dragGhost, _flyCurrent.X);
+        Canvas.SetTop(_dragGhost, _flyCurrent.Y);
+
+        if (Math.Sqrt(remaining.X * remaining.X + remaining.Y * remaining.Y) > 0.7 &&
+            elapsed < _flyDuration) return;
+        FinalizeGhostFly();
+    }
+
+    /// <summary>飞行收尾：移除幽灵与数据提交在同一 UI pass 内，不留一帧空白。</summary>
+    private void FinalizeGhostFly()
+    {
+        StopGhostFly();
+        var commit = _flyCommit;
+        _flyCommit = null;
+        EndDragVisuals();
+        commit?.Invoke();
+    }
+
+    private void StopGhostFly()
+    {
+        _flyTimer?.Stop();
+        _ghostFlying = false;
+    }
+
+    /// <summary>结束拖拽跟踪（高亮与拖拽字段），幽灵与飞行动画保留给落点提交。</summary>
+    private void EndDragTracking()
     {
         _dropTarget?.SetDropTarget(false);
         _dropTarget = null;
         ClearLineHighlight();
         _hoverLine = (null, null, null);
+        _dragMode = DragMode.None;
+        _dragSource = null;
+        _dragStarted = false;
+    }
+
+    private void EndDragVisuals()
+    {
+        EndDragTracking();
         DragLayer.Children.Clear();
         _dragGhost = null;
+        _flyCommit = null;
+        StopGhostFly();
     }
 
     private void ClearLineHighlight()

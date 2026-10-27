@@ -65,9 +65,12 @@
             <Setter Property="Padding" Value="20" />
         </Style>
 
-        <!-- 分晓忙碌遮罩：卡片从 0.96 轻微放大淡入（0.22s，克制动效） -->
+        <!-- 分晓忙碌遮罩：卡片从 0.96 轻微放大淡入（0.22s，克制动效）。
+             动画只在未开启系统「减弱动效」时挂载（窗口 ctor 加 allow-motion 类）。 -->
         <Style Selector="Border.busy-in">
             <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        </Style>
+        <Style Selector="Window.allow-motion Border.busy-in">
             <Style.Animations>
                 <Animation Duration="0:0:0.22" Easing="CubicEaseOut" FillMode="Forward">
                     <KeyFrame Cue="0%">
@@ -84,9 +87,11 @@
             </Style.Animations>
         </Style>
 
-        <!-- 分晓忙碌指示弧：恒定角速度旋转（linear），仅在忙碌时转动 -->
+        <!-- 分晓忙碌指示弧：恒定角速度旋转（linear），仅在忙碌时转动；减弱动效时停转改进度条 -->
         <Style Selector="Canvas.busy-spin">
             <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        </Style>
+        <Style Selector="Window.allow-motion Canvas.busy-spin">
             <Style.Animations>
                 <Animation Duration="0:0:0.9" IterationCount="INFINITE">
                     <KeyFrame Cue="0%">

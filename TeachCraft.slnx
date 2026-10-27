@@ -6,6 +6,8 @@
     <Project Path="src/GradeStrip.Core/GradeStrip.Core.csproj" />
     <Project Path="src/GradeWeave.App/GradeWeave.App.csproj" />
     <Project Path="src/GradeWeave.Core/GradeWeave.Core.csproj" />
+    <Project Path="src/MeetRoster.App/MeetRoster.App.csproj" />
+    <Project Path="src/MeetRoster.Core/MeetRoster.Core.csproj" />
     <Project Path="src/SeatGrid.App/SeatGrid.App.csproj" />
     <Project Path="src/SeatGrid.Core/SeatGrid.Core.csproj" />
     <Project Path="src/TeachCraft.App/TeachCraft.App.csproj" />

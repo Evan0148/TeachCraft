@@ -419,7 +419,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Border Grid.Row="1" Classes="chart-card">
+                <Border Grid.Row="1" Classes="chart-card" x:Name="SeatChartHost">
                     <Grid>
                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2">

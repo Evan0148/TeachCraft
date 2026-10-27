@@ -13,6 +13,7 @@ public enum ArrangeMode
 {
     RosterOrder,
     GenderAlternate,
+    GenderPair,
     Random,
     Height,
     Vision,
