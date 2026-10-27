@@ -17,7 +17,7 @@ public static class MeetScheduleBuilder
                 slot.Entries.Clear();
                 if (slot.Category == MeetEventCategory.Ceremony) continue;
 
-                if (slot.Category == MeetEventCategory.Team)
+                if (IsTeamEvent(slot.EventName))
                 {
                     FillTeamEntries(project, slot);
                     continue;
@@ -54,10 +54,11 @@ public static class MeetScheduleBuilder
 
     private static void FillTeamEntries(MeetProject project, MeetSlot slot)
     {
+        var requiresRegistration = slot.EventName == "4x100米接力";
         var group = 1;
         foreach (var meetClass in project.Classes)
         {
-            var registered = meetClass.Athletes.Any(a =>
+            var registered = !requiresRegistration || meetClass.Athletes.Any(a =>
                 a.TeamEvent1 == slot.EventName ||
                 a.TeamEvent2 == slot.EventName ||
                 a.TeamEvent3 == slot.EventName);
@@ -79,4 +80,8 @@ public static class MeetScheduleBuilder
         "一分钟跳绳" => "跳绳队",
         _ => "代表队",
     };
+
+    private static bool IsTeamEvent(string eventName) =>
+        eventName.Contains("接力", StringComparison.Ordinal) ||
+        eventName.Contains("跳绳", StringComparison.Ordinal);
 }

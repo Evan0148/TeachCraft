@@ -38,3 +38,7 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 *.log
+
+# 走查截图与本地代理工作区（不进仓库）
+outputs/
+.workbuddy/

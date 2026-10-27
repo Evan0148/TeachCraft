@@ -44,7 +44,7 @@
             <Setter Property="MinWidth" Value="30" />
         </Style>
         <Style Selector="Border.class-group">
-            <Setter Property="Background" Value="#F7F4EB" />
+            <Setter Property="Background" Value="{StaticResource PinnedBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="3" />
@@ -70,13 +70,13 @@
             <Setter Property="LetterSpacing" Value="0.4" />
         </Style>
         <Style Selector="TextBlock.helper">
-            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="FontSize" Value="10" />
             <Setter Property="LineHeight" Value="16" />
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBlock.table-head">
-            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontSize" Value="10.5" />
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -92,7 +92,7 @@
         </Style>
         <Style Selector="TextBox.info-field">
             <Setter Property="Background" Value="#FCFBF7" />
-            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="5" />
             <Setter Property="Padding" Value="8,6" />
@@ -123,13 +123,58 @@
         <Style Selector="ComboBox.cell">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="5,0" />
+            <Setter Property="Padding" Value="6,0" />
             <Setter Property="FontSize" Value="10.5" />
             <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="ComboBox.cell:pointerover /template/ Border#Background">
             <Setter Property="Background" Value="#FBF9F3" />
+        </Style>
+        <Style Selector="ComboBox.cell:focus /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,1,0" />
+        </Style>
+        <Style Selector="Button.event-cell">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.event-cell TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.event-cell.unset">
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+        </Style>
+        <Style Selector="Button.event-cell TextBlock.muted">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+        </Style>
+        <Style Selector="Button.event-cell:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.event-cell:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource WashPressedBrush}" />
+        </Style>
+        <Style Selector="ComboBox.field">
+            <Setter Property="Background" Value="{StaticResource PaperBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="ListBox.classes">
             <Setter Property="Background" Value="Transparent" />
@@ -143,7 +188,7 @@
             <Setter Property="Margin" Value="0,1" />
         </Style>
         <Style Selector="ListBox.classes ListBoxItem:pointerover">
-            <Setter Property="Background" Value="#F7F4EB" />
+            <Setter Property="Background" Value="{StaticResource PinnedBrush}" />
         </Style>
         <Style Selector="ListBox.classes ListBoxItem:selected">
             <Setter Property="Background" Value="#F1EEE5" />
@@ -152,7 +197,7 @@
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="Border.athlete-row:pointerover">
-            <Setter Property="Background" Value="#FCFAF4" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
         </Style>
         <Style Selector="Button.top">
             <Setter Property="Padding" Value="11,6" />
@@ -171,8 +216,16 @@
         <Style Selector="Button.section-tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#F4F1E8" />
         </Style>
+        <Style Selector="Button.section-tab:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EDE9DE" />
+        </Style>
         <Style Selector="Button.section-tab.active /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
+        </Style>
+        <Style Selector="Button.section-tab.active">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="CornerRadius" Value="6,6,2,2" />
         </Style>
         <Style Selector="Button.section-tab.active TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
@@ -188,10 +241,13 @@
             <Setter Property="FontWeight" Value="Normal" />
         </Style>
         <Style Selector="Button.day-card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#F7F4EB" />
+            <Setter Property="Background" Value="{StaticResource PinnedBrush}" />
+        </Style>
+        <Style Selector="Button.day-card:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EDE9DE" />
         </Style>
         <Style Selector="Button.day-card.active /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="Button.day-card TextBlock.day-name">
@@ -213,30 +269,49 @@
         </Style>
         <Style Selector="Button.filter-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#FBF9F3" />
-            <Setter Property="BorderBrush" Value="#CFC8B6" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}" />
+        </Style>
+        <Style Selector="Button.filter-chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#EFEBE0" />
         </Style>
         <Style Selector="Button.filter-chip.active /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="Button.filter-chip.active TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
         <Style Selector="Border.slot-row">
-            <Setter Property="Background" Value="#FCFAF4" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12,10" />
             <Setter Property="Margin" Value="0,0,0,7" />
         </Style>
+        <Style Selector="Border.slot-row.highlight">
+            <Setter Property="Background" Value="#FFF7F0" />
+            <Setter Property="BorderBrush" Value="#D9A58E" />
+            <Setter Property="BorderThickness" Value="1,1,1,1" />
+        </Style>
         <Style Selector="Border.entry-chip">
             <Setter Property="Background" Value="{StaticResource CardBrush}" />
-            <Setter Property="BorderBrush" Value="#E2DCCC" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="6,2" />
             <Setter Property="Margin" Value="0,0,5,5" />
+        </Style>
+        <Style Selector="Border.entry-chip.highlight">
+            <Setter Property="Background" Value="{StaticResource AccentWashBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.entry-chip.highlight TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+        </Style>
+        <Style Selector="Border.entry-chip.highlight TextBlock.muted">
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
         <Style Selector="Border.category-badge">
             <Setter Property="BorderThickness" Value="1" />
@@ -277,37 +352,45 @@
                     <StackPanel VerticalAlignment="Center" Spacing="1">
                         <TextBlock Text="竞名" FontFamily="{StaticResource SerifFont}" FontSize="19"
                                    LetterSpacing="3" Foreground="{StaticResource InkBrush}" />
-                        <TextBlock Text="MEETROSTER" FontFamily="{StaticResource MonoFont}" FontSize="8"
-                                   LetterSpacing="2.2" Foreground="{StaticResource MutedBrush}" />
+                        <TextBlock Text="运动会报名与赛程" FontSize="10"
+                                   Foreground="{StaticResource MutedBrush}" />
                     </StackPanel>
                     <Border Width="1" Height="30" Background="{StaticResource LineBrush}" Margin="6,0" />
                     <StackPanel VerticalAlignment="Center" Spacing="1" MaxWidth="320">
                         <TextBlock Text="{Binding ProjectTitle}" FontFamily="{StaticResource SerifFont}"
                                    FontSize="18" Foreground="{StaticResource InkBrush}"
                                    TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding ProjectMeta}" FontSize="9"
+                        <TextBlock Text="{Binding ProjectMeta}" FontSize="10"
                                    Foreground="{StaticResource MutedBrush}"
                                    TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                    <Border Classes="chip" VerticalAlignment="Center">
-                        <TextBlock Text="运动会应用" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
-                    </Border>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                    <Button Classes="primary top" Content="导入报名表" Click="OnImportRoster"
-                            ToolTip.Tip="导入解析将在下一步接入"
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="ghost top" Content="导入报名表" Click="OnImportRoster"
+                            IsEnabled="{Binding !IsBusy}"
+                            ToolTip.Tip="一次选择多个班级的 Excel 报名表"
                             AutomationProperties.Name="导入报名表" />
-                    <Button Classes="ghost top" Content="导出报名表" Click="OnExportRoster"
-                            ToolTip.Tip="导出功能将在报名逻辑确定后接入"
-                            AutomationProperties.Name="导出报名表" />
+                    <Button Classes="ghost top" Content="导入赛程" Click="OnImportSchedule"
+                            IsEnabled="{Binding !IsBusy}"
+                            ToolTip.Tip="导入往届“竞赛日程 + 项目分组表”工作簿"
+                            AutomationProperties.Name="导入赛程" />
+                    <Border Width="1" Height="22" Background="{StaticResource LineBrush}" Margin="3,0" />
+                    <Button Classes="primary top" Content="保存" Click="OnSaveRoster"
+                            IsEnabled="{Binding CanSave}"
+                            ToolTip.Tip="写回各自的原始报名表（先备份为 .bak）；快捷键 Ctrl+S"
+                            AutomationProperties.Name="保存报名表" />
+                    <Button Classes="ghost top" Content="另存为…" Click="OnExportRoster"
+                            IsEnabled="{Binding CanExport}"
+                            ToolTip.Tip="导出到指定文件夹，文件名自动改为“年级班运动会报名表.xlsx”"
+                            AutomationProperties.Name="另存为" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ==================== 视图切换 ==================== -->
         <Border Grid.Row="1" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1"
-                Background="#FCFAF4" Padding="18,4">
+                Background="{StaticResource WashBrush}" Padding="18,4">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                     <Button Classes="section-tab" Classes.active="{Binding IsRegistrationView}"
@@ -315,7 +398,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <TextBlock Text="报名" FontFamily="{StaticResource SerifFont}" FontSize="14" />
                             <TextBlock Text="{Binding RegistrationTabMeta}" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="8.5" VerticalAlignment="Center" />
+                                       FontSize="9" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Classes="section-tab" Classes.active="{Binding IsScheduleView}"
@@ -323,22 +406,22 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <TextBlock Text="赛程" FontFamily="{StaticResource SerifFont}" FontSize="14" />
                             <TextBlock Text="{Binding ScheduleTabMeta}" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="8.5" VerticalAlignment="Center" />
+                                       FontSize="9" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
                     <Ellipse Width="5" Height="5" Fill="{StaticResource MossBrush}" />
-                    <TextBlock Text="示例数据 · 报名与赛程预览" FontFamily="{StaticResource MonoFont}"
-                               FontSize="8.5" LetterSpacing="0.6" Foreground="{StaticResource MutedBrush}" />
+                    <TextBlock Text="{Binding DataModeHint}" FontFamily="{StaticResource MonoFont}"
+                               FontSize="9" LetterSpacing="0.6" Foreground="{StaticResource MutedBrush}" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ==================== 主体 ==================== -->
         <Grid Grid.Row="2">
-            <Grid IsVisible="{Binding IsRegistrationView}" ColumnDefinitions="236,*,296"
-                  ColumnSpacing="14" Margin="16,14">
+            <Grid IsVisible="{Binding IsRegistrationView}" ColumnDefinitions="220,*,Auto"
+                  ColumnSpacing="14" Margin="16,12">
             <!-- 班级列表 -->
             <Border Grid.Column="0" Classes="panel-card">
                 <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="9">
@@ -347,11 +430,11 @@
                             <TextBlock Text="参赛班级" Classes="section-title" />
                             <Border Classes="mini-badge" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding ClassCountLabel}" FontFamily="{StaticResource MonoFont}"
-                                           FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}" />
                             </Border>
                         </StackPanel>
                         <TextBlock Grid.Column="1" Text="ROSTER" FontFamily="{StaticResource MonoFont}"
-                                   FontSize="8" LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
+                                   FontSize="9" LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
                                    VerticalAlignment="Center" />
                     </Grid>
 
@@ -366,42 +449,57 @@
                               StrokeLineCap="Round" IsHitTestVisible="False" />
                     </Panel>
 
-                    <TextBlock Grid.Row="2" Text="{Binding ClassListSummary}" FontSize="9.5"
+                    <TextBlock Grid.Row="2" Text="{Binding ClassListSummary}" FontSize="10"
                                Foreground="{StaticResource MutedBrush}" />
 
-                    <ListBox Grid.Row="3" Classes="classes" ItemsSource="{Binding VisibleClasses}"
-                             SelectedItem="{Binding SelectedClass, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="app:ClassItemViewModel">
-                                <Grid ColumnDefinitions="3,*,Auto" ColumnSpacing="8">
-                                    <Border Classes="class-accent" Width="3" Height="28" CornerRadius="2"
-                                            Background="Transparent" VerticalAlignment="Center" />
-                                    <StackPanel Grid.Column="1" Spacing="3">
-                                        <TextBlock Text="{Binding Name}" FontSize="13" LetterSpacing="0.2"
-                                                   Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="{Binding MetaLine}" FontSize="9.5"
-                                                   Foreground="{StaticResource MutedBrush}" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2"
-                                                VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding CountLabel}" FontFamily="{StaticResource MonoFont}"
-                                                   FontSize="12" Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="人" FontSize="8.5"
-                                                   Foreground="{StaticResource MutedBrush}" VerticalAlignment="Bottom"
-                                                   Margin="0,0,0,1" />
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Grid Grid.Row="3">
+                        <ListBox Classes="classes" ItemsSource="{Binding VisibleClasses}"
+                                 SelectedItem="{Binding SelectedClass, Mode=TwoWay}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="app:ClassItemViewModel">
+                                    <Grid ColumnDefinitions="3,*,Auto" ColumnSpacing="8">
+                                        <Border Classes="class-accent" Width="3" Height="28" CornerRadius="2"
+                                                VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock Text="{Binding Name}" FontSize="13" LetterSpacing="0.2"
+                                                       Foreground="{StaticResource InkBrush}" />
+                                            <TextBlock Text="{Binding MetaLine}" FontSize="10"
+                                                       Foreground="{StaticResource MutedBrush}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding CountLabel}" FontFamily="{StaticResource MonoFont}"
+                                                       FontSize="12" Foreground="{StaticResource InkBrush}" />
+                                            <TextBlock Text="人" FontSize="9"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel IsVisible="{Binding !HasVisibleClasses}" Spacing="6"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="180">
+                            <TextBlock Text="没有匹配的班级" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="13" Foreground="{StaticResource InkBrush}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="换个关键词，或清除筛选查看全部班级。"
+                                       FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                            <Button Classes="link" Content="清除筛选" Click="OnClearClassSearch"
+                                    FontSize="11" HorizontalAlignment="Center"
+                                    AutomationProperties.Name="清除班级筛选" />
+                        </StackPanel>
+                    </Grid>
 
                     <Border Grid.Row="4" Background="{StaticResource PaperBrush}"
                             BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                             CornerRadius="6" Padding="9,7">
                         <StackPanel Spacing="3">
                             <TextBlock Text="{Binding RegistrationSummary}" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="9" Foreground="{StaticResource InkSoftBrush}" />
-                            <TextBlock Text="名单来自合成示例，可随意点选与修改。" FontSize="9"
+                                       FontSize="10" Foreground="{StaticResource InkSoftBrush}" />
+                            <TextBlock Text="{Binding DataSourceHint}" FontSize="10"
                                        Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
@@ -419,21 +517,27 @@
                                 <TextBlock Text="{Binding SelectedClass.Name}" FontFamily="{StaticResource SerifFont}"
                                            FontSize="24" Foreground="{StaticResource InkBrush}" />
                                 <Border Classes="chip" VerticalAlignment="Center">
-                                    <TextBlock Text="报名表" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
+                                    <TextBlock Text="{Binding RegistrationBadge}" FontSize="10"
+                                               Foreground="{StaticResource MutedBrush}" />
                                 </Border>
-                                <Border Classes="chip" VerticalAlignment="Center">
-                                    <TextBlock Text="示例数据" FontSize="9.5" Foreground="{StaticResource MutedBrush}" />
+                                <Border Classes="chip" VerticalAlignment="Center"
+                                        Background="{StaticResource WashHoverBrush}"
+                                        BorderBrush="{StaticResource AccentBrush}"
+                                        IsVisible="{Binding IsDirty}">
+                                    <TextBlock Text="未保存" FontSize="10"
+                                               Foreground="{StaticResource AccentDeepBrush}" />
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="按导入模板排列：姓名、性别、3 个团体项目与 2 个比赛项目。"
+                            <TextBlock Text="按导入模板排列：姓名、性别、团体项目与比赛项目；只显示已报的项目。"
                                        FontSize="10.5" Foreground="{StaticResource MutedBrush}" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <TextBlock Text="ROSTER SHEET" FontFamily="{StaticResource MonoFont}" FontSize="8"
+                            <TextBlock Text="ROSTER SHEET" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                        LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
                             <Button Classes="ghost top" Content="添加运动员" Click="OnAddAthlete"
+                                    IsEnabled="{Binding !IsBusy}"
                                     AutomationProperties.Name="添加运动员" />
                         </StackPanel>
                     </Grid>
@@ -444,15 +548,18 @@
                         <Grid ColumnDefinitions="1.1*,1.5*,1*" ColumnSpacing="12" Margin="18,10">
                             <StackPanel Spacing="3">
                                 <TextBlock Text="参赛单位编码" Classes="field-label" />
-                                <TextBox Classes="info-field" Text="{Binding SelectedClass.Code, Mode=TwoWay}" />
+                                <TextBox Classes="info-field" Text="{Binding SelectedClass.Code, Mode=TwoWay}"
+                                         AutomationProperties.Name="参赛单位编码" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Spacing="3">
-                                <TextBlock Text="领队（班主任）&amp; 电话" Classes="field-label" />
-                                <TextBox Classes="info-field" Text="{Binding SelectedClass.LeaderContact, Mode=TwoWay}" />
+                                <TextBlock Text="领队（班主任）及电话" Classes="field-label" />
+                                <TextBox Classes="info-field" Text="{Binding SelectedClass.LeaderContact, Mode=TwoWay}"
+                                         AutomationProperties.Name="领队及电话" />
                             </StackPanel>
                             <StackPanel Grid.Column="2" Spacing="3">
                                 <TextBlock Text="任课体育老师" Classes="field-label" />
-                                <TextBox Classes="info-field" Text="{Binding SelectedClass.Coach, Mode=TwoWay}" />
+                                <TextBox Classes="info-field" Text="{Binding SelectedClass.Coach, Mode=TwoWay}"
+                                         AutomationProperties.Name="任课体育老师" />
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -464,68 +571,126 @@
                                        Foreground="{StaticResource InkBrush}" />
                             <Border Classes="mini-badge" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding SelectedClass.AthleteCount}" FontFamily="{StaticResource MonoFont}"
-                                           FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}" />
                             </Border>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
                             <TextBlock Text="{Binding SelectedClass.IndividualTotal, StringFormat='单项 {0}'}"
-                                       FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource MutedBrush}" />
                             <TextBlock Text="{Binding SelectedClass.TeamTotal, StringFormat='团体 {0}'}"
-                                       FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource MutedBrush}" />
                         </StackPanel>
                     </Grid>
 
-                    <!-- 表格 -->
-                    <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto" Padding="18,0,18,0">
-                        <StackPanel MinWidth="760">
-                            <Border Background="{StaticResource PinnedBrush}" BorderBrush="{StaticResource LineBrush}"
-                                    BorderThickness="1" CornerRadius="6,6,0,0" Padding="4,0">
-                                <Grid ColumnDefinitions="34,112,66,*,*,*,*,*,26" ColumnSpacing="4" Height="32">
-                                    <TextBlock Grid.Column="0" Classes="table-head" HorizontalAlignment="Center" Text="#" />
-                                    <TextBlock Grid.Column="1" Classes="table-head" Text="姓名" />
-                                    <TextBlock Grid.Column="2" Classes="table-head" Text="性别" />
-                                    <TextBlock Grid.Column="3" Classes="table-head" Text="团体项目1" />
-                                    <TextBlock Grid.Column="4" Classes="table-head" Text="团体项目2" />
-                                    <TextBlock Grid.Column="5" Classes="table-head" Text="团体项目3" />
-                                    <TextBlock Grid.Column="6" Classes="table-head" Text="比赛项目1" />
-                                    <TextBlock Grid.Column="7" Classes="table-head" Text="比赛项目2" />
-                                </Grid>
-                            </Border>
+                    <!-- 表格：表头固定，仅数据区滚动 -->
+                    <Grid Grid.Row="3" RowDefinitions="Auto,*" Margin="18,0,18,0"
+                          IsEnabled="{Binding !IsBusy}">
+                        <Border Grid.Row="0" Background="{StaticResource PinnedBrush}"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="6,6,0,0" Padding="6,0">
+                            <Grid ColumnDefinitions="30,106,74,1.35*,1*,28" ColumnSpacing="4" Height="32">
+                                <TextBlock Grid.Column="0" Classes="table-head" HorizontalAlignment="Center" Text="#" />
+                                <TextBlock Grid.Column="1" Classes="table-head" Text="姓名" />
+                                <TextBlock Grid.Column="2" Classes="table-head" Text="性别" />
+                                <TextBlock Grid.Column="3" Classes="table-head" Text="团体项目" />
+                                <TextBlock Grid.Column="4" Classes="table-head" Text="比赛项目" />
+                            </Grid>
+                        </Border>
 
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled" Padding="0,0,2,0">
                             <ItemsControl ItemsSource="{Binding SelectedClass.Athletes}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="app:AthleteRowViewModel">
                                         <Border Classes="athlete-row" BorderBrush="{StaticResource LineBrush}"
-                                                BorderThickness="0,0,0,1" Background="Transparent">
-                                            <Grid ColumnDefinitions="34,112,66,*,*,*,*,*,26" ColumnSpacing="4" Height="40">
+                                                BorderThickness="0,0,0,1">
+                                            <Grid ColumnDefinitions="30,106,74,1.35*,1*,28" ColumnSpacing="4"
+                                                  MinHeight="40" Margin="6,0">
                                                 <TextBlock Grid.Column="0" Text="{Binding NumberLabel}"
-                                                           FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
                                                            Foreground="{StaticResource MutedBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 <TextBox Grid.Column="1" Classes="cell" Text="{Binding Name, Mode=TwoWay}"
-                                                         PlaceholderText="输入姓名" />
+                                                         PlaceholderText="输入姓名"
+                                                         LostFocus="OnNameLostFocus"
+                                                         AutomationProperties.Name="姓名" />
                                                 <ComboBox Grid.Column="2" Classes="cell"
                                                           ItemsSource="{Binding GenderOptions}"
-                                                          SelectedItem="{Binding Gender, Mode=TwoWay}" />
-                                                <ComboBox Grid.Column="3" Classes="cell"
-                                                          ItemsSource="{Binding TeamEventOptions}"
-                                                          SelectedItem="{Binding TeamEvent1, Mode=TwoWay}" />
-                                                <ComboBox Grid.Column="4" Classes="cell"
-                                                          ItemsSource="{Binding TeamEventOptions}"
-                                                          SelectedItem="{Binding TeamEvent2, Mode=TwoWay}" />
-                                                <ComboBox Grid.Column="5" Classes="cell"
-                                                          ItemsSource="{Binding TeamEventOptions}"
-                                                          SelectedItem="{Binding TeamEvent3, Mode=TwoWay}" />
-                                                <ComboBox Grid.Column="6" Classes="cell"
-                                                          ItemsSource="{Binding IndividualEventOptions}"
-                                                          SelectedItem="{Binding IndividualEvent1, Mode=TwoWay}" />
-                                                <ComboBox Grid.Column="7" Classes="cell"
-                                                          ItemsSource="{Binding IndividualEventOptions}"
-                                                          SelectedItem="{Binding IndividualEvent2, Mode=TwoWay}" />
-                                                <Button Grid.Column="8" Classes="mini" Content="×"
+                                                          SelectedItem="{Binding Gender, Mode=TwoWay}"
+                                                          SelectionChanged="OnGenderAdjusted"
+                                                          AutomationProperties.Name="性别" />
+
+                                                <Grid Grid.Column="3">
+                                                    <ItemsControl ItemsSource="{Binding TeamChips}"
+                                                                  IsVisible="{Binding HasTeamChips}"
+                                                                  VerticalAlignment="Center">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="app:EventChipViewModel">
+                                                                <Button Classes="event-cell" Click="OnEditEvent"
+                                                                        Tag="{Binding Row}" CommandParameter="T"
+                                                                        Margin="0,2,4,4"
+                                                                        AutomationProperties.Name="{Binding EventName}">
+                                                                    <TextBlock Text="{Binding EventName}" FontSize="10"
+                                                                               VerticalAlignment="Center"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               ToolTip.Tip="{Binding EventName}" />
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <Button Classes="event-cell" Click="OnEditEvent"
+                                                            Tag="{Binding}" CommandParameter="T"
+                                                            Classes.unset="True"
+                                                            IsVisible="{Binding !HasTeamChips}"
+                                                            AutomationProperties.Name="选择团体项目">
+                                                        <TextBlock Text="选择项目" FontSize="10.5"
+                                                                   VerticalAlignment="Center"
+                                                                   Classes="muted" />
+                                                    </Button>
+                                                </Grid>
+
+                                                <Grid Grid.Column="4">
+                                                    <ItemsControl ItemsSource="{Binding IndividualChips}"
+                                                                  IsVisible="{Binding HasIndividualChips}"
+                                                                  VerticalAlignment="Center">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="app:EventChipViewModel">
+                                                                <Button Classes="event-cell" Click="OnEditEvent"
+                                                                        Tag="{Binding Row}" CommandParameter="I"
+                                                                        Margin="0,2,4,4"
+                                                                        AutomationProperties.Name="{Binding EventName}">
+                                                                    <TextBlock Text="{Binding EventName}" FontSize="10"
+                                                                               VerticalAlignment="Center"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               ToolTip.Tip="{Binding EventName}" />
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <Button Classes="event-cell" Click="OnEditEvent"
+                                                            Tag="{Binding}" CommandParameter="I"
+                                                            Classes.unset="True"
+                                                            IsVisible="{Binding !HasIndividualChips}"
+                                                            AutomationProperties.Name="选择比赛项目">
+                                                        <TextBlock Text="选择项目" FontSize="10.5"
+                                                                   VerticalAlignment="Center"
+                                                                   Classes="muted" />
+                                                    </Button>
+                                                </Grid>
+
+                                                <Button Grid.Column="5" Classes="mini" Content="×"
                                                         Click="OnRemoveAthlete" Tag="{Binding}"
                                                         ToolTip.Tip="删除这一行"
                                                         AutomationProperties.Name="删除这一行" />
@@ -534,40 +699,72 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
+                        </ScrollViewer>
+                    </Grid>
 
                     <!-- 报名说明 -->
-                    <Border Grid.Row="4" Background="#FCFAF4" BorderBrush="{StaticResource LineBrush}"
+                    <Border Grid.Row="4" Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
                             BorderThickness="0,1,0,0" Padding="18,9">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="9">
-                            <TextBlock Text="备注" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                            <TextBlock Text="备注" FontFamily="{StaticResource MonoFont}" FontSize="10"
                                        Foreground="{StaticResource MutedBrush}" VerticalAlignment="Top"
                                        Margin="0,2,0,0" />
-                            <TextBlock Grid.Column="1" Text="{Binding ProjectNote}" FontSize="9.5"
+                            <TextBlock Grid.Column="1" Text="{Binding ProjectNote}" FontSize="10"
                                        LineHeight="16" Foreground="{StaticResource InkSoftBrush}"
                                        TextWrapping="Wrap" />
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="18,8,18,10">
-                        <TextBlock Text="{Binding SelectedClassFooter}" FontSize="9.5"
+                    <Grid Grid.Row="5" Margin="18,8,18,10">
+                        <TextBlock Text="{Binding SelectedClassFooter}" FontSize="10"
                                    Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
-                        <Button Grid.Column="1" Classes="link" Content="+ 添加一行" Click="OnAddAthlete"
-                                FontSize="11.5" />
                     </Grid>
+
+                    <Border Grid.Row="0" Grid.RowSpan="6" ZIndex="5"
+                            IsVisible="{Binding !HasSelectedClass}"
+                            Background="{StaticResource PaperBrush}" Padding="32">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Spacing="9" MaxWidth="380">
+                            <TextBlock Text="从导入报名表开始" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="21" Foreground="{StaticResource InkBrush}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="可一次选择多个班级的 .xlsx 报名表；导入后在这里核对姓名、性别与项目，文件只在本机处理。"
+                                       FontSize="10.5" LineHeight="18"
+                                       Foreground="{StaticResource MutedBrush}"
+                                       TextWrapping="Wrap" TextAlignment="Center" />
+                            <Button Classes="primary" Content="导入报名表" Click="OnImportRoster"
+                                    HorizontalAlignment="Center" Padding="16,7" FontSize="11.5"
+                                    IsEnabled="{Binding !IsBusy}"
+                                    AutomationProperties.Name="导入报名表（空态）" />
+                            <Border Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
+                                    BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                <TextBlock Text="每班每项男女各限 2 人 · 每人限报 2 个单项 · 团体项目最多 3 项"
+                                           FontSize="10" Foreground="{StaticResource InkSoftBrush}"
+                                           TextWrapping="Wrap" TextAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 
             <!-- 右侧报名概览 -->
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                          Width="{Binding OverviewWidth}" IsVisible="{Binding ShowOverview}">
                 <StackPanel Spacing="10">
-                    <Border Classes="panel-card">
+                    <Border Classes="panel-card" IsVisible="{Binding !HasSelectedClass}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="报名概览" Classes="section-title" />
+                            <TextBlock Text="导入报名表后，这里显示本班人数、报名项次与体检结果。"
+                                       Classes="helper" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="panel-card" IsVisible="{Binding HasSelectedClass}">
                         <StackPanel Spacing="9">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="本班概览" Classes="section-title" />
                                 <TextBlock Grid.Column="1" Text="CLASS SNAPSHOT" FontFamily="{StaticResource MonoFont}"
-                                           FontSize="8" LetterSpacing="1.6" Foreground="{StaticResource MutedBrush}"
+                                           FontSize="9" LetterSpacing="1.6" Foreground="{StaticResource MutedBrush}"
                                            VerticalAlignment="Center" />
                             </Grid>
                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="7" RowSpacing="7">
@@ -576,7 +773,7 @@
                                         <TextBlock Text="{Binding SelectedClass.AthleteCount}"
                                                    FontFamily="{StaticResource MonoFont}" FontSize="19"
                                                    Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="运动员" FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock Text="运动员" FontSize="10" Foreground="{StaticResource MutedBrush}" />
                                     </StackPanel>
                                 </Border>
                                 <Border Grid.Row="0" Grid.Column="1" Classes="stat-tile">
@@ -584,7 +781,7 @@
                                         <TextBlock Text="{Binding SelectedClass.EntryTotal}"
                                                    FontFamily="{StaticResource MonoFont}" FontSize="19"
                                                    Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="报名项次" FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock Text="报名项次" FontSize="10" Foreground="{StaticResource MutedBrush}" />
                                     </StackPanel>
                                 </Border>
                                 <Border Grid.Row="1" Grid.Column="0" Classes="stat-tile">
@@ -592,7 +789,7 @@
                                         <TextBlock Text="{Binding SelectedClass.MaleCount}"
                                                    FontFamily="{StaticResource MonoFont}" FontSize="17"
                                                    Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="男子" FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock Text="男子" FontSize="10" Foreground="{StaticResource MutedBrush}" />
                                     </StackPanel>
                                 </Border>
                                 <Border Grid.Row="1" Grid.Column="1" Classes="stat-tile">
@@ -600,7 +797,7 @@
                                         <TextBlock Text="{Binding SelectedClass.FemaleCount}"
                                                    FontFamily="{StaticResource MonoFont}" FontSize="17"
                                                    Foreground="{StaticResource InkBrush}" />
-                                        <TextBlock Text="女子" FontSize="9" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock Text="女子" FontSize="10" Foreground="{StaticResource MutedBrush}" />
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -609,11 +806,77 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Classes="panel-card">
+                    <Border Classes="panel-card" IsVisible="{Binding ShowValidationPanel}">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="报名体检" Classes="section-title" />
+                                <TextBlock Grid.Column="1" Text="{Binding ValidationSummary}"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding ValidationIssues}"
+                                          IsVisible="{Binding HasValidationIssues}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="app:ValidationIssueItem">
+                                        <Border Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1" CornerRadius="5" Padding="7,6"
+                                                Margin="0,0,0,5">
+                                            <Grid ColumnDefinitions="3,*" ColumnSpacing="6">
+                                                <Border Width="3" CornerRadius="1.5" Background="{Binding Brush}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Message}" FontSize="10"
+                                                           LineHeight="15" TextWrapping="Wrap"
+                                                           Foreground="{Binding Brush}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border IsVisible="{Binding !HasValidationIssues}"
+                                    Background="{StaticResource WashBrush}"
+                                    BorderBrush="{StaticResource LineBrush}"
+                                    BorderThickness="1" CornerRadius="5" Padding="8,7">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="6" Height="6" Fill="{StaticResource MossBrush}"
+                                             VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding ValidationOkText}" FontSize="10"
+                                               LineHeight="15" TextWrapping="Wrap"
+                                               Foreground="{StaticResource MossBrush}" />
+                                </StackPanel>
+                            </Border>
+                            <Border IsVisible="{Binding HasImportNotices}"
+                                    Background="{StaticResource PaperBrush}"
+                                    BorderBrush="{StaticResource LineBrush}"
+                                    BorderThickness="1" CornerRadius="5" Padding="8,7">
+                                <StackPanel Spacing="4">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding ImportNoticeSummary}" FontSize="10"
+                                                   Foreground="{StaticResource MutedBrush}"
+                                                   VerticalAlignment="Center" />
+                                        <Button Grid.Column="1" Classes="link" Content="知道了"
+                                                Click="OnDismissImportNotices" FontSize="10"
+                                                AutomationProperties.Name="收起导入提示" />
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding ImportNotices}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="app:ValidationIssueItem">
+                                                <TextBlock Text="{Binding Message}" FontSize="10"
+                                                           LineHeight="15" TextWrapping="Wrap"
+                                                           Foreground="{Binding Brush}" Margin="0,0,0,2" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock Text="单项每班男女各限 2 人；每人限报 2 个单项。"
+                                       Classes="helper" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="panel-card" IsVisible="{Binding HasSelectedClass}">
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="单项人数" Classes="section-title" />
-                                <TextBlock Grid.Column="1" Text="每项上限 2 人" FontSize="9"
+                                <TextBlock Grid.Column="1" Text="每项上限 2 人" FontSize="10"
                                            Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                             </Grid>
                             <Grid ColumnDefinitions="*,54,54" Margin="0,0,0,1">
@@ -634,13 +897,13 @@
                                                         HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <Ellipse Width="5" Height="5" Fill="{Binding MaleBrush}" />
                                                 <TextBlock Text="{Binding MaleLabel}" FontFamily="{StaticResource MonoFont}"
-                                                           FontSize="9.5" Foreground="{Binding MaleBrush}" Width="28" />
+                                                           FontSize="10" Foreground="{Binding MaleBrush}" Width="28" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
                                                         HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <Ellipse Width="5" Height="5" Fill="{Binding FemaleBrush}" />
                                                 <TextBlock Text="{Binding FemaleLabel}" FontFamily="{StaticResource MonoFont}"
-                                                           FontSize="9.5" Foreground="{Binding FemaleBrush}" Width="28" />
+                                                           FontSize="10" Foreground="{Binding FemaleBrush}" Width="28" />
                                             </StackPanel>
                                         </Grid>
                                     </DataTemplate>
@@ -666,13 +929,13 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Classes="event-chip">
-                                            <TextBlock Text="{Binding}" FontSize="9.5"
+                                            <TextBlock Text="{Binding}" FontSize="10"
                                                        Foreground="{StaticResource InkSoftBrush}" />
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <TextBlock Text="团体项目按模板不填人数，现场出人；如需报名也可直接在上表选择。"
+                            <TextBlock Text="三个团体项目均可报，每人最多 3 项；未报时该格显示一个“选择项目”框。"
                                        Classes="helper" />
                         </StackPanel>
                     </Border>
@@ -681,8 +944,8 @@
             </Grid>
 
             <!-- ==================== 赛程视图 ==================== -->
-            <Grid IsVisible="{Binding IsScheduleView}" ColumnDefinitions="232,*,286"
-                  ColumnSpacing="14" Margin="16,14">
+            <Grid IsVisible="{Binding IsScheduleView}" ColumnDefinitions="220,*,Auto"
+                  ColumnSpacing="14" Margin="16,12">
                 <!-- 日期与筛选 -->
                 <Border Grid.Column="0" Classes="panel-card">
                     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
@@ -691,28 +954,31 @@
                                 <TextBlock Text="赛程日期" Classes="section-title" />
                                 <Border Classes="mini-badge" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding ScheduleDays.Count}"
-                                               FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
                                                Foreground="{StaticResource MutedBrush}" />
                                 </Border>
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="DAYS" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="8" LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
+                                       FontSize="9" LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
 
-                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ScheduleDays}">
+                        <ScrollViewer Grid.Row="1" MaxHeight="230" VerticalScrollBarVisibility="Auto"
+                                      IsVisible="{Binding HasScheduleDays}">
+                        <ItemsControl ItemsSource="{Binding ScheduleDays}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="app:ScheduleDayItemViewModel">
                                     <Button Classes="day-card" Classes.active="{Binding IsSelected}"
-                                            Click="OnSelectDay" Tag="{Binding}" Margin="0,0,0,6">
+                                            Click="OnSelectDay" Tag="{Binding}" Margin="0,0,0,6"
+                                            AutomationProperties.Name="{Binding Name}">
                                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding Name}" Classes="day-name"
                                                            FontFamily="{StaticResource SerifFont}" FontSize="14" />
-                                                <TextBlock Text="{Binding DateText}" FontSize="9.5"
+                                                <TextBlock Text="{Binding DateText}" FontSize="10"
                                                            Foreground="{StaticResource MutedBrush}" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding MetaLabel}" FontSize="8.5"
+                                            <TextBlock Grid.Column="1" Text="{Binding MetaLabel}" FontSize="9"
                                                        Foreground="{StaticResource MutedBrush}" TextAlignment="Right"
                                                        VerticalAlignment="Center" MaxWidth="78" TextWrapping="Wrap" />
                                         </Grid>
@@ -720,12 +986,29 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        </ScrollViewer>
 
-                        <StackPanel Grid.Row="2" Spacing="7">
+                        <Border Grid.Row="1" IsVisible="{Binding !HasScheduleDays}"
+                                Background="{StaticResource PaperBrush}"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                CornerRadius="6" Padding="10,9">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="尚未导入赛程" FontFamily="{StaticResource SerifFont}"
+                                           FontSize="13" Foreground="{StaticResource InkBrush}" />
+                                <TextBlock Text="导入含“竞赛日程 + 项目分组表”的工作簿后，这里会显示日期与筛选。"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                <Button Classes="ghost" Content="导入赛程" Click="OnImportSchedule"
+                                        HorizontalAlignment="Left" Padding="10,4" FontSize="10.5"
+                                        IsEnabled="{Binding !IsBusy}"
+                                        AutomationProperties.Name="导入赛程（空态）" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Row="2" Spacing="7" IsVisible="{Binding HasScheduleDays}">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Text="项目筛选" Classes="field-label" />
                                 <TextBlock Grid.Column="1" Text="FILTER" FontFamily="{StaticResource MonoFont}"
-                                           FontSize="8" LetterSpacing="1.4" Foreground="{StaticResource MutedBrush}" />
+                                           FontSize="9" LetterSpacing="1.4" Foreground="{StaticResource MutedBrush}" />
                             </Grid>
                             <ItemsControl ItemsSource="{Binding ScheduleCategories}">
                                 <ItemsControl.ItemsPanel>
@@ -738,9 +1021,9 @@
                                         <Button Classes="filter-chip" Classes.active="{Binding IsActive}"
                                                 Click="OnSelectCategory" Tag="{Binding}" Margin="0,0,5,5">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="{Binding Name}" FontSize="9.5" />
+                                                <TextBlock Text="{Binding Name}" FontSize="10" />
                                                 <TextBlock Text="{Binding CountLabel}"
-                                                           FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                                           FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                            Opacity="0.8" />
                                             </StackPanel>
                                         </Button>
@@ -749,17 +1032,49 @@
                             </ItemsControl>
                         </StackPanel>
 
+                        <StackPanel Grid.Row="3" Spacing="6" VerticalAlignment="Top"
+                                    IsVisible="{Binding HasScheduleDays}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="班级高亮" Classes="field-label" />
+                                <TextBlock Grid.Column="1" Text="HIGHLIGHT"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                           LetterSpacing="1.2" Foreground="{StaticResource MutedBrush}" />
+                            </Grid>
+                            <ComboBox Classes="field" ItemsSource="{Binding AllClasses}"
+                                      SelectedItem="{Binding ScheduleHighlightClass, Mode=TwoWay}"
+                                      AutomationProperties.Name="班级高亮">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="app:ClassItemViewModel">
+                                        <TextBlock Text="{Binding Name}" FontSize="11" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                <TextBlock Text="{Binding ScheduleHighlightSummary}" FontSize="9"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Classes="link" Content="清除"
+                                        FontSize="10" Click="OnClearHighlight"
+                                        IsVisible="{Binding HasScheduleHighlight}"
+                                        IsEnabled="{Binding !IsBusy}" />
+                            </Grid>
+                            <TextBlock Text="选择后，日程里的项目和分组条目会同时着色。"
+                                       Classes="helper" />
+                        </StackPanel>
+
                         <Border Grid.Row="4" Background="{StaticResource PaperBrush}"
                                 BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                                 CornerRadius="6" Padding="9,8" VerticalAlignment="Bottom">
                             <StackPanel Spacing="3">
                                 <TextBlock Text="{Binding ScheduleTabMeta}"
-                                           FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
                                            Foreground="{StaticResource InkSoftBrush}" />
-                                <TextBlock Text="{Binding ScheduleClassCountLabel, StringFormat='共 {0} 个班级参赛'}"
-                                           FontSize="9" Foreground="{StaticResource MutedBrush}" />
-                                <TextBlock Text="班级高亮将在下一步接入。" FontSize="9"
-                                           Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding ClassCountText, StringFormat='共 {0} 个班级参赛'}"
+                                           FontSize="10" Foreground="{StaticResource MutedBrush}" />
+                                <TextBlock Text="{Binding ScheduleSourceName}" FontSize="10"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding ScheduleSourceName}" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -777,15 +1092,21 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7"
                                         VerticalAlignment="Center">
-                                <TextBlock Text="SCHEDULE" FontFamily="{StaticResource MonoFont}" FontSize="8"
+                                <TextBlock Text="SCHEDULE" FontFamily="{StaticResource MonoFont}" FontSize="9"
                                            LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
                                            VerticalAlignment="Center" />
                                 <Border Classes="chip" VerticalAlignment="Center">
-                                    <TextBlock Text="示例排程" FontSize="9.5"
+                                    <TextBlock Text="{Binding ScheduleBadge}" FontSize="10"
                                                Foreground="{StaticResource MutedBrush}" />
                                 </Border>
+                                <Border Classes="chip" VerticalAlignment="Center"
+                                        IsVisible="{Binding HasScheduleHighlight}">
+                                    <TextBlock Text="{Binding ScheduleHighlightSummary}" FontSize="10"
+                                               Foreground="{StaticResource AccentDeepBrush}"
+                                               MaxWidth="180" TextTrimming="CharacterEllipsis" />
+                                </Border>
                                 <TextBlock Text="{Binding ScheduleDaySummary}"
-                                           FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
                                            Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
@@ -804,11 +1125,11 @@
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="7"
                                                                 Margin="9,0,0,0" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding English}"
-                                                                   FontFamily="{StaticResource MonoFont}" FontSize="8"
+                                                                   FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                                    LetterSpacing="1.4"
                                                                    Foreground="{StaticResource MutedBrush}" />
                                                         <TextBlock Text="{Binding TimeRange}"
-                                                                   FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                                                   FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                                    Foreground="{StaticResource MutedBrush}" />
                                                     </StackPanel>
                                                     <Border Grid.Column="2" Width="1" Height="11"
@@ -817,7 +1138,7 @@
                                                             Background="{StaticResource LineBrush}"
                                                             VerticalAlignment="Center" />
                                                     <TextBlock Grid.Column="4" Text="{Binding CountLabel}"
-                                                               FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                                               FontFamily="{StaticResource MonoFont}" FontSize="10"
                                                                Foreground="{StaticResource MutedBrush}"
                                                                VerticalAlignment="Center" />
                                                 </Grid>
@@ -825,15 +1146,14 @@
                                                 <ItemsControl ItemsSource="{Binding Slots}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="app:ScheduleSlotViewModel">
-                                                            <Border Classes="slot-row">
+                                                            <Border Classes="slot-row"
+                                                                    Classes.highlight="{Binding HasClassHighlight}">
                                                                 <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="12">
                                                                     <StackPanel Spacing="2">
                                                                         <TextBlock Text="{Binding Time}"
                                                                                    FontFamily="{StaticResource MonoFont}"
                                                                                    FontSize="14"
                                                                                    Foreground="{StaticResource InkBrush}" />
-                                                                        <TextBlock Text="{Binding Period}" FontSize="8.5"
-                                                                                   Foreground="{StaticResource MutedBrush}" />
                                                                     </StackPanel>
 
                                                                     <StackPanel Grid.Column="1" Spacing="4">
@@ -843,7 +1163,7 @@
                                                                                     BorderBrush="{Binding CategoryBrush}">
                                                                                 <TextBlock Text="{Binding CategoryLabel}"
                                                                                            FontFamily="{StaticResource MonoFont}"
-                                                                                           FontSize="8.5"
+                                                                                           FontSize="9"
                                                                                            Foreground="{Binding CategoryBrush}" />
                                                                             </Border>
                                                                             <TextBlock Text="{Binding EventName}"
@@ -852,15 +1172,24 @@
                                                                                        Foreground="{StaticResource InkBrush}"
                                                                                        VerticalAlignment="Center" />
                                                                             <Border Classes="chip" VerticalAlignment="Center"
+                                                                                    IsVisible="{Binding ShowGrade}">
+                                                                                <TextBlock Text="{Binding Grade}" FontSize="10" />
+                                                                            </Border>
+                                                                            <Border Classes="chip" VerticalAlignment="Center"
                                                                                     IsVisible="{Binding ShowGender}">
-                                                                                <TextBlock Text="{Binding Gender}" FontSize="9" />
+                                                                                <TextBlock Text="{Binding Gender}" FontSize="10" />
                                                                             </Border>
                                                                             <Border Classes="chip" VerticalAlignment="Center"
                                                                                     IsVisible="{Binding !IsCeremony}">
-                                                                                <TextBlock Text="{Binding Stage}" FontSize="9" />
+                                                                                <TextBlock Text="{Binding Stage}" FontSize="10" />
                                                                             </Border>
                                                                         </StackPanel>
-                                                                        <TextBlock Text="{Binding DetailText}" FontSize="9.5"
+                                                                        <TextBlock Text="{Binding DetailText}" FontSize="10"
+                                                                                   Foreground="{StaticResource MutedBrush}" />
+                                                                        <TextBlock Text="{Binding GroupSummary}"
+                                                                                   IsVisible="{Binding ShowGroupSummary}"
+                                                                                   FontFamily="{StaticResource MonoFont}"
+                                                                                   FontSize="9"
                                                                                    Foreground="{StaticResource MutedBrush}" />
 
                                                                         <ItemsControl ItemsSource="{Binding Entries}"
@@ -873,19 +1202,21 @@
                                                                             </ItemsControl.ItemsPanel>
                                                                             <ItemsControl.ItemTemplate>
                                                                                 <DataTemplate x:DataType="app:ScheduleEntryViewModel">
-                                                                                    <Border Classes="entry-chip">
+                                                                                    <Border Classes="entry-chip"
+                                                                                            Classes.highlight="{Binding IsHighlighted}"
+                                                                                            Opacity="{Binding Opacity}">
                                                                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                                                                             <TextBlock Text="{Binding ClassName}"
-                                                                                                       FontSize="9.5"
+                                                                                                       FontSize="10"
                                                                                                        Foreground="{StaticResource InkSoftBrush}" />
-                                                                                            <TextBlock Text="·" FontSize="9.5"
+                                                                                            <TextBlock Text="·" FontSize="10"
                                                                                                        Foreground="{StaticResource MutedBrush}" />
                                                                                             <TextBlock Text="{Binding AthleteName}"
-                                                                                                       FontSize="9.5"
+                                                                                                       FontSize="10"
                                                                                                        Foreground="{StaticResource InkSoftBrush}" />
                                                                                             <TextBlock Text="{Binding Lane}"
                                                                                                        FontFamily="{StaticResource MonoFont}"
-                                                                                                       FontSize="8"
+                                                                                                       FontSize="9"
                                                                                                        Foreground="{StaticResource MutedBrush}"
                                                                                                        VerticalAlignment="Center" />
                                                                                         </StackPanel>
@@ -896,7 +1227,7 @@
 
                                                                         <TextBlock Text="{Binding EmptyEntryText}"
                                                                                    IsVisible="{Binding !HasEntries}"
-                                                                                   FontSize="9.5"
+                                                                                   FontSize="10"
                                                                                    Foreground="{StaticResource MutedBrush}" />
                                                                     </StackPanel>
 
@@ -908,8 +1239,11 @@
                                                                                    FontSize="10"
                                                                                    Foreground="{StaticResource InkSoftBrush}"
                                                                                    TextAlignment="Right" />
-                                                                        <TextBlock Text="{Binding EntryUnitLabel}" FontSize="8"
-                                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                        <TextBlock Text="{Binding HighlightedEntryCountLabel}"
+                                                                                   IsVisible="{Binding HasClassHighlight}"
+                                                                                   FontFamily="{StaticResource MonoFont}"
+                                                                                   FontSize="9"
+                                                                                   Foreground="{StaticResource AccentDeepBrush}"
                                                                                    TextAlignment="Right" />
                                                                     </StackPanel>
                                                                 </Grid>
@@ -924,12 +1258,13 @@
 
                                 <Border IsVisible="{Binding !HasScheduleSlots}" Padding="0,28" HorizontalAlignment="Stretch">
                                     <StackPanel HorizontalAlignment="Center" Spacing="5">
-                                        <TextBlock Text="没有符合条件的项目" FontFamily="{StaticResource SerifFont}"
+                                        <TextBlock Text="{Binding ScheduleEmptyTitle}" FontFamily="{StaticResource SerifFont}"
                                                    FontSize="15" Foreground="{StaticResource InkBrush}"
                                                    HorizontalAlignment="Center" />
                                         <TextBlock Text="{Binding ScheduleEmptyText}" FontSize="10"
                                                    Foreground="{StaticResource MutedBrush}"
-                                                   HorizontalAlignment="Center" />
+                                                   HorizontalAlignment="Center" TextWrapping="Wrap"
+                                                   MaxWidth="360" TextAlignment="Center" />
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -938,14 +1273,23 @@
                 </Border>
 
                 <!-- 赛程概览 -->
-                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                              Width="{Binding OverviewWidth}" IsVisible="{Binding ShowOverview}">
                     <StackPanel Spacing="10">
-                        <Border Classes="panel-card">
+                        <Border Classes="panel-card" IsVisible="{Binding !HasScheduleDays}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="赛程概览" Classes="section-title" />
+                                <TextBlock Text="导入赛程后，这里显示比赛日、项目数与参赛人次。"
+                                           Classes="helper" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="panel-card" IsVisible="{Binding HasScheduleDays}">
                             <StackPanel Spacing="9">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="赛程概览" Classes="section-title" />
                                     <TextBlock Grid.Column="1" Text="MEET" FontFamily="{StaticResource MonoFont}"
-                                               FontSize="8" LetterSpacing="1.6"
+                                               FontSize="9" LetterSpacing="1.6"
                                                Foreground="{StaticResource MutedBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
@@ -956,7 +1300,7 @@
                                             <TextBlock Text="{Binding ScheduleTotalDaysLabel}"
                                                        FontFamily="{StaticResource MonoFont}" FontSize="19"
                                                        Foreground="{StaticResource InkBrush}" />
-                                            <TextBlock Text="比赛日" FontSize="9"
+                                            <TextBlock Text="比赛日" FontSize="10"
                                                        Foreground="{StaticResource MutedBrush}" />
                                         </StackPanel>
                                     </Border>
@@ -965,7 +1309,7 @@
                                             <TextBlock Text="{Binding ScheduleTotalSlotsLabel}"
                                                        FontFamily="{StaticResource MonoFont}" FontSize="19"
                                                        Foreground="{StaticResource InkBrush}" />
-                                            <TextBlock Text="项目" FontSize="9"
+                                            <TextBlock Text="项目" FontSize="10"
                                                        Foreground="{StaticResource MutedBrush}" />
                                         </StackPanel>
                                     </Border>
@@ -974,7 +1318,7 @@
                                             <TextBlock Text="{Binding ScheduleTotalEntriesLabel}"
                                                        FontFamily="{StaticResource MonoFont}" FontSize="17"
                                                        Foreground="{StaticResource InkBrush}" />
-                                            <TextBlock Text="参赛人次" FontSize="9"
+                                            <TextBlock Text="参赛人次" FontSize="10"
                                                        Foreground="{StaticResource MutedBrush}" />
                                         </StackPanel>
                                     </Border>
@@ -983,22 +1327,22 @@
                                             <TextBlock Text="{Binding ScheduleClassCountLabel}"
                                                        FontFamily="{StaticResource MonoFont}" FontSize="17"
                                                        Foreground="{StaticResource InkBrush}" />
-                                            <TextBlock Text="班级" FontSize="9"
+                                            <TextBlock Text="班级" FontSize="10"
                                                        Foreground="{StaticResource MutedBrush}" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
-                                <TextBlock Text="赛程按两天示例时段排布，参赛名单随报名同步。"
+                                <TextBlock Text="赛程数据来自导入工作簿，参赛名单按分组表显示。"
                                            Classes="helper" />
                             </StackPanel>
                         </Border>
 
-                        <Border Classes="panel-card">
+                        <Border Classes="panel-card" IsVisible="{Binding HasScheduleDays}">
                             <StackPanel Spacing="8">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Text="今日项目" Classes="section-title" />
                                     <TextBlock Grid.Column="1" Text="BY CATEGORY"
-                                               FontFamily="{StaticResource MonoFont}" FontSize="8"
+                                               FontFamily="{StaticResource MonoFont}" FontSize="9"
                                                LetterSpacing="1.2"
                                                Foreground="{StaticResource MutedBrush}"
                                                VerticalAlignment="Center" />
@@ -1014,7 +1358,7 @@
                                                            Foreground="{StaticResource InkSoftBrush}"
                                                            Margin="6,0,0,0" VerticalAlignment="Center" />
                                                 <TextBlock Grid.Column="2" Text="{Binding CountLabel}"
-                                                           FontFamily="{StaticResource MonoFont}" FontSize="9.5"
+                                                           FontFamily="{StaticResource MonoFont}" FontSize="10"
                                                            Foreground="{StaticResource MutedBrush}" />
                                             </Grid>
                                         </DataTemplate>
@@ -1025,9 +1369,13 @@
 
                         <Border Classes="panel-card">
                             <StackPanel Spacing="7">
-                                <TextBlock Text="下一步" Classes="section-title" />
-                                <TextBlock Text="赛程生成规则、班级高亮与导出将在后续接入；现在先确认信息层级与阅读方式。"
+                                <TextBlock Text="使用说明" Classes="section-title" />
+                                <TextBlock Text="导入报名表后，右侧显示本班体检；导入赛程后，在左侧选择班级，即可同时高亮日程中的项目和分组条目。"
                                            Classes="helper" />
+                                <TextBlock Text="{Binding ScheduleSourceName}" FontSize="10"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding ScheduleSourceName}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -1038,17 +1386,24 @@
         <!-- ==================== 状态栏 ==================== -->
         <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
                 Padding="16,7">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
                     <Ellipse Width="5" Height="5" Fill="{StaticResource MossBrush}" />
-                    <TextBlock Text="本机运行 · 文件不上传" FontFamily="{StaticResource MonoFont}" FontSize="9"
+                    <TextBlock Text="本机运行 · 文件不上传" FontFamily="{StaticResource MonoFont}" FontSize="10"
                                LetterSpacing="0.6" Foreground="{StaticResource MossBrush}" />
-                    <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="9" Foreground="#C9C1AE" />
+                    <TextBlock Text="/" FontFamily="{StaticResource MonoFont}" FontSize="10"
+                               Foreground="{StaticResource LineStrongBrush}" />
                     <TextBlock Text="{Binding RegistrationSummary}" FontFamily="{StaticResource MonoFont}"
-                               FontSize="9" LetterSpacing="0.4" Foreground="{StaticResource MutedBrush}" />
+                               FontSize="10" LetterSpacing="0.4" Foreground="{StaticResource MutedBrush}"
+                               TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="9.5"
-                           Foreground="{Binding StatusBrush}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                            ToolTip.Tip="{Binding StatusDetail}">
+                    <Ellipse Width="5" Height="5" Fill="{Binding StatusBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusText}" FontSize="10"
+                               MaxWidth="560" TextTrimming="CharacterEllipsis"
+                               Foreground="{Binding StatusBrush}" VerticalAlignment="Center" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

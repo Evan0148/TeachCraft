@@ -375,6 +375,29 @@ public partial class App : Application
         var category = index + 4 < args.Length ? args[index + 4] : null;
         var widthIndex = Array.IndexOf(args, "--meetroster-width");
         var heightIndex = Array.IndexOf(args, "--meetroster-height");
+        var highlightIndex = Array.IndexOf(args, "--meetroster-highlight");
+        var highlightClass = highlightIndex >= 0 && highlightIndex + 1 < args.Length
+            ? args[highlightIndex + 1]
+            : null;
+        var registrationIndex = Array.IndexOf(args, "--meetroster-registration");
+        var registrationPath = registrationIndex >= 0 && registrationIndex + 1 < args.Length
+            ? args[registrationIndex + 1]
+            : null;
+        var scheduleIndex = Array.IndexOf(args, "--meetroster-schedule");
+        var schedulePath = scheduleIndex >= 0 && scheduleIndex + 1 < args.Length
+            ? args[scheduleIndex + 1]
+            : null;
+        var showDemo = args.Contains("--meetroster-demo");
+        var showEventDialog = args.Contains("--meetroster-dialog");
+        var scaleIndex = Array.IndexOf(args, "--meetroster-scale");
+        var scale = scaleIndex >= 0 && scaleIndex + 1 < args.Length &&
+                    double.TryParse(args[scaleIndex + 1], out var parsedScale)
+            ? parsedScale
+            : 1;
+        var dialogSlotIndex = Array.IndexOf(args, "--meetroster-dialog-slot");
+        var dialogSlot = dialogSlotIndex >= 0 && dialogSlotIndex + 1 < args.Length
+            ? args[dialogSlotIndex + 1]
+            : MeetRoster.App.EventEditorViewModel.IndividualGroupKey;
         var width = widthIndex >= 0 && widthIndex + 1 < args.Length &&
                     int.TryParse(args[widthIndex + 1], out var parsedWidth)
             ? parsedWidth
@@ -398,15 +421,60 @@ public partial class App : Application
                 window.Show();
                 await Task.Delay(400);
 
+                if (showDemo)
+                {
+                    window.LoadDemoForCapture();
+                    await Task.Delay(400);
+                }
+
+                if (!string.IsNullOrWhiteSpace(registrationPath))
+                {
+                    await window.LoadRegistrationForCaptureAsync(registrationPath);
+                    await Task.Delay(400);
+                }
+
+                if (!string.IsNullOrWhiteSpace(schedulePath))
+                {
+                    await window.LoadScheduleForCaptureAsync(schedulePath);
+                    await Task.Delay(600);
+                }
+
+                var removeIndex = Array.IndexOf(args, "--meetroster-remove");
+                if (removeIndex >= 0 && removeIndex + 1 < args.Length)
+                {
+                    window.SimulateRemoveForCapture(args[removeIndex + 1].Split(','));
+                    await Task.Delay(300);
+                }
+
                 if (string.Equals(view, "schedule", StringComparison.OrdinalIgnoreCase))
                 {
                     var dayIndex = int.TryParse(dayText, out var parsedDay) ? parsedDay : 1;
-                    window.ShowScheduleForCapture(dayIndex, category);
+                    window.ShowScheduleForCapture(dayIndex, category, highlightClass);
+                }
+
+                if (showEventDialog)
+                {
+                    var dialog = window.OpenEventDialogForCapture(dialogSlot);
+                    if (dialog is null)
+                        throw new InvalidOperationException("弹窗走查需要先注入报名表（--meetroster-registration）。");
+
+                    dialog.Show();
+                    await Task.Delay(900);
+                    dialog.UpdateLayout();
+                    dialog.CaptureTo(target);
+                    dialog.Close();
+                    window.Close();
+                    return;
                 }
 
                 await Task.Delay(1000);
                 window.UpdateLayout();
-                window.CaptureTo(target);
+
+                var metricsIndex = Array.IndexOf(args, "--meetroster-metrics");
+                if (metricsIndex >= 0 && metricsIndex + 1 < args.Length)
+                    window.DumpRowMetrics(args[metricsIndex + 1]);
+
+                window.CaptureTo(target, scale);
                 window.Close();
             }
             catch (Exception ex)

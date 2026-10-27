@@ -52,7 +52,7 @@ public static class MeetSamples
         {
             Title = "示例中学第五届田径运动会",
             Venue = "田径场",
-            Note = "每班每个单项最多男女各报 2 人，每人限报 2 个单项（不含集体项目）；团体项目不填，现场出人。",
+            Note = "每班每个单项最多男女各报 2 人，每人限报 2 个单项；团体项目最多报 3 项（4x100 接力、20*50 混合接力、一分钟跳绳）。",
         };
 
         foreach (var eventName in MeetCatalog.IndividualEvents)
@@ -108,17 +108,17 @@ public static class MeetSamples
         AddSlot(first, "11:00", "上午", "实心球", "女子", MeetEventCategory.Field, "决赛", "投掷区");
         AddSlot(first, "14:30", "下午", "100米", "男子", MeetEventCategory.Track, "决赛", "田径场");
         AddSlot(first, "14:50", "下午", "200米", "女子", MeetEventCategory.Track, "预赛", "田径场");
-        AddSlot(first, "15:20", "下午", "4x100米接力", "混合", MeetEventCategory.Team, "预赛", "田径场");
+        AddSlot(first, "15:20", "下午", "4x100米接力", "混合", MeetEventCategory.Track, "预赛", "田径场");
 
         var second = new MeetDay { Name = "第二天", DateText = "10 月 31 日" };
         AddSlot(second, "08:30", "上午", "400米", "女子", MeetEventCategory.Track, "预赛", "田径场");
         AddSlot(second, "09:00", "上午", "200米", "男子", MeetEventCategory.Track, "预赛", "田径场");
         AddSlot(second, "09:30", "上午", "立定跳远", "女子", MeetEventCategory.Field, "决赛", "沙坑区");
         AddSlot(second, "10:00", "上午", "跳高", "男子", MeetEventCategory.Field, "决赛", "跳高区");
-        AddSlot(second, "10:30", "上午", "一分钟跳绳", "混合", MeetEventCategory.Team, "决赛", "篮球场");
-        AddSlot(second, "14:30", "下午", "20*50米男女混合接力", "混合", MeetEventCategory.Team, "决赛", "田径场");
+        AddSlot(second, "10:30", "上午", "一分钟跳绳", "混合", MeetEventCategory.Fun, "决赛", "篮球场");
+        AddSlot(second, "14:30", "下午", "20*50米男女混合接力", "混合", MeetEventCategory.Fun, "决赛", "田径场");
         AddSlot(second, "15:00", "下午", "100米", "女子", MeetEventCategory.Track, "决赛", "田径场");
-        AddSlot(second, "15:30", "下午", "4x100米接力", "混合", MeetEventCategory.Team, "决赛", "田径场");
+        AddSlot(second, "15:30", "下午", "4x100米接力", "混合", MeetEventCategory.Track, "决赛", "田径场");
         AddSlot(second, "16:00", "下午", "闭幕式", "不限", MeetEventCategory.Ceremony, "闭幕式", "田径场");
 
         project.Days.Add(first);
@@ -180,6 +180,17 @@ public static class MeetSamples
     private static void ApplyTeamEvents(Athlete athlete, int index)
     {
         athlete.TeamEvent1 = "4x100米接力";
-        athlete.TeamEvent2 = index < 2 ? "20*50米男女混合接力" : "一分钟跳绳";
+
+        // 合成数据里让团体项目数量有差别（1 / 2 / 3 个），便于查看表格只显示已报项目。
+        switch (index % 3)
+        {
+            case 1:
+                athlete.TeamEvent2 = "20*50米男女混合接力";
+                break;
+            case 2:
+                athlete.TeamEvent2 = "20*50米男女混合接力";
+                athlete.TeamEvent3 = "一分钟跳绳";
+                break;
+        }
     }
 }

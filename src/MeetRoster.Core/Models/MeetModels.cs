@@ -6,6 +6,7 @@ public enum MeetEventCategory
     Track,
     Field,
     Team,
+    Fun,
     Ceremony,
     Other,
 }
@@ -38,6 +39,8 @@ public sealed class MeetClass
     public string LeaderContact { get; set; } = string.Empty;
     public string Coach { get; set; } = string.Empty;
     public string Note { get; set; } = string.Empty;
+    /// <summary>导入来源文件；用于按班回写时保留原模板样式。</summary>
+    public string? SourcePath { get; set; }
     public List<Athlete> Athletes { get; } = [];
 }
 
@@ -67,10 +70,14 @@ public sealed class MeetSlot
     public required string Time { get; init; }
     public required string Period { get; init; }
     public required string EventName { get; init; }
+    public string Grade { get; init; } = string.Empty;
     public string Gender { get; init; } = "不限";
     public MeetEventCategory Category { get; init; } = MeetEventCategory.Other;
     public string Venue { get; init; } = string.Empty;
     public string Stage { get; init; } = string.Empty;
+    public string GroupCount { get; init; } = string.Empty;
+    public string AdvanceCount { get; init; } = string.Empty;
+    public string EntryCountText { get; init; } = string.Empty;
     public List<MeetEntry> Entries { get; } = [];
 }
 
@@ -80,4 +87,6 @@ public sealed class MeetEntry
     public required string ClassName { get; init; }
     public required string AthleteName { get; init; }
     public string Lane { get; init; } = string.Empty;
+    public string Bib { get; init; } = string.Empty;
+    public string Group { get; init; } = string.Empty;
 }

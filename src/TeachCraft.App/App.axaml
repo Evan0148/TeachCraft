@@ -22,6 +22,13 @@
         <SolidColorBrush x:Key="SidebarBrush" Color="#F8F6F0" />
         <SolidColorBrush x:Key="PinnedBrush" Color="#F7F4EB" />
         <SolidColorBrush x:Key="OverlayBrush" Color="#33141413" />
+        <!-- 表格/表单的暖白底与三档交互底色：竞名、归位等列表页共用，避免再写散值 -->
+        <SolidColorBrush x:Key="WashBrush" Color="#FCFAF4" />
+        <SolidColorBrush x:Key="WashHoverBrush" Color="#FBF3EC" />
+        <SolidColorBrush x:Key="WashPressedBrush" Color="#F7E9DF" />
+        <SolidColorBrush x:Key="AccentWashBrush" Color="#FBE4D7" />
+        <SolidColorBrush x:Key="LineStrongBrush" Color="#CFC8B6" />
+        <SolidColorBrush x:Key="TeamBrush" Color="#8A6A3C" />
 
         <!-- 成绩条分档色，和 xlsx 导出保持同一套值 -->
         <SolidColorBrush x:Key="Tier1Brush" Color="#70AD47" />
@@ -209,6 +216,15 @@
         <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#F1EEE5" />
             <Setter Property="BorderBrush" Value="#BDB6A4" />
+        </Style>
+        <Style Selector="Button.ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E9E4D7" />
+            <Setter Property="BorderBrush" Value="#B0A896" />
+        </Style>
+        <Style Selector="Button.ghost:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#E7E3D8" />
+            <Setter Property="Foreground" Value="#B3AD9E" />
         </Style>
 
         <!-- 侧栏导航 -->

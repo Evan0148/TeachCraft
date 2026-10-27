@@ -36,6 +36,7 @@ public sealed partial class ClassItemViewModel : ObservableObject
             if (_source.Code == value) return;
             _source.Code = value;
             OnPropertyChanged();
+            _changed?.Invoke(this);
         }
     }
 
@@ -47,6 +48,7 @@ public sealed partial class ClassItemViewModel : ObservableObject
             if (_source.LeaderContact == value) return;
             _source.LeaderContact = value;
             OnPropertyChanged();
+            _changed?.Invoke(this);
         }
     }
 
@@ -58,6 +60,7 @@ public sealed partial class ClassItemViewModel : ObservableObject
             if (_source.Coach == value) return;
             _source.Coach = value;
             OnPropertyChanged();
+            _changed?.Invoke(this);
         }
     }
 
@@ -91,6 +94,7 @@ public sealed partial class ClassItemViewModel : ObservableObject
         Athletes.Add(new AthleteRowViewModel(athlete, OnRowChanged));
         Renumber();
         RefreshStats();
+        _changed?.Invoke(this);
     }
 
     public void RemoveAthlete(AthleteRowViewModel row)
@@ -102,6 +106,7 @@ public sealed partial class ClassItemViewModel : ObservableObject
         _source.Athletes.RemoveAt(index);
         Renumber();
         RefreshStats();
+        _changed?.Invoke(this);
     }
 
     public void RefreshStats()

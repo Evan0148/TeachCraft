@@ -247,6 +247,37 @@
                                 </Border>
                             </Grid>
                         </Button>
+
+                        <Button Classes="nav" Click="OnLaunchMeetRoster"
+                                AutomationProperties.Name="竞名 · 运动会报名" HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <Viewbox Grid.Column="0" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Canvas Width="120" Height="120">
+                                        <Rectangle Canvas.Left="10" Canvas.Top="10" Width="100" Height="100"
+                                                   RadiusX="24" RadiusY="24" Fill="#FAF9F5"
+                                                   Stroke="#E7E3D8" StrokeThickness="3"/>
+                                        <Rectangle Canvas.Left="30" Canvas.Top="38" Width="52" Height="7"
+                                                   RadiusX="3" RadiusY="3" Fill="#141413"/>
+                                        <Rectangle Canvas.Left="30" Canvas.Top="56" Width="46" Height="7"
+                                                   RadiusX="3" RadiusY="3" Fill="#3D3B36"/>
+                                        <Rectangle Canvas.Left="30" Canvas.Top="74" Width="52" Height="7"
+                                                   RadiusX="3" RadiusY="3" Fill="#E7E3D8"/>
+                                        <Rectangle Canvas.Left="30" Canvas.Top="92" Width="38" Height="7"
+                                                   RadiusX="3" RadiusY="3" Fill="#6F6A5E"/>
+                                        <Line StartPoint="88,34" EndPoint="88,88"
+                                              Stroke="#D97757" StrokeThickness="4" StrokeLineCap="Round"/>
+                                        <Ellipse Canvas.Left="72" Canvas.Top="40" Width="8" Height="8"
+                                                 Fill="#D97757"/>
+                                    </Canvas>
+                                </Viewbox>
+                                <TextBlock Grid.Column="1" Text="竞名 · 运动会报名" VerticalAlignment="Center" />
+                                <Border Grid.Column="2" BorderBrush="#46C6613F" BorderThickness="1"
+                                        CornerRadius="3" Background="#0DD97757" Padding="5,1" VerticalAlignment="Center">
+                                    <TextBlock Text="报名" FontFamily="{StaticResource MonoFont}" FontSize="8.5"
+                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                </Border>
+                            </Grid>
+                        </Button>
                     </StackPanel>
 
                     <Grid ColumnDefinitions="Auto,*" Margin="6,24,6,8">
