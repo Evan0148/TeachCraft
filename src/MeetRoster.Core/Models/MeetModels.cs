@@ -61,6 +61,8 @@ public sealed class MeetDay
 {
     public required string Name { get; init; }
     public required string DateText { get; init; }
+    /// <summary>从赛程解析出的比赛日期；示例数据可能为空。用于分组表按日期对齐时段。</summary>
+    public DateOnly? Date { get; init; }
     public List<MeetSlot> Slots { get; } = [];
 }
 

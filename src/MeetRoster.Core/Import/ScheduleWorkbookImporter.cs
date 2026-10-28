@@ -22,7 +22,9 @@ public static class ScheduleWorkbookImporter
         if (!File.Exists(path))
             throw new InvalidDataException("找不到赛程工作簿：" + path);
 
-        using var workbook = new XLWorkbook(path);
+        // stream 构造 + 中文异常包装（Plan 4.1 / 4.4）。
+        using var stream = WorkbookIO.OpenReadShared(path);
+        using var workbook = WorkbookIO.OpenWorkbook(path, stream);
         var issues = new List<RegistrationIssue>();
         var scheduleSheet = FindSheet(workbook, "竞赛日程")
             ?? throw new InvalidDataException("赛程工作簿里没有找到“竞赛日程”工作表。");
@@ -120,6 +122,7 @@ public static class ScheduleWorkbookImporter
             {
                 Name = index switch { 1 => "第一天", 2 => "第二天", 3 => "第三天", _ => $"第 {index} 天" },
                 DateText = $"{date.Month} 月 {date.Day} 日",
+                Date = date,
             });
 
             var day = days[^1];
@@ -135,26 +138,58 @@ public static class ScheduleWorkbookImporter
 
     private static void AttachGrouping(IXLWorksheet sheet, List<MeetDay> days, List<RegistrationIssue> issues)
     {
-        var slots = new Dictionary<string, MeetSlot>(StringComparer.Ordinal);
-        foreach (var slot in days.SelectMany(d => d.Slots))
+        // 同键可能命中多个时段（跨天同名项目、同日上下午两轮）：候选按出现顺序分配，
+        // 不再静默丢弃（Plan 2.1）；分组表若带日期节则先按日期精确对齐。
+        var slots = new Dictionary<string, List<(DateOnly? Date, MeetSlot Slot)>>(StringComparer.Ordinal);
+        foreach (var day in days)
         {
-            var key = SlotKey(slot.Grade, slot.Gender, slot.EventName, slot.Stage);
-            if (!slots.ContainsKey(key)) slots[key] = slot;
+            foreach (var slot in day.Slots)
+            {
+                var key = LooseSlotKey(slot.Grade, slot.Gender, slot.EventName, slot.Stage);
+                if (!slots.TryGetValue(key, out var list)) slots[key] = list = [];
+                list.Add((day.Date, slot));
+            }
         }
 
         var lastRow = sheet.LastRowUsed()?.RowNumber() ?? 0;
         var unmatchedBlocks = 0;
+        var ambiguousKeys = new HashSet<string>(StringComparer.Ordinal);
+        var cursors = new Dictionary<string, int>(StringComparer.Ordinal);
+        DateOnly? currentDate = null; // 分组表出现日期节时更新；无日期节的表保持 null
+
         for (var row = 1; row <= lastRow; row++)
         {
+            var section = ParseSection(Clean(sheet.Cell(row, 1).GetString()));
+            if (section is not null)
+            {
+                currentDate = section.Value.Date;
+                continue;
+            }
+
             if (!TryReadBlockHeader(sheet, row, out var grade, out var gender, out var eventName, out var stage))
                 continue;
 
-            var key = SlotKey(grade, gender, eventName, stage);
-            if (!slots.TryGetValue(key, out var slot))
+            var key = LooseSlotKey(grade, gender, eventName, stage);
+            if (!slots.TryGetValue(key, out var candidates))
             {
                 unmatchedBlocks++;
                 continue;
             }
+
+            if (currentDate is not null)
+            {
+                var dated = candidates.Where(c => c.Date == currentDate).ToList();
+                if (dated.Count > 0) candidates = dated;
+            }
+
+            var cursor = cursors.TryGetValue(key, out var value) ? value : 0;
+            var slot = candidates[Math.Min(cursor, candidates.Count - 1)].Slot;
+            cursors[key] = cursor + 1;
+
+            if (candidates.Count > 1 && ambiguousKeys.Add(key))
+                issues.Add(new RegistrationIssue(
+                    $"「{grade} {gender} {eventName}」在赛程里命中 {candidates.Count} 个时段，分组名单已按出现顺序分配，请核对。",
+                    false));
 
             var r = row + 1;
             string currentGroup = string.Empty;
@@ -177,8 +212,9 @@ public static class ScheduleWorkbookImporter
 
                     if (!teamEvent)
                     {
+                        // 此刻 r 指向号码布行；姓名/班级行在其后两行（ReadIndividualGroup 契约）。
                         ReadIndividualGroup(sheet, r, currentGroup, laneNumbers, grade, slot);
-                        r += 3;
+                        r = FindIndividualBlockEnd(sheet, r + 2, lastRow);
                     }
                     continue;
                 }
@@ -186,14 +222,15 @@ public static class ScheduleWorkbookImporter
                 if (teamEvent && currentGroup.Length > 0)
                 {
                     var laneRow = ReadLaneNumbers(sheet, r);
-                    if (laneRow.Count > 0 && !HasClassCells(sheet, r))
+                    var hasClass = HasClassCells(sheet, r);
+                    if (laneRow.Count > 0 && !hasClass)
                     {
                         laneNumbers = laneRow;
                         r++;
                         continue;
                     }
 
-                    if (HasClassCells(sheet, r))
+                    if (hasClass)
                     {
                         ReadTeamGroupRow(sheet, r, currentGroup, laneNumbers, grade, eventName, slot);
                         r++;
@@ -210,6 +247,25 @@ public static class ScheduleWorkbookImporter
         if (unmatchedBlocks > 0)
             issues.Add(new RegistrationIssue(
                 $"项目分组表里有 {unmatchedBlocks} 个项目未在竞赛日程中找到对应时段，已跳过这些分组。", false));
+    }
+
+    /// <summary>
+    /// 个人项目组块结束探测（Plan 2.3）：从班级行之后逐行向前看，最多 5 行。
+    /// 返回下一块的起始行（下一组号行 / 块头 / 日期节 / 空行）。
+    /// </summary>
+    private static int FindIndividualBlockEnd(IXLWorksheet sheet, int classesRow, int lastRow)
+    {
+        var r = classesRow + 1;
+        for (var scanned = 0; r <= lastRow && scanned < 5; r++, scanned++)
+        {
+            var first = Clean(sheet.Cell(r, 1).GetString());
+            if (first.Length == 0) break; // 空行视为块结束，避免盲跳进下一组
+            if (TryReadBlockHeader(sheet, r, out _, out _, out _, out _)) break;
+            if (first.Contains("组", StringComparison.Ordinal) && TryParseGroupNumber(first, out _)) break;
+            if (ParseSection(first) is not null) break;
+        }
+
+        return r;
     }
 
     private static void ReadIndividualGroup(
@@ -342,7 +398,7 @@ public static class ScheduleWorkbookImporter
         return false;
     }
 
-    private static string SlotKey(string grade, string gender, string eventName, string stage) =>
+    private static string LooseSlotKey(string grade, string gender, string eventName, string stage) =>
         $"{grade}|{gender}|{eventName}|{NormalizeStage(stage)}";
 
     private static string NormalizeStage(string stage) => Clean(stage) switch
@@ -395,32 +451,8 @@ public static class ScheduleWorkbookImporter
         return text;
     }
 
-    private static string NormalizeEventName(string value)
-    {
-        var text = Clean(value)
-            .Replace("×", "x", StringComparison.Ordinal)
-            .Replace("X", "x", StringComparison.Ordinal)
-            .Replace("＊", "*", StringComparison.Ordinal)
-            .Replace("（团体）", "", StringComparison.Ordinal)
-            .Replace("(团体)", "", StringComparison.Ordinal)
-            .Replace(" ", "", StringComparison.Ordinal);
-
-        return text switch
-        {
-            "100米" or "100m" => "100米",
-            "200米" or "200m" => "200米",
-            "400米" or "400m" => "400米",
-            "800米" or "800m" => "800米",
-            "1000米" or "1000m" => "1000米",
-            "实心球" => "实心球",
-            "立定跳远" => "立定跳远",
-            "跳高" => "跳高",
-            "4x100米接力" => "4x100米接力",
-            "20x50米接力" or "20*50米男女混合接力" or "20x50米男女混合接力" => "20*50米男女混合接力",
-            "跳绳" or "一分钟跳绳" or "1分钟跳绳" => "一分钟跳绳",
-            _ => text,
-        };
-    }
+    /// <summary>委托到统一归一化实现（Plan 2.2，规则并集含 M→米 / 100O米 / 20x50米接力）。</summary>
+    private static string NormalizeEventName(string value) => EventNameNormalizer.Normalize(value);
 
     private static string VenueFor(string eventName, MeetEventCategory category) => category switch
     {

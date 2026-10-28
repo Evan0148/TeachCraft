@@ -21,7 +21,7 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="Button.choice">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="7" />
@@ -32,14 +32,14 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.choice:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="Button.choice:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#F7E9DF" />
+            <Setter Property="Background" Value="{StaticResource WashPressedBrush}" />
         </Style>
         <Style Selector="TextBox.search">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
@@ -66,7 +66,7 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Background="#FCFAF4" BorderBrush="{StaticResource LineBrush}"
+        <Border Grid.Row="1" Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
                 BorderThickness="1" CornerRadius="8" Padding="10" Margin="20,12,20,0">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <StackPanel Spacing="4">
@@ -84,7 +84,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#FBE4D7" BorderBrush="{StaticResource AccentBrush}"
+                                    <Border Background="{StaticResource AccentWashBrush}" BorderBrush="{StaticResource AccentBrush}"
                                             BorderThickness="1" CornerRadius="4" Padding="7,2"
                                             Margin="0,0,5,4">
                                         <TextBlock Text="{Binding}" FontSize="10.5"
@@ -113,7 +113,7 @@
 
         <Grid Grid.Row="3" Margin="20,10,20,0">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Choices}" Margin="0,0,14,0">
+                <ItemsControl ItemsSource="{Binding Choices}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="app:EventChoiceViewModel">
                             <Button Classes="choice" Click="OnChoose"
@@ -134,7 +134,7 @@
                                                    FontSize="10" Foreground="{StaticResource AccentDeepBrush}"
                                                    TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" Background="#F7F4EB"
+                                    <Border Grid.Column="2" Background="{StaticResource PinnedBrush}"
                                             BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                                             CornerRadius="4" Padding="7,3" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding ReplaceText}" FontSize="10"

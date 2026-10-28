@@ -38,6 +38,20 @@ public partial class EventEditorWindow : Window
             // 打开即落焦搜索框：多数场景是先搜项目再点选。
             SearchBox.Focus();
         };
+        // 单选模式下回车 = 选第一项（「完成」按钮只在多选模式存在，搜索后回车不应是死键）。
+        KeyDown += OnWindowKeyDown;
+    }
+
+    private void OnWindowKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key != Avalonia.Input.Key.Enter || _viewModel.IsGroupMode) return;
+
+        var first = _viewModel.Choices.FirstOrDefault();
+        if (first is null) return;
+
+        e.Handled = true;
+        Result = new EventEditorResult(_viewModel.SlotKey, first.EventName);
+        Close();
     }
 
     /// <summary>设计走查用：把窗口渲染成 PNG。</summary>

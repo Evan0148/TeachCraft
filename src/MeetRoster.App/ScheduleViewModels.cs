@@ -54,17 +54,6 @@ public sealed class ScheduleGroupViewModel
 /// <summary>赛程中的一个时段与它的参赛名单。</summary>
 public sealed class ScheduleSlotViewModel
 {
-    private static readonly IBrush TrackBrush = new SolidColorBrush(Color.Parse("#A34A36"));
-    private static readonly IBrush TrackTint = new SolidColorBrush(Color.Parse("#14A34A36"));
-    private static readonly IBrush FieldBrush = new SolidColorBrush(Color.Parse("#5A7A4B"));
-    private static readonly IBrush FieldTint = new SolidColorBrush(Color.Parse("#145A7A4B"));
-    private static readonly IBrush TeamBrush = new SolidColorBrush(Color.Parse("#8A6A3C"));
-    private static readonly IBrush TeamTint = new SolidColorBrush(Color.Parse("#148A6A3C"));
-    private static readonly IBrush FunBrush = new SolidColorBrush(Color.Parse("#4F6D7A"));
-    private static readonly IBrush FunTint = new SolidColorBrush(Color.Parse("#144F6D7A"));
-    private static readonly IBrush CeremonyBrush = new SolidColorBrush(Color.Parse("#7C7668"));
-    private static readonly IBrush CeremonyTint = new SolidColorBrush(Color.Parse("#127C7668"));
-
     public ScheduleSlotViewModel(MeetSlot source, string? highlightClass = null)
     {
         Source = source;
@@ -77,11 +66,11 @@ public sealed class ScheduleSlotViewModel
 
         (CategoryLabel, CategoryBrush, CategoryTint) = source.Category switch
         {
-            MeetEventCategory.Track => ("径赛", TrackBrush, TrackTint),
-            MeetEventCategory.Field => ("田赛", FieldBrush, FieldTint),
-            MeetEventCategory.Fun => ("趣味", FunBrush, FunTint),
-            MeetEventCategory.Team => ("团体", TeamBrush, TeamTint),
-            _ => ("仪式", CeremonyBrush, CeremonyTint),
+            MeetEventCategory.Track => ("径赛", MeetRosterPalette.Track, MeetRosterPalette.TrackTint),
+            MeetEventCategory.Field => ("田赛", MeetRosterPalette.Field, MeetRosterPalette.FieldTint),
+            MeetEventCategory.Fun => ("趣味", MeetRosterPalette.Fun, MeetRosterPalette.FunTint),
+            MeetEventCategory.Team => ("团体", MeetRosterPalette.Team, MeetRosterPalette.TeamTint),
+            _ => ("仪式", MeetRosterPalette.Ceremony, MeetRosterPalette.CeremonyTint),
         };
     }
 

@@ -91,7 +91,7 @@
             <Setter Property="MinHeight" Value="34" />
         </Style>
         <Style Selector="TextBox.info-field">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="5" />
@@ -131,7 +131,7 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="ComboBox.cell:pointerover /template/ Border#Background">
-            <Setter Property="Background" Value="#FBF9F3" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
         </Style>
         <Style Selector="ComboBox.cell:focus /template/ Border#Background">
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
@@ -155,6 +155,8 @@
         </Style>
         <Style Selector="Button.event-cell.unset">
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Padding" Value="10,0" />
         </Style>
         <Style Selector="Button.event-cell TextBlock.muted">
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
@@ -191,13 +193,18 @@
             <Setter Property="Background" Value="{StaticResource PinnedBrush}" />
         </Style>
         <Style Selector="ListBox.classes ListBoxItem:selected">
-            <Setter Property="Background" Value="#F1EEE5" />
+            <Setter Property="Background" Value="{StaticResource PaperDeepBrush}" />
         </Style>
         <Style Selector="ListBox.classes ListBoxItem:selected Border.class-accent">
             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style Selector="Border.athlete-row:pointerover">
             <Setter Property="Background" Value="{StaticResource WashBrush}" />
+        </Style>
+        <!-- 删除行按钮悬停转危险色：最危险的操作要有明确的破坏性暗示（Plan ⑥） -->
+        <Style Selector="Button.mini:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentWashBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
         <Style Selector="Button.top">
             <Setter Property="Padding" Value="11,6" />
@@ -214,10 +221,10 @@
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         </Style>
         <Style Selector="Button.section-tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#F4F1E8" />
+            <Setter Property="Background" Value="{StaticResource PaperDeepBrush}" />
         </Style>
         <Style Selector="Button.section-tab:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#EDE9DE" />
+            <Setter Property="Background" Value="{StaticResource WashDeepBrush}" />
         </Style>
         <Style Selector="Button.section-tab.active /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
@@ -244,7 +251,7 @@
             <Setter Property="Background" Value="{StaticResource PinnedBrush}" />
         </Style>
         <Style Selector="Button.day-card:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#EDE9DE" />
+            <Setter Property="Background" Value="{StaticResource WashDeepBrush}" />
         </Style>
         <Style Selector="Button.day-card.active /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
@@ -268,11 +275,11 @@
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
         </Style>
         <Style Selector="Button.filter-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF9F3" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}" />
         </Style>
         <Style Selector="Button.filter-chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#EFEBE0" />
+            <Setter Property="Background" Value="{StaticResource WashDeepBrush}" />
         </Style>
         <Style Selector="Button.filter-chip.active /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
@@ -290,8 +297,8 @@
             <Setter Property="Margin" Value="0,0,0,7" />
         </Style>
         <Style Selector="Border.slot-row.highlight">
-            <Setter Property="Background" Value="#FFF7F0" />
-            <Setter Property="BorderBrush" Value="#D9A58E" />
+            <Setter Property="Background" Value="{StaticResource HighlightBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource HighlightLineBrush}" />
             <Setter Property="BorderThickness" Value="1,1,1,1" />
         </Style>
         <Style Selector="Border.entry-chip">
@@ -371,6 +378,10 @@
                             IsEnabled="{Binding !IsBusy}"
                             ToolTip.Tip="一次选择多个班级的 Excel 报名表"
                             AutomationProperties.Name="导入报名表" />
+                    <Button Classes="ghost top" Content="导入名单" Click="OnImportRosterList"
+                            IsEnabled="{Binding !IsBusy}"
+                            ToolTip.Tip="导入学生名单（含「姓名」列，可选「性别」「班级」）；之后点「添加运动员」即可从名单挑选"
+                            AutomationProperties.Name="导入名单" />
                     <Button Classes="ghost top" Content="导入赛程" Click="OnImportSchedule"
                             IsEnabled="{Binding !IsBusy}"
                             ToolTip.Tip="导入往届“竞赛日程 + 项目分组表”工作簿"
@@ -382,7 +393,7 @@
                             AutomationProperties.Name="保存报名表" />
                     <Button Classes="ghost top" Content="另存为…" Click="OnExportRoster"
                             IsEnabled="{Binding CanExport}"
-                            ToolTip.Tip="导出到指定文件夹，文件名自动改为“年级班运动会报名表.xlsx”"
+                            ToolTip.Tip="导出到指定文件夹，文件名自动改为“年级班运动会报名表.xlsx”；只包含有原始报名表的班级"
                             AutomationProperties.Name="另存为" />
                 </StackPanel>
             </Grid>
@@ -398,7 +409,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <TextBlock Text="报名" FontFamily="{StaticResource SerifFont}" FontSize="14" />
                             <TextBlock Text="{Binding RegistrationTabMeta}" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="9" VerticalAlignment="Center" />
+                                       FontSize="10" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button Classes="section-tab" Classes.active="{Binding IsScheduleView}"
@@ -406,14 +417,14 @@
                         <StackPanel Orientation="Horizontal" Spacing="7">
                             <TextBlock Text="赛程" FontFamily="{StaticResource SerifFont}" FontSize="14" />
                             <TextBlock Text="{Binding ScheduleTabMeta}" FontFamily="{StaticResource MonoFont}"
-                                       FontSize="9" VerticalAlignment="Center" />
+                                       FontSize="10" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
                     <Ellipse Width="5" Height="5" Fill="{StaticResource MossBrush}" />
                     <TextBlock Text="{Binding DataModeHint}" FontFamily="{StaticResource MonoFont}"
-                               FontSize="9" LetterSpacing="0.6" Foreground="{StaticResource MutedBrush}" />
+                               FontSize="10" LetterSpacing="0.6" Foreground="{StaticResource MutedBrush}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -537,7 +548,8 @@
                                        LetterSpacing="1.8" Foreground="{StaticResource MutedBrush}"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
                             <Button Classes="ghost top" Content="添加运动员" Click="OnAddAthlete"
-                                    IsEnabled="{Binding !IsBusy}"
+                                    IsEnabled="{Binding HasSelectedClass}"
+                                    ToolTip.Tip="导入名单后可从名单挑选；没有名单时添加一行空白"
                                     AutomationProperties.Name="添加运动员" />
                         </StackPanel>
                     </Grid>
@@ -590,7 +602,7 @@
                         <Border Grid.Row="0" Background="{StaticResource PinnedBrush}"
                                 BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
                                 CornerRadius="6,6,0,0" Padding="6,0">
-                            <Grid ColumnDefinitions="30,106,74,1.35*,1*,28" ColumnSpacing="4" Height="32">
+                            <Grid ColumnDefinitions="30,106,74,1.6*,0.85*,28" ColumnSpacing="4" Height="32">
                                 <TextBlock Grid.Column="0" Classes="table-head" HorizontalAlignment="Center" Text="#" />
                                 <TextBlock Grid.Column="1" Classes="table-head" Text="姓名" />
                                 <TextBlock Grid.Column="2" Classes="table-head" Text="性别" />
@@ -600,13 +612,13 @@
                         </Border>
 
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled" Padding="0,0,2,0">
+                                      HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding SelectedClass.Athletes}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="app:AthleteRowViewModel">
                                         <Border Classes="athlete-row" BorderBrush="{StaticResource LineBrush}"
                                                 BorderThickness="0,0,0,1">
-                                            <Grid ColumnDefinitions="30,106,74,1.35*,1*,28" ColumnSpacing="4"
+                                            <Grid ColumnDefinitions="30,106,74,1.6*,0.85*,28" ColumnSpacing="4"
                                                   MinHeight="40" Margin="6,0">
                                                 <TextBlock Grid.Column="0" Text="{Binding NumberLabel}"
                                                            FontFamily="{StaticResource MonoFont}" FontSize="10"
@@ -978,9 +990,9 @@
                                                 <TextBlock Text="{Binding DateText}" FontSize="10"
                                                            Foreground="{StaticResource MutedBrush}" />
                                             </StackPanel>
-                                            <TextBlock Grid.Column="1" Text="{Binding MetaLabel}" FontSize="9"
+                                            <TextBlock Grid.Column="1" Text="{Binding MetaLabel}" FontSize="10"
                                                        Foreground="{StaticResource MutedBrush}" TextAlignment="Right"
-                                                       VerticalAlignment="Center" MaxWidth="78" TextWrapping="Wrap" />
+                                                       VerticalAlignment="Center" MaxWidth="92" TextWrapping="Wrap" />
                                         </Grid>
                                     </Button>
                                 </DataTemplate>
@@ -1050,7 +1062,7 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                                <TextBlock Text="{Binding ScheduleHighlightSummary}" FontSize="9"
+                                <TextBlock Text="{Binding ScheduleHighlightSummary}" FontSize="10"
                                            Foreground="{StaticResource MutedBrush}"
                                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                 <Button Grid.Column="1" Classes="link" Content="清除"

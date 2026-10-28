@@ -46,7 +46,9 @@ public static class RegistrationWorkbookExporter
 
     private static void Write(MeetClass meetClass, string source, string target)
     {
-        using var workbook = new XLWorkbook(source);
+        // stream 构造：读完即释放句柄（Plan 4.2，与导入侧一致）。
+        using var stream = Import.WorkbookIO.OpenReadShared(source);
+        using var workbook = new XLWorkbook(stream);
         var sheet = FindSheet(workbook);
         var headerRow = FindHeaderRow(sheet);
         var dataStart = headerRow + 1;
@@ -58,13 +60,16 @@ public static class RegistrationWorkbookExporter
         if (!string.IsNullOrWhiteSpace(meetClass.Coach)) sheet.Cell(5, 2).Value = meetClass.Coach;
 
         var templateEnd = Math.Max(sheet.LastRowUsed()?.RowNumber() ?? dataStart, dataStart + 28);
-        for (var row = dataStart; row <= templateEnd; row++)
-        {
-            for (var column = 1; column <= 7; column++)
-                sheet.Cell(row, column).Clear(XLClearOptions.Contents);
-        }
+        // 一次性清空模板区内容（Plan 4.2：替代逐格 196 次 Cell().Clear()）。
+        sheet.Range(dataStart, 1, templateEnd, 7).Clear(XLClearOptions.Contents);
 
         var sourceStyleRow = dataStart;
+        // 源样式只取一次缓存复用（Plan 4.2：替代循环内每行每列重复解析）。
+        var sourceStyles = new IXLStyle[8];
+        for (var column = 1; column <= 7; column++)
+            sourceStyles[column] = sheet.Cell(sourceStyleRow, column).Style;
+        var sourceHeight = sheet.Row(sourceStyleRow).Height;
+
         var athletes = meetClass.Athletes
             .Where(a => !string.IsNullOrWhiteSpace(a.Name))
             .ToList();
@@ -76,8 +81,8 @@ public static class RegistrationWorkbookExporter
             if (row > templateEnd)
             {
                 for (var column = 1; column <= 7; column++)
-                    sheet.Cell(row, column).Style = sheet.Cell(sourceStyleRow, column).Style;
-                sheet.Row(row).Height = sheet.Row(sourceStyleRow).Height;
+                    sheet.Cell(row, column).Style = sourceStyles[column];
+                sheet.Row(row).Height = sourceHeight;
             }
 
             sheet.Cell(row, 1).Value = athlete.Name.Trim();

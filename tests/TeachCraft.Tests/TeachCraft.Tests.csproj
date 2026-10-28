@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\SeatGrid.Core\SeatGrid.Core.csproj" />
     <ProjectReference Include="..\..\src\ClassBlock.Core\ClassBlock.Core.csproj" />
     <ProjectReference Include="..\..\src\MeetRoster.Core\MeetRoster.Core.csproj" />
+    <ProjectReference Include="..\..\src\MeetRoster.App\MeetRoster.App.csproj" />
   </ItemGroup>
 
 </Project>

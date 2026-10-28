@@ -139,7 +139,7 @@ public partial class EventEditorViewModel : ObservableObject
         }
 
         RefreshSelectedEvents();
-        RebuildChoices();
+        UpdateGroupChoices();
         OnPropertyChanged(nameof(CanClear));
         OnPropertyChanged(nameof(ShowClearSingle));
         OnPropertyChanged(nameof(ShowClearGroup));
@@ -151,7 +151,7 @@ public partial class EventEditorViewModel : ObservableObject
         if (!IsGroupMode) return;
         _selections.Clear();
         RefreshSelectedEvents();
-        RebuildChoices();
+        UpdateGroupChoices();
         Hint = IsTeamGroup ? "已清空团体项目。" : "已清空比赛项目。";
         OnPropertyChanged(nameof(CanClear));
         OnPropertyChanged(nameof(ShowClearSingle));
@@ -167,16 +167,53 @@ public partial class EventEditorViewModel : ObservableObject
         if (IsTeamGroup)
         {
             foreach (var eventName in MeetCatalog.TeamEvents)
-                _allChoices.Add(BuildGroupChoice(eventName, isTeam: true));
+                _allChoices.Add(new EventChoiceViewModel(eventName, isTeam: true));
         }
         else
         {
             var events = _row.Gender == "女子" ? MeetCatalog.FemaleIndividualEvents : MeetCatalog.MaleIndividualEvents;
             foreach (var eventName in events)
-                _allChoices.Add(BuildGroupChoice(eventName, isTeam: false));
+                _allChoices.Add(new EventChoiceViewModel(eventName, isTeam: false));
         }
 
+        UpdateGroupChoices();
         RefreshChoices();
+    }
+
+    /// <summary>
+    /// 原地刷新候选行的状态（人数预判 / 选中态 / 满员提醒），不重建 Choices 集合——
+    /// 多选切换时列表滚动位置不跳（Plan ⑥ / P1-11）。
+    /// </summary>
+    private void UpdateGroupChoices()
+    {
+        foreach (var choice in _allChoices)
+        {
+            var selected = _selections.Contains(choice.EventName);
+            var others = choice.IsTeam ? CountOtherTeamAthletes(choice.EventName) : CountOtherAthletes(choice.EventName, excludeSelf: true);
+            var total = others + (selected ? 1 : 0);
+
+            choice.Meta = choice.IsTeam ? $"本班已有 {total} 人报此项目" : $"{_row.Gender} 已报 {total}/2";
+            choice.ReplaceText = selected ? "已选" : "选入";
+            choice.IsCurrent = selected;
+
+            if (!selected && _selections.Count >= _maxSelections)
+            {
+                choice.Warning = IsTeamGroup
+                    ? $"已选 {_maxSelections} 个团体项目，先取消一个再选。"
+                    : $"已选 {_maxSelections} 个单项，先取消一个再选。";
+                choice.HasWarning = true;
+            }
+            else if (!choice.IsTeam && !selected && total >= 2)
+            {
+                choice.Warning = $"{_row.Gender}{choice.EventName} 已满 2 人，选入后会提示超限";
+                choice.HasWarning = true;
+            }
+            else
+            {
+                choice.Warning = string.Empty;
+                choice.HasWarning = false;
+            }
+        }
     }
 
     private EventChoiceViewModel BuildTeamChoice(string eventName, string current)
@@ -228,35 +265,6 @@ public partial class EventEditorViewModel : ObservableObject
             choice.HasWarning = true;
         }
         else if (total >= 2)
-        {
-            choice.Warning = $"{_row.Gender}{eventName} 已满 2 人，选入后会提示超限";
-            choice.HasWarning = true;
-        }
-
-        return choice;
-    }
-
-    private EventChoiceViewModel BuildGroupChoice(string eventName, bool isTeam)
-    {
-        var selected = _selections.Contains(eventName);
-        var others = isTeam ? CountOtherTeamAthletes(eventName) : CountOtherAthletes(eventName, excludeSelf: true);
-        var total = others + (selected ? 1 : 0);
-
-        var choice = new EventChoiceViewModel(eventName, isTeam)
-        {
-            Meta = isTeam ? $"本班已有 {total} 人报此项目" : $"{_row.Gender} 已报 {total}/2",
-            ReplaceText = selected ? "已选" : "选入",
-            IsCurrent = selected,
-        };
-
-        if (!selected && _selections.Count >= _maxSelections)
-        {
-            choice.Warning = IsTeamGroup
-                ? $"已选 {_maxSelections} 个团体项目，先取消一个再选。"
-                : $"已选 {_maxSelections} 个单项，先取消一个再选。";
-            choice.HasWarning = true;
-        }
-        else if (!isTeam && !selected && total >= 2)
         {
             choice.Warning = $"{_row.Gender}{eventName} 已满 2 人，选入后会提示超限";
             choice.HasWarning = true;
@@ -321,9 +329,20 @@ public partial class EventEditorViewModel : ObservableObject
     }
 }
 
-/// <summary>选择项目列表里的一行：项目名 + 人数预判 + 满员 / 重复提醒。</summary>
-public sealed class EventChoiceViewModel
+/// <summary>
+/// 选择项目列表里的一行：项目名 + 人数预判 + 满员 / 重复提醒。
+/// 状态可原地更新（INPC），多选切换时列表不重建、滚动位置不跳（Plan ⑥ / P1-11）。
+/// </summary>
+public sealed class EventChoiceViewModel : System.ComponentModel.INotifyPropertyChanged
 {
+    private string _meta = string.Empty;
+    private string _replaceText = string.Empty;
+    private bool _isCurrent;
+    private string _warning = string.Empty;
+    private bool _hasWarning;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
     public EventChoiceViewModel(string eventName, bool isTeam)
     {
         EventName = eventName;
@@ -332,10 +351,19 @@ public sealed class EventChoiceViewModel
 
     public string EventName { get; }
     public bool IsTeam { get; }
-    public string Meta { get; init; } = string.Empty;
-    public string ReplaceText { get; init; } = string.Empty;
-    public bool IsCurrent { get; init; }
-    public string Warning { get; set; } = string.Empty;
-    public bool HasWarning { get; set; }
+    public string Meta { get => _meta; set => Set(ref _meta, value); }
+    public string ReplaceText { get => _replaceText; set => Set(ref _replaceText, value); }
+    public bool IsCurrent { get => _isCurrent; set => Set(ref _isCurrent, value); }
+    public string Warning { get => _warning; set => Set(ref _warning, value); }
+    public bool HasWarning { get => _hasWarning; set => Set(ref _hasWarning, value); }
     public string AutomationName => $"{EventName}，{Meta}";
+
+    private void Set<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? name = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+        if (name == nameof(Meta))
+            PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(AutomationName)));
+    }
 }

@@ -11,17 +11,21 @@ namespace MeetRoster.App;
 
 public sealed partial class MeetRosterViewModel : ObservableObject
 {
-    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#5A7A4B"));
-    private static readonly IBrush NeutralBrush = new SolidColorBrush(Color.Parse("#6F6A5E"));
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#A34A36"));
+    private static readonly IBrush SuccessBrush = MeetRosterPalette.Success;
+    private static readonly IBrush NeutralBrush = MeetRosterPalette.Neutral;
+    private static readonly IBrush ErrorBrush = MeetRosterPalette.Error;
 
     private MeetProject _project = new();
     private readonly Dictionary<string, List<RegistrationIssue>> _importIssues = new(StringComparer.Ordinal);
+    private readonly List<RosterEntry> _roster = [];
     private bool _isDemo = true;
     private bool _scheduleImported;
     private string _scheduleFilterKey = "all";
 
     public MeetProject Project => _project;
+
+    /// <summary>当前载入的是合成示例数据；首次真实导入会整体替换示例班。</summary>
+    public bool IsDemo => _isDemo;
 
     public ObservableCollection<ClassItemViewModel> AllClasses { get; } = [];
     public ObservableCollection<ClassItemViewModel> VisibleClasses { get; } = [];
@@ -173,10 +177,20 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         SetStatus("已载入合成示例数据 · 仅用于界面走查");
     }
 
+    /// <summary>班级搜索是否已排入一次筛选；连续输入只做最后一次（Plan ⑥ / P1-13）。</summary>
+    private bool _classFilterQueued;
+
     partial void OnClassSearchTextChanged(string value)
     {
-        ApplyClassFilter();
-        OnPropertyChanged(nameof(ClassListSummary));
+        // 输入路径防抖：筛选本身很轻，但重建 VisibleClasses 可能连带重置选中班级。
+        if (_classFilterQueued) return;
+        _classFilterQueued = true;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _classFilterQueued = false;
+            ApplyClassFilter();
+            OnPropertyChanged(nameof(ClassListSummary));
+        }, Avalonia.Threading.DispatcherPriority.Background);
     }
 
     partial void OnIsBusyChanged(bool value)
@@ -276,7 +290,11 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
     public void AddAthlete()
     {
-        if (SelectedClass is null) return;
+        if (SelectedClass is null)
+        {
+            SetStatus("先导入或选择一个班级，再添加运动员");
+            return;
+        }
 
         // 末尾已经有空白行时不再叠加，避免连点生成一串空行。
         var last = SelectedClass.Athletes.LastOrDefault();
@@ -290,7 +308,8 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
         SelectedClass.AddAthlete();
         OnPropertyChanged(nameof(SelectedClassFooter));
-        SetStatus($"已为 {SelectedClass.Name} 添加一行");
+        SetStatus($"已为 {SelectedClass.Name} 添加一行"
+                  + (HasRoster ? string.Empty : "（导入名单后可点「添加运动员」从名单挑选）"));
     }
 
     public void RemoveAthlete(AthleteRowViewModel row)
@@ -312,17 +331,27 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         var results = new List<RegistrationImportResult>();
         await Task.Run(() =>
         {
-            foreach (var path in paths)
-            {
-                try
+            // 并行导入（Plan 4.1）：ClosedXML 载入占大头，限流并发 + (index, result) 按原文件顺序回填，
+            // 保住"同批次同名班级取最后一份"的既有语义。
+            var resultsBag = new System.Collections.Concurrent.ConcurrentBag<(int Index, RegistrationImportResult Result)>();
+            var errorBag = new System.Collections.Concurrent.ConcurrentBag<(int Index, string Error)>();
+            Parallel.ForEach(Enumerable.Range(0, paths.Count),
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                i =>
                 {
-                    results.Add(RegistrationWorkbookImporter.Import(path));
-                }
-                catch (Exception ex)
-                {
-                    errors.Add($"{Path.GetFileName(path)}：{ex.Message}");
-                }
-            }
+                    try
+                    {
+                        resultsBag.Add((i, RegistrationWorkbookImporter.Import(paths[i])));
+                    }
+                    catch (Exception ex)
+                    {
+                        // 业务校验的中文消息（InvalidDataException）原样透传，意外异常走 ErrorText 人话。
+                        var reason = ex is InvalidDataException ? ex.Message : ErrorText.Describe(ex, "读取");
+                        errorBag.Add((i, $"{Path.GetFileName(paths[i])}：{reason}"));
+                    }
+                });
+            results.AddRange(resultsBag.OrderBy(t => t.Index).Select(t => t.Result));
+            errors.AddRange(errorBag.OrderBy(t => t.Index).Select(t => t.Error));
         });
 
         IsBusy = false;
@@ -358,7 +387,9 @@ public sealed partial class MeetRosterViewModel : ObservableObject
                 : _project.Note,
         };
 
-        if (!_isDemo && _scheduleImported)
+        // 合并导入：同名班整体替换、旧班原样保留、新班按导入顺序追加。
+        // 示例数据模式除外——首次导入把示例班整体换掉。
+        if (!_isDemo)
         {
             var importedByName = imported.ToDictionary(r => r.Class.Name, r => r, StringComparer.Ordinal);
             var added = new HashSet<string>(StringComparer.Ordinal);
@@ -419,6 +450,12 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         try
         {
             result = await Task.Run(() => ScheduleWorkbookImporter.Import(path));
+        }
+        catch (InvalidDataException ex)
+        {
+            IsBusy = false;
+            SetStatus(ex.Message, true);
+            return;
         }
         catch (Exception ex)
         {
@@ -506,10 +543,9 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             return;
         }
 
-        IsDirty = false;
-        var message = $"已导出 {exported} 份报名表到 {outputDirectory}";
-        if (errors.Count > 0) message += $" · {errors.Count} 份失败";
-        SetStatus(message, errors.Count > 0, string.Join(Environment.NewLine, errors), success: errors.Count == 0);
+        FinishWriteBack("已导出", exported, classes.Count, errors,
+            successTail: $"到 {outputDirectory}",
+            successTailDetail: string.Empty);
     }
 
     /// <summary>把当前名单写回各自的原始报名表（先备份 .bak 再替换）。</summary>
@@ -522,7 +558,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
         if (classes.Count == 0)
         {
-            SetStatus("当前没有可保存的原始报名表；用「另存为」导出到文件夹。", true);
+            SetStatus(DescribeUnsavableClasses(), true);
             return;
         }
 
@@ -555,17 +591,182 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             return;
         }
 
-        IsDirty = false;
-        var message = $"已保存 {saved} 份到原文件 · 原文件备份为 .bak";
-        if (errors.Count > 0) message += $" · {errors.Count} 份失败";
-        SetStatus(message, errors.Count > 0, string.Join(Environment.NewLine, errors),
-            success: errors.Count == 0);
+        FinishWriteBack("已保存", saved, classes.Count, errors,
+            successTail: "到原文件 · 原文件备份为 .bak",
+            successTailDetail: string.Empty);
+    }
+
+    /// <summary>
+    /// 保存 / 另存为的统一收尾（Plan 1.2 + 1.3）：只有"全部目标班级都成功写入、
+    /// 且没有有数据但没被写出去的班"才允许清未保存标记，否则保留脏标记并点名。
+    /// </summary>
+    private void FinishWriteBack(string verbPrefix, int written, int total,
+        IReadOnlyList<string> errors, string successTail, string successTailDetail)
+    {
+        var missingSource = ClassesWithoutSource();
+
+        if (errors.Count == 0 && written == total && missingSource.Count == 0)
+        {
+            IsDirty = false;
+            SetStatus($"{verbPrefix} {written} 份报名表 {successTail}", success: true,
+                detail: successTailDetail.Length > 0 ? successTailDetail : null);
+            return;
+        }
+
+        // 有失败或有班级没被写入：保留 IsDirty，逐项说明。
+        var parts = new List<string> { $"{verbPrefix} {written}/{total} 份报名表" };
+        if (errors.Count > 0)
+            parts.Add($"{errors.Count} 份失败（这些班级的改动尚未保存）");
+        if (missingSource.Count > 0)
+            parts.Add($"{missingSource.Count} 个班没有原始报名表未写入");
+        var message = string.Join(" · ", parts);
+        if (missingSource.Count > 0)
+            message += $"（{string.Join("、", missingSource)}）";
+        SetStatus(message, error: true,
+            detail: string.Join(Environment.NewLine,
+                errors.Concat(missingSource.Select(n => $"{n}：没有原始报名表，本次未写入"))));
+    }
+
+    /// <summary>有报名数据但没有原始报名表的班级：保存 / 另存为都不会写入它们。</summary>
+    private List<string> ClassesWithoutSource() => AllClasses
+        .Where(c => c.AthleteCount > 0 && string.IsNullOrWhiteSpace(c.Source.SourcePath))
+        .Select(c => c.Name)
+        .ToList();
+
+    /// <summary>Ctrl+S 按下但找不到任何可写目标时的点名提示。</summary>
+    public string DescribeUnsavableClasses()
+    {
+        var missing = ClassesWithoutSource();
+        if (missing.Count == 0)
+            return "当前没有可保存的原始报名表";
+        return $"以下班级没有原始报名表，无法直接保存：{string.Join("、", missing)}。"
+               + "可在 Excel 中按模板为它们新建报名表后重新导入；「另存为」也只会导出有原始报名表的班级。";
     }
 
     public void ClearClassSearch()
     {
         ClassSearchText = string.Empty;
         SetStatus("已清除班级筛选");
+    }
+
+    // ---------- 名单（添加运动员时按名单挑选） ----------
+
+    /// <summary>是否已导入学生名单；有名单时「添加运动员」改为从名单挑选。</summary>
+    public bool HasRoster => _roster.Count > 0;
+
+    public int RosterCount => _roster.Count;
+
+    /// <summary>当前班级可挑选的名单候选（名单里带其他班标记的会按班级过滤）。</summary>
+    public IReadOnlyList<RosterCandidateViewModel> BuildRosterCandidates()
+    {
+        if (SelectedClass is null) return [];
+
+        var existing = SelectedClass.Athletes
+            .Select(a => a.Name)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .ToHashSet(StringComparer.Ordinal);
+
+        // 名单若有班级列：只显示本班或未标班级的学生；本班一个都没有时不筛（避免名单与班级命名不一致时空白）。
+        var forClass = _roster
+            .Where(e => e.ClassName.Length == 0 || string.Equals(e.ClassName, SelectedClass.Name, StringComparison.Ordinal))
+            .ToList();
+        var effective = forClass.Count > 0 ? forClass : _roster;
+
+        return effective
+            .Select(e => new RosterCandidateViewModel(e, existing.Contains(e.Name)))
+            .ToList();
+    }
+
+    /// <summary>把名单里选中的学生加入当前班级；已在表内的同名跳过。返回实际加入人数。</summary>
+    public int AddAthletesFromRoster(IReadOnlyList<RosterEntry> picks)
+    {
+        if (SelectedClass is null || picks.Count == 0) return 0;
+
+        var existing = SelectedClass.Athletes
+            .Select(a => a.Name)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var added = 0;
+        var missingGender = 0;
+        foreach (var entry in picks)
+        {
+            if (!existing.Add(entry.Name)) continue;
+            var gender = string.IsNullOrEmpty(entry.Gender) ? "男子" : entry.Gender;
+            if (string.IsNullOrEmpty(entry.Gender)) missingGender++;
+            SelectedClass.AddAthlete(entry.Name, gender);
+            added++;
+        }
+
+        OnPropertyChanged(nameof(SelectedClassFooter));
+        if (added == 0)
+            SetStatus("选中的学生都已在当前班级的报名表里");
+        else
+        {
+            var message = $"已从名单加入 {added} 名运动员到 {SelectedClass.Name}";
+            if (missingGender > 0) message += $" · {missingGender} 人名单没有性别，已按男子录入";
+            SetStatus(message, success: true);
+        }
+
+        return added;
+    }
+
+    /// <summary>读取学生名单（花名册），供「添加运动员」时挑选。</summary>
+    public async Task ImportRosterFileAsync(string path)
+    {
+        IsBusy = true;
+        SetStatus("正在读取名单…");
+
+        RosterImportResult result;
+        try
+        {
+            result = await Task.Run(() => RosterNameImporter.Import(path));
+        }
+        catch (InvalidDataException ex)
+        {
+            IsBusy = false;
+            SetStatus(ex.Message, true);
+            return;
+        }
+        catch (Exception ex)
+        {
+            IsBusy = false;
+            SetStatus(ErrorText.Describe(ex, "读取名单"), true);
+            return;
+        }
+
+        IsBusy = false;
+        if (result.Entries.Count == 0)
+        {
+            SetStatus("名单里没有读到学生：请确认「姓名」列下方有数据", true);
+            return;
+        }
+
+        // 归班：条目自带班级优先；否则用标题/文件名推断的班级（如“七年级1班花名册”）。
+        var entries = result.Entries
+            .Select(e => e.ClassName.Length > 0 || result.InferredClassName.Length == 0
+                ? e
+                : e with { ClassName = result.InferredClassName })
+            .ToList();
+
+        // 按班替换：同一份花名册重复导入不会叠加，不同班的名单则累加（支持一班一个文件）。
+        var classes = entries.Select(e => e.ClassName).Distinct(StringComparer.Ordinal).ToList();
+        foreach (var cls in classes)
+            _roster.RemoveAll(e => string.Equals(e.ClassName, cls, StringComparison.Ordinal));
+        _roster.AddRange(entries);
+
+        OnPropertyChanged(nameof(HasRoster));
+        OnPropertyChanged(nameof(RosterCount));
+
+        var message = $"已导入名单 · {entries.Count} 人";
+        var labeled = entries.Select(e => e.ClassName).Where(c => c.Length > 0).Distinct(StringComparer.Ordinal).ToList();
+        if (labeled.Count == 1 && labeled[0] == result.InferredClassName && result.InferredClassName.Length > 0)
+            message += $"（{result.InferredClassName}，按标题/文件名识别）";
+        else if (labeled.Count == 1)
+            message += $"（{labeled[0]}）";
+        if (_roster.Count > entries.Count) message += $" · 名单累计 {_roster.Count} 人";
+        if (result.Issues.Count > 0) message += $" · {result.Issues.Count} 条提示";
+        SetStatus(message + "；点「添加运动员」即可从名单挑选", success: true);
     }
 
     public void SetStatus(string text, bool error = false, string? detail = null, bool success = false)
@@ -598,7 +799,8 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             RefreshSchedule();
         }
 
-        ApplyClassFilter();
+        // 只自动补位，不覆盖调用方指定的班级（Plan 3.2：LoadProject 里 SelectedClass 只赋值一次）。
+        ApplyClassFilter(autoSelect: false);
         SelectedClass = VisibleClasses.FirstOrDefault(c => c.Name == preferredClassName)
                        ?? VisibleClasses.FirstOrDefault();
         ScheduleHighlightClass = null;
@@ -643,7 +845,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         OnPropertyChanged(nameof(CanExport));
     }
 
-    private void ApplyClassFilter()
+    private void ApplyClassFilter(bool autoSelect = true)
     {
         var query = (ClassSearchText ?? string.Empty).Trim();
         VisibleClasses.Clear();
@@ -654,7 +856,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
                 VisibleClasses.Add(item);
         }
 
-        if (VisibleClasses.Count > 0 && (SelectedClass is null || !VisibleClasses.Contains(SelectedClass)))
+        if (autoSelect && VisibleClasses.Count > 0 && (SelectedClass is null || !VisibleClasses.Contains(SelectedClass)))
             SelectedClass = VisibleClasses[0];
         else if (VisibleClasses.Count == 0)
             SelectedClass = null;
@@ -672,9 +874,8 @@ public sealed partial class MeetRosterViewModel : ObservableObject
     {
         IsDirty = true;
 
-        // 名单一旦被编辑，导入时的旧提示就过期了：按当前数据重新体检，避免“改完了提示还在”。
-        if (_importIssues.Remove(item.Name))
-            RebuildImportNotices();
+        // 名单一旦被编辑，导入时的旧提示就过期了（RebuildImportNotices 在合并队列里处理）。
+        ScheduleHeavyRefresh();
 
         OnPropertyChanged(nameof(AthleteTotalLabel));
         OnPropertyChanged(nameof(EntryTotalLabel));
@@ -688,7 +889,31 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowValidationPanel));
         OnPropertyChanged(nameof(SelectedClassFooter));
 
-        if (ReferenceEquals(item, SelectedClass))
+        // 重量级重算（事件统计 / 全表校验 / 赛程刷新）合并到渲染空闲时执行（Plan 3.1 / 3.3）。
+    }
+
+    /// <summary>是否已排入一次重量级重算；连续编辑只保留最后一次。</summary>
+    private bool _heavyRefreshQueued;
+
+    /// <summary>
+    /// 把每次编辑都会触发的重算合并到 Dispatcher 空闲档（Plan 3.1 / 3.3）：
+    /// 事件统计、报名体检、导入提示、示例赛程的 RefreshEntries + RefreshSchedule。
+    /// 轻通知（状态栏 / IsDirty / 汇总标签）已在调用点同步完成。
+    /// </summary>
+    private void ScheduleHeavyRefresh()
+    {
+        if (_heavyRefreshQueued) return;
+        _heavyRefreshQueued = true;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _heavyRefreshQueued = false;
+            RunHeavyRefresh();
+        }, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
+    private void RunHeavyRefresh()
+    {
+        if (SelectedClass is not null)
         {
             RebuildEventStats();
             RebuildValidationIssues();
@@ -785,7 +1010,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
     {
         "track" => slot.Category == MeetEventCategory.Track,
         "field" => slot.Category == MeetEventCategory.Field,
-        "fun" => slot.Category == MeetEventCategory.Fun,
+        // 「趣味」自 1.14.1 起并入「团体」筛选，fun 键不再可达（Plan U-6）。
         "team" => slot.Category is MeetEventCategory.Team or MeetEventCategory.Fun,
         "ceremony" => slot.Category == MeetEventCategory.Ceremony,
         _ => true,
@@ -826,7 +1051,9 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             EventStats.Add(new EventStatItem(
                 eventName,
                 SelectedClass.CountFor("男子", eventName),
-                SelectedClass.CountFor("女子", eventName)));
+                SelectedClass.CountFor("女子", eventName),
+                maleAvailable: MeetCatalog.MaleIndividualEvents.Contains(eventName),
+                femaleAvailable: MeetCatalog.FemaleIndividualEvents.Contains(eventName)));
         }
     }
 
@@ -903,45 +1130,44 @@ public sealed partial class MeetRosterViewModel : ObservableObject
     }
 }
 
-/// <summary>单项人数：男、女两栏各按“每班上限 2 人”给出计数。</summary>
+/// <summary>单项人数：男、女两栏各按“每班上限 2 人”给出计数；该性别不存在的项目显示 “—”（Plan U-7）。</summary>
 public sealed class EventStatItem
 {
-    private static readonly IBrush Muted = new SolidColorBrush(Color.Parse("#8A8476"));
-    private static readonly IBrush Accent = new SolidColorBrush(Color.Parse("#A34A36"));
-    private static readonly IBrush Moss = new SolidColorBrush(Color.Parse("#5A7A4B"));
-    private static readonly IBrush Danger = new SolidColorBrush(Color.Parse("#A34A36"));
-
-    public EventStatItem(string name, int maleCount, int femaleCount)
+    public EventStatItem(string name, int maleCount, int femaleCount,
+        bool maleAvailable = true, bool femaleAvailable = true)
     {
         Name = name;
         MaleCount = maleCount;
         FemaleCount = femaleCount;
+        MaleAvailable = maleAvailable;
+        FemaleAvailable = femaleAvailable;
     }
 
     public string Name { get; }
     public int MaleCount { get; }
     public int FemaleCount { get; }
-    public string MaleLabel => $"{MaleCount}/2";
-    public string FemaleLabel => $"{FemaleCount}/2";
-    public IBrush MaleBrush => BrushFor(MaleCount);
-    public IBrush FemaleBrush => BrushFor(FemaleCount);
-    public bool IsOverLimit => MaleCount > 2 || FemaleCount > 2;
+    public bool MaleAvailable { get; }
+    public bool FemaleAvailable { get; }
+    public string MaleLabel => MaleAvailable ? $"{MaleCount}/2" : "—";
+    public string FemaleLabel => FemaleAvailable ? $"{FemaleCount}/2" : "—";
+    public IBrush MaleBrush => BrushFor(MaleCount, MaleAvailable);
+    public IBrush FemaleBrush => BrushFor(FemaleCount, FemaleAvailable);
+    public bool IsOverLimit => (MaleAvailable && MaleCount > 2) || (FemaleAvailable && FemaleCount > 2);
 
-    private static IBrush BrushFor(int count) => count switch
-    {
-        <= 0 => Muted,
-        1 => Accent,
-        2 => Moss,
-        _ => Danger,
-    };
+    private static IBrush BrushFor(int count, bool available) => !available
+        ? MeetRosterPalette.Muted
+        : count switch
+        {
+            <= 0 => MeetRosterPalette.Muted,
+            1 => MeetRosterPalette.Accent,
+            2 => MeetRosterPalette.Moss,
+            _ => MeetRosterPalette.Error,
+        };
 }
 
 /// <summary>报名体检中的一条提示。</summary>
 public sealed class ValidationIssueItem
 {
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#A34A36"));
-    private static readonly IBrush WarningBrush = new SolidColorBrush(Color.Parse("#A07A3C"));
-
     public ValidationIssueItem(string message, bool isError)
     {
         Message = message;
@@ -950,17 +1176,17 @@ public sealed class ValidationIssueItem
 
     public string Message { get; }
     public bool IsError { get; }
-    public IBrush Brush => IsError ? ErrorBrush : WarningBrush;
+    public IBrush Brush => IsError ? MeetRosterPalette.Error : MeetRosterPalette.Warning;
 }
 
 /// <summary>赛程今日分类统计。</summary>
 public sealed class ScheduleCategoryStatItem
 {
-    public static readonly IBrush TrackBrush = new SolidColorBrush(Color.Parse("#A34A36"));
-    public static readonly IBrush FieldBrush = new SolidColorBrush(Color.Parse("#5A7A4B"));
-    public static readonly IBrush FunBrush = new SolidColorBrush(Color.Parse("#4F6D7A"));
-    public static readonly IBrush TeamBrush = new SolidColorBrush(Color.Parse("#8A6A3C"));
-    public static readonly IBrush CeremonyBrush = new SolidColorBrush(Color.Parse("#7C7668"));
+    public static readonly IBrush TrackBrush = MeetRosterPalette.Track;
+    public static readonly IBrush FieldBrush = MeetRosterPalette.Field;
+    public static readonly IBrush FunBrush = MeetRosterPalette.Fun;
+    public static readonly IBrush TeamBrush = MeetRosterPalette.Team;
+    public static readonly IBrush CeremonyBrush = MeetRosterPalette.Ceremony;
 
     public ScheduleCategoryStatItem(string name, int count, IBrush brush)
     {

@@ -23,6 +23,7 @@ public sealed partial class AthleteRowViewModel : ObservableObject
 
     private readonly Athlete _source;
     private readonly Action? _changed;
+    private bool _suppressChanged; // 批量写多个槽位时抑制逐槽回调，收尾统一触发一次（Plan 3.4）
     private string _teamEvent1;
 
     /// <summary>该行背后的 Athlete 档案，供人数统计按引用排除本人。</summary>
@@ -116,12 +117,20 @@ public sealed partial class AthleteRowViewModel : ObservableObject
         // 性别变了以后，原来选的项目可能在新性别里不存在（如女子没有 1000 米），直接摘掉并留提示。
         var allowed = value == "女子" ? MeetCatalog.FemaleIndividualEvents : MeetCatalog.MaleIndividualEvents;
         var dropped = new List<string>();
-        foreach (var slot in IndividualSlots)
+        _suppressChanged = true;
+        try
         {
-            var current = RawEvent(slot);
-            if (string.IsNullOrWhiteSpace(current) || allowed.Contains(current)) continue;
-            SetEvent(slot, string.Empty);
-            dropped.Add(current);
+            foreach (var slot in IndividualSlots)
+            {
+                var current = RawEvent(slot);
+                if (string.IsNullOrWhiteSpace(current) || allowed.Contains(current)) continue;
+                SetEvent(slot, string.Empty);
+                dropped.Add(current);
+            }
+        }
+        finally
+        {
+            _suppressChanged = false;
         }
 
         LastGenderAdjustment = dropped.Count == 0
@@ -143,7 +152,7 @@ public sealed partial class AthleteRowViewModel : ObservableObject
         write(raw);
         OnPropertyChanged();
         RefreshChips();
-        _changed?.Invoke();
+        if (!_suppressChanged) _changed?.Invoke();
     }
 
     /// <summary>读取槽位原始值；空字符串表示未报。</summary>
@@ -187,18 +196,43 @@ public sealed partial class AthleteRowViewModel : ObservableObject
         OnPropertyChanged(nameof(IsIndividual2Empty));
     }
 
-    /// <summary>把一组团体项目按顺序写回三个格；多余的清空。</summary>
+    /// <summary>把一组团体项目按顺序写回三个格；多余的清空。整批只触发一次变更回调。</summary>
+    /// <summary>
+    /// 写回团体项目：每个项目固定对应一个槽位——4x100→团体项目1、20*50→团体项目2、一分钟跳绳→团体项目3，
+    /// 不再按选择顺序填格（与 Excel 模板列一一对应）。整批只触发一次变更回调。
+    /// </summary>
     public void SetTeamEvents(IReadOnlyList<string> events)
     {
-        for (var i = 0; i < TeamSlots.Count; i++)
-            SetEvent(TeamSlots[i], i < events.Count ? events[i] : string.Empty);
+        var arranged = MeetCatalog.ArrangeTeamSlots(events);
+        _suppressChanged = true;
+        try
+        {
+            for (var i = 0; i < TeamSlots.Count; i++)
+                SetEvent(TeamSlots[i], arranged[i]);
+        }
+        finally
+        {
+            _suppressChanged = false;
+        }
+
+        _changed?.Invoke();
     }
 
-    /// <summary>把一组单项按顺序写回两个格；多余的清空。</summary>
+    /// <summary>把一组单项按顺序写回两个格；多余的清空。整批只触发一次变更回调。</summary>
     public void SetIndividualEvents(IReadOnlyList<string> events)
     {
-        for (var i = 0; i < IndividualSlots.Count; i++)
-            SetEvent(IndividualSlots[i], i < events.Count ? events[i] : string.Empty);
+        _suppressChanged = true;
+        try
+        {
+            for (var i = 0; i < IndividualSlots.Count; i++)
+                SetEvent(IndividualSlots[i], i < events.Count ? events[i] : string.Empty);
+        }
+        finally
+        {
+            _suppressChanged = false;
+        }
+
+        _changed?.Invoke();
     }
 
     private void RefreshChips()

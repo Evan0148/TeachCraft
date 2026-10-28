@@ -26,7 +26,10 @@
         <SolidColorBrush x:Key="WashBrush" Color="#FCFAF4" />
         <SolidColorBrush x:Key="WashHoverBrush" Color="#FBF3EC" />
         <SolidColorBrush x:Key="WashPressedBrush" Color="#F7E9DF" />
+        <SolidColorBrush x:Key="WashDeepBrush" Color="#EDE9DE" />
         <SolidColorBrush x:Key="AccentWashBrush" Color="#FBE4D7" />
+        <SolidColorBrush x:Key="HighlightBrush" Color="#FFF7F0" />
+        <SolidColorBrush x:Key="HighlightLineBrush" Color="#D9A58E" />
         <SolidColorBrush x:Key="LineStrongBrush" Color="#CFC8B6" />
         <SolidColorBrush x:Key="TeamBrush" Color="#8A6A3C" />
 

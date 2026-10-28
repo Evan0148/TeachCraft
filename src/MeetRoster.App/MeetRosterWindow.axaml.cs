@@ -10,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
+using MeetRoster.Core.Import;
 using TeachCraft.Shared;
 
 namespace MeetRoster.App;
@@ -17,6 +18,11 @@ namespace MeetRoster.App;
 public partial class MeetRosterWindow : Window
 {
     private static readonly FilePickerFileType ExcelFilter = new("Excel 报名表")
+    {
+        Patterns = ["*.xlsx"],
+    };
+
+    private static readonly FilePickerFileType RosterFilter = new("学生名单")
     {
         Patterns = ["*.xlsx"],
     };
@@ -135,12 +141,39 @@ public partial class MeetRosterWindow : Window
 
             if (paths.Count == 0) return;
 
-            var existing = ViewModel.AllClasses.Sum(c => c.AthleteCount);
-            if (existing > 0 && !await ConfirmDialog.ShowAsync(
-                    this, "替换当前报名表？",
-                    $"当前已有 {ViewModel.AllClasses.Count} 个班、{existing} 名运动员。导入会按班级整体替换同名班级，未导出的修改将丢失。",
-                    "替换导入", "取消", danger: true))
-                return;
+            var existingAthletes = ViewModel.AllClasses.Sum(c => c.AthleteCount);
+            if (ViewModel.IsDemo)
+            {
+                if (!await ConfirmDialog.ShowAsync(
+                        this, "导入报名表？",
+                        $"将导入 {paths.Count} 份报名表并替换当前示例数据，示例班级与排程不会保留。",
+                        "导入并替换示例", "取消", danger: true))
+                    return;
+            }
+            else
+            {
+                // 廉价预读各文件的"参赛单位"，把"新增 / 替换 / 保留"算给用户看；预读失败按新增对待。
+                var peeked = paths
+                    .Select(path => (Path: path, Name: RegistrationWorkbookImporter.PeekClassName(path)))
+                    .ToList();
+                var existingNames = ViewModel.AllClasses.Select(c => c.Name).ToHashSet(StringComparer.Ordinal);
+                var replaceNames = peeked
+                    .Where(p => p.Name is not null && existingNames.Contains(p.Name))
+                    .Select(p => p.Name!)
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(n => n, StringComparer.Ordinal)
+                    .ToList();
+                var newCount = peeked.Count(p => p.Name is null || !existingNames.Contains(p.Name));
+
+                if (existingAthletes > 0 && !await ConfirmDialog.ShowAsync(
+                        this, "导入报名表？",
+                        $"本次导入 {paths.Count} 份：新增 {newCount} 个班{SummarizeNewClasses(peeked, existingNames)}；"
+                        + $"替换 {replaceNames.Count} 个同名班{SummarizeClassNames(replaceNames)}；"
+                        + $"其余 {Math.Max(ViewModel.AllClasses.Count - replaceNames.Count, 0)} 个现有班原样保留。"
+                        + "同名班级将按新文件整体替换。",
+                        "导入报名表", "取消", danger: true))
+                    return;
+            }
 
             await ViewModel.ImportRegistrationFilesAsync(paths);
         }
@@ -296,7 +329,54 @@ public partial class MeetRosterWindow : Window
         }
     }
 
-    private void OnAddAthlete(object? sender, RoutedEventArgs e) => ViewModel.AddAthlete();
+    /// <summary>导入学生名单：之后「添加运动员」改为从名单挑选。</summary>
+    private async void OnImportRosterList(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "导入学生名单",
+                AllowMultiple = false,
+                FileTypeFilter = [RosterFilter],
+            });
+
+            var path = files.FirstOrDefault()?.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path)) return;
+
+            await ViewModel.ImportRosterFileAsync(path);
+        }
+        catch (Exception ex)
+        {
+            ViewModel.SetStatus(ErrorText.Describe(ex, "导入名单"), true);
+        }
+    }
+
+    /// <summary>
+    /// 添加运动员：已导入名单时弹出名单挑选窗（与「选择项目」同构，可多选）；
+    /// 没有名单时维持旧行为，直接加一行空白。
+    /// </summary>
+    private async void OnAddAthlete(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedClass is null)
+        {
+            ViewModel.SetStatus("先导入或选择一个班级，再添加运动员");
+            return;
+        }
+
+        if (!ViewModel.HasRoster)
+        {
+            ViewModel.AddAthlete();
+            return;
+        }
+
+        var dialog = new RosterPickWindow(new RosterPickViewModel(
+            ViewModel.BuildRosterCandidates(), ViewModel.SelectedClass.Name));
+        await dialog.ShowDialog(this);
+
+        if (dialog.Picked.Count == 0) return;
+        ViewModel.AddAthletesFromRoster(dialog.Picked);
+    }
 
     private async void OnRemoveAthlete(object? sender, RoutedEventArgs e)
     {
@@ -336,7 +416,7 @@ public partial class MeetRosterWindow : Window
         if (!ViewModel.CanSave)
         {
             ViewModel.SetStatus(ViewModel.IsDirty
-                ? "当前班级没有原始报名表，请用「另存为」导出"
+                ? ViewModel.DescribeUnsavableClasses()
                 : "没有需要保存的改动");
             return;
         }
@@ -363,9 +443,10 @@ public partial class MeetRosterWindow : Window
     private void OnNameLostFocus(object? sender, RoutedEventArgs e)
     {
         if (sender is not TextBox { DataContext: AthleteRowViewModel row }) return;
-        if (row.Name == row.Name.Trim()) return;
+        var name = row.Name;
+        if (string.IsNullOrWhiteSpace(name) || name == name.Trim()) return;
 
-        row.Name = row.Name.Trim();
+        row.Name = name.Trim();
     }
 
     private async void OnEditEvent(object? sender, RoutedEventArgs e)
@@ -411,4 +492,25 @@ public partial class MeetRosterWindow : Window
 
     private static string DisplayName(AthleteRowViewModel row) =>
         string.IsNullOrWhiteSpace(row.Name) ? "未命名运动员" : row.Name;
+
+    /// <summary>班级名列表的折叠展示：最多点名 5 个，其余合并为计数。</summary>
+    private static string SummarizeClassNames(IReadOnlyList<string> names)
+    {
+        if (names.Count == 0) return string.Empty;
+        var shown = string.Join("、", names.Take(5));
+        return $"（{shown}{(names.Count > 5 ? $" 等 {names.Count} 个班" : "")}）";
+    }
+
+    /// <summary>新增班的预读名单（预读失败的文件不计入点名，只算进数量）。</summary>
+    private static string SummarizeNewClasses(
+        IReadOnlyList<(string Path, string? Name)> peeked, IReadOnlySet<string> existingNames)
+    {
+        var names = peeked
+            .Where(p => p.Name is not null && !existingNames.Contains(p.Name))
+            .Select(p => p.Name!)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+        return SummarizeClassNames(names);
+    }
 }

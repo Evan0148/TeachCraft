@@ -9,6 +9,7 @@ namespace TeachCraft.Shared;
 /// <summary>
 /// 统一确认弹窗：纸墨配色、主操作 IsDefault、取消 IsCancel（Esc 可退）。
 /// 用于不可撤销的操作（覆盖、替换、删除已成形的数据），文案必须写清后果与数量。
+/// danger=true 时默认焦点（回车 / 空格）落在取消侧，确认必须显式点击。
 /// </summary>
 internal static class ConfirmDialog
 {
@@ -42,7 +43,7 @@ internal static class ConfirmDialog
         var confirm = new Button
         {
             Content = confirmText,
-            IsDefault = true,
+            IsDefault = !danger,
             Padding = new Thickness(16, 7),
             Background = danger ? Danger : Ink,
             Foreground = Paper,
@@ -52,6 +53,7 @@ internal static class ConfirmDialog
         {
             Content = cancelText,
             IsCancel = true,
+            IsDefault = danger,
             Padding = new Thickness(16, 7),
             Background = Card,
             Foreground = InkSoft,
@@ -91,6 +93,12 @@ internal static class ConfirmDialog
 
         cancel.Click += (_, _) => dialog.Close(false);
         confirm.Click += (_, _) => dialog.Close(true);
+
+        if (danger)
+        {
+            // 危险操作：把键盘焦点也放到安全侧，回车 / 空格都不会触发确认。
+            dialog.Opened += (_, _) => cancel.Focus();
+        }
 
         return await dialog.ShowDialog<bool>(owner);
     }

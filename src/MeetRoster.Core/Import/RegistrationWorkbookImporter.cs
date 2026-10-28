@@ -17,12 +17,52 @@ public sealed class RegistrationImportResult
 /// <summary>读取班级报名表模板，字段位置与附件模板保持一致。</summary>
 public static class RegistrationWorkbookImporter
 {
+    /// <summary>
+    /// 只读"参赛单位"一格，供导入确认弹窗预读班级名。
+    /// 任何失败（文件损坏 / 被占用 / 找不到字段）都返回 null，调用方按"新增班"对待；
+    /// 实际导入仍以完整解析结果为准。
+    /// </summary>
+    public static string? PeekClassName(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            using var stream = WorkbookIO.OpenReadShared(path);
+            using var workbook = new XLWorkbook(stream);
+            var sheet = FindSheet(workbook);
+            if (!TryFindHeader(sheet, out var headerRow)) return null;
+            var className = Clean(FindField(sheet, headerRow, "参赛单位"));
+            return className.Length > 0 ? className : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool TryFindHeader(IXLWorksheet sheet, out int headerRow)
+    {
+        try
+        {
+            headerRow = FindHeaderRow(sheet);
+            return true;
+        }
+        catch (InvalidDataException)
+        {
+            headerRow = 0;
+            return false;
+        }
+    }
+
     public static RegistrationImportResult Import(string path)
     {
         if (!File.Exists(path))
             throw new InvalidDataException("找不到报名表文件：" + path);
 
-        using var workbook = new XLWorkbook(path);
+        // stream 构造：ClosedXML 把整个包读进内存后即可释放文件句柄，
+        // 避免导入期间文件被 Excel 占用导致失败（Plan 4.1）。
+        using var stream = WorkbookIO.OpenReadShared(path);
+        using var workbook = WorkbookIO.OpenWorkbook(path, stream);
         var sheet = FindSheet(workbook);
         var headerRow = FindHeaderRow(sheet);
         var issues = new List<RegistrationIssue>();
@@ -72,13 +112,22 @@ public static class RegistrationWorkbookImporter
                 continue;
             }
 
+            // 团体项目重新分布到固定槽位：即使用户把 20*50 写进"团体项目1"列，
+            // 导入后也会归位到"团体项目2"，与 UI 写回、导出保持同一列位契约。
+            var arrangedTeam = MeetCatalog.ArrangeTeamSlots(
+            [
+                CleanTeamEvent(team1, row, issues),
+                CleanTeamEvent(team2, row, issues),
+                CleanTeamEvent(team3, row, issues),
+            ]);
+
             var athlete = new Athlete
             {
                 Name = name,
                 Gender = gender,
-                TeamEvent1 = CleanTeamEvent(team1, row, issues),
-                TeamEvent2 = CleanTeamEvent(team2, row, issues),
-                TeamEvent3 = CleanTeamEvent(team3, row, issues),
+                TeamEvent1 = arrangedTeam[0],
+                TeamEvent2 = arrangedTeam[1],
+                TeamEvent3 = arrangedTeam[2],
                 IndividualEvent1 = individual1,
                 IndividualEvent2 = individual2,
             };
@@ -232,33 +281,8 @@ public static class RegistrationWorkbookImporter
         return text;
     }
 
-    public static string NormalizeEvent(string value)
-    {
-        var text = Clean(value)
-            .Replace("×", "x", StringComparison.Ordinal)
-            .Replace("X", "x", StringComparison.Ordinal)
-            .Replace("＊", "*", StringComparison.Ordinal)
-            .Replace("（团体）", "", StringComparison.Ordinal)
-            .Replace("(团体)", "", StringComparison.Ordinal)
-            .Replace(" ", "", StringComparison.Ordinal)
-            .Replace("M", "米", StringComparison.OrdinalIgnoreCase);
-
-        return text switch
-        {
-            "100m" or "100米" => "100米",
-            "200m" or "200米" => "200米",
-            "400m" or "400米" => "400米",
-            "800m" or "800米" => "800米",
-            "1000m" or "1000米" or "100O米" => "1000米",
-            "实心球" => "实心球",
-            "立定跳远" => "立定跳远",
-            "跳高" => "跳高",
-            "4x100米接力" or "4x100M接力" => "4x100米接力",
-            "20x50米男女混合接力" or "20*50米男女混合接力" => "20*50米男女混合接力",
-            "1分钟跳绳" or "一分钟跳绳" or "1分钟跳绳（团体）" => "一分钟跳绳",
-            _ => text,
-        };
-    }
+    /// <summary>委托到统一归一化实现（Plan 2.2）；保留公共 API 兼容。</summary>
+    public static string NormalizeEvent(string value) => EventNameNormalizer.Normalize(value);
 
     private static string Clean(string value) =>
         (value ?? string.Empty).Replace("\u3000", " ", StringComparison.Ordinal).Trim();
