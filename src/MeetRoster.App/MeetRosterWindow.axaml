@@ -380,7 +380,7 @@
                             AutomationProperties.Name="导入报名表" />
                     <Button Classes="ghost top" Content="导入名单" Click="OnImportRosterList"
                             IsEnabled="{Binding !IsBusy}"
-                            ToolTip.Tip="导入学生名单（含「姓名」列，可选「性别」「班级」）；之后点「添加运动员」即可从名单挑选"
+                            ToolTip.Tip="{Binding RosterStatusHint}"
                             AutomationProperties.Name="导入名单" />
                     <Button Classes="ghost top" Content="导入赛程" Click="OnImportSchedule"
                             IsEnabled="{Binding !IsBusy}"

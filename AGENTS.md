@@ -54,7 +54,7 @@ $$\text{v}\{Major\}.\{Minor\}.\{Patch\}[-\text{preview}.\{RunNumber\}]$$
 
 工作流：`.github/workflows/release-draft.yml`
 
-1. **测试**：`windows-latest` 上依次运行 `dotnet test tests/GradeStrip.Tests/GradeStrip.Tests.csproj -c Release`（102 项，分晓导入 / 报表 / 导出回归）、`dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj -c Release`（76 项，工具箱、时序模板、竞名报名/赛程/名单导入导出端到端）与 `dotnet test tests/GradeWeave.Tests/GradeWeave.Tests.csproj -c Release`（115 项，织序自动保存 / 作息时间表 / 导入 / 编排 / 活动 / 走班 / 手动放课 / 锁课 / 冲突聚合台 / 教师名单与分工五视角 / 导出设置与双样式 / xls 导入 / 导出 / 工程往返 / 岗位匹配回归），失败则阻止发布。
+1. **测试**：`windows-latest` 上依次运行 `dotnet test tests/GradeStrip.Tests/GradeStrip.Tests.csproj -c Release`（102 项，分晓导入 / 报表 / 导出回归）、`dotnet test tests/TeachCraft.Tests/TeachCraft.Tests.csproj -c Release`（78 项，工具箱、时序模板、竞名报名/赛程/名单导入导出端到端）与 `dotnet test tests/GradeWeave.Tests/GradeWeave.Tests.csproj -c Release`（115 项，织序自动保存 / 作息时间表 / 导入 / 编排 / 活动 / 走班 / 手动放课 / 锁课 / 冲突聚合台 / 教师名单与分工五视角 / 导出设置与双样式 / xls 导入 / 导出 / 工程往返 / 岗位匹配回归），失败则阻止发布。
 2. **构建矩阵**：7 个 RID × 2 种部署模式 = 14 个包。
 
 | RID | 运行器 | 产物 |
@@ -110,7 +110,7 @@ src/GradeStrip.App           # 分晓成绩条窗口（Library，同进程内嵌
 src/GradeStrip.Core          # 成绩导入、分析、xlsx 导出
 tests/GradeStrip.Tests       # xUnit 测试（102 项，分晓导入 / 报表 / 导出回归 + 合成 fixtures）
 tests/GradeWeave.Tests       # xUnit 测试（115 项，织序自动保存 / 作息时间表 / 导入 / 编排 / 活动 / 走班 / 手动放课 / 锁课 / 冲突聚合台 / 教师名单与分工五视角 / 导出设置与双样式 / xls 导入 / 导出 / 工程往返 / 岗位匹配回归 + 合成 fixtures）
-tests/TeachCraft.Tests       # xUnit 测试（76 项，工具箱、时序模板与竞名报名/赛程/名单导入导出端到端）
+tests/TeachCraft.Tests       # xUnit 测试（78 项，工具箱、时序模板与竞名报名/赛程/名单导入导出端到端）
 installer                    # Inno Setup 脚本与中文语言文件
 bundle/macos                 # Info.plist / Entitlements / DMG 脚本
 scripts/version.ps1          # 版本号计算
@@ -179,7 +179,7 @@ design-preview               # 已评审的 HTML 视觉稿（只读参考）
 
 ## 九、验证要求
 
-- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与全部 xUnit 测试（GradeStrip.Tests 102 项 + TeachCraft.Tests 76 项 + GradeWeave.Tests 115 项）。
+- 提交前必须通过：`dotnet build TeachCraft.slnx -c Release` 与全部 xUnit 测试（GradeStrip.Tests 102 项 + TeachCraft.Tests 78 项 + GradeWeave.Tests 115 项）。
 - 涉及图片 / PDF 引擎的改动，必须额外用真实文件跑一遍：格式转换、PDF 合并、Word→PDF、PDF 转图片。
 - 涉及归位的改动，必须额外验证：带表头 / 无表头名单识别、配置 xlsx 往返、PNG / PDF / Excel 三种导出。
 - 涉及时序的改动，必须额外验证：真实总表的年级/学期/月份/班级数识别、目标班级 7 节课与课服/午学/晚修提取、PNG 与 PDF 输出。

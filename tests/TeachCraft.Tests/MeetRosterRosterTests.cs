@@ -105,7 +105,7 @@ public sealed class MeetRosterRosterTests : IDisposable
         var added = vm.AddAthletesFromRoster(
             candidates.Where(c => c.CanSelect).Select(c => c.Entry).ToList());
 
-        Assert.Equal(2, added);
+        Assert.Equal(2, added.Count);
         Assert.Equal(3, vm.SelectedClass!.AthleteCount);
         Assert.Contains(vm.SelectedClass.Athletes, a => a.Name == "新同学甲" && a.Gender == "女子");
     }
@@ -190,6 +190,72 @@ public sealed class MeetRosterRosterTests : IDisposable
         await vm.ImportRosterFileAsync(RosterFileWithTitle("七年级1班花名册副本.xlsx", "七年级1班花名册",
             ["姓名", "性别"], ["甲同学", "女"]));
         Assert.Equal(2, vm.RosterCount); // 同班替换，不叠加
+    }
+
+    [Fact]
+    public void RosterImport_HeaderlessSheetWithIdAndName_InfersColumns()
+    {
+        // 真实花名册常见形态：第 1 行合并标题，第 2 行起直接是「学号 + 姓名」，没有表头。
+        var path = Path.Combine(_root, "八（6）班学生名单.xlsx");
+        using (var workbook = new XLWorkbook())
+        {
+            var sheet = workbook.AddWorksheet("Sheet1");
+            sheet.Cell(1, 1).Value = "八（6）班学生名单";
+            sheet.Range(1, 1, 1, 5).Merge();
+            string[][] rows =
+            [
+                ["20240601", "曾文君"],
+                ["20240602", "陈琳曦"],
+                ["20240603", "陈昱洋"],
+                ["20240604", "陈钟磬"],
+            ];
+            for (var i = 0; i < rows.Length; i++)
+            {
+                sheet.Cell(2 + i, 1).Value = rows[i][0];
+                sheet.Cell(2 + i, 2).Value = rows[i][1];
+            }
+            workbook.SaveAs(path);
+        }
+
+        var result = RosterNameImporter.Import(path);
+
+        Assert.Equal(4, result.Entries.Count);
+        Assert.Equal("曾文君", result.Entries[0].Name);
+        Assert.Equal("八（6）班", result.InferredClassName);
+        Assert.All(result.Entries, e => Assert.Equal("八（6）班", e.ClassName));
+        // 整份没有性别列：只汇总一条提示，不逐人刷屏。
+        Assert.Single(result.Issues);
+        Assert.Contains("没有性别列", result.Issues[0].Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RosterImport_HeaderlessWithGenderColumn_ReadsGender()
+    {
+        var path = Path.Combine(_root, "无表头带性别.xlsx");
+        using (var workbook = new XLWorkbook())
+        {
+            var sheet = workbook.AddWorksheet("Sheet1");
+            sheet.Cell(1, 1).Value = "九（1）班名单";
+            string[][] rows =
+            [
+                ["20250101", "苏晚晴", "女"],
+                ["20250102", "陈屿", "男"],
+                ["20250103", "顾之遥", "女"],
+            ];
+            for (var i = 0; i < rows.Length; i++)
+            {
+                for (var j = 0; j < rows[i].Length; j++)
+                    sheet.Cell(2 + i, 1 + j).Value = rows[i][j];
+            }
+            workbook.SaveAs(path);
+        }
+
+        var result = RosterNameImporter.Import(path);
+
+        Assert.Equal(3, result.Entries.Count);
+        Assert.Equal("女子", result.Entries[0].Gender);
+        Assert.Equal("男子", result.Entries[1].Gender);
+        Assert.Equal("九（1）班", result.InferredClassName);
     }
 
     // ---------- fixtures ----------

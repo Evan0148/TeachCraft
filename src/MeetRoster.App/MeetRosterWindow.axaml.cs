@@ -330,7 +330,8 @@ public partial class MeetRosterWindow : Window
     }
 
     /// <summary>导入学生名单：之后「添加运动员」改为从名单挑选。</summary>
-    private async void OnImportRosterList(object? sender, RoutedEventArgs e)
+    /// <summary>打开文件选择器并导入名单；被顶栏按钮与「添加运动员」引导共用。</summary>
+    private async Task<bool> PickAndImportRosterAsync()
     {
         try
         {
@@ -342,19 +343,24 @@ public partial class MeetRosterWindow : Window
             });
 
             var path = files.FirstOrDefault()?.TryGetLocalPath();
-            if (string.IsNullOrWhiteSpace(path)) return;
+            if (string.IsNullOrWhiteSpace(path)) return false;
 
             await ViewModel.ImportRosterFileAsync(path);
+            return ViewModel.HasRoster;
         }
         catch (Exception ex)
         {
             ViewModel.SetStatus(ErrorText.Describe(ex, "导入名单"), true);
+            return false;
         }
     }
 
+    private async void OnImportRosterList(object? sender, RoutedEventArgs e) =>
+        await PickAndImportRosterAsync();
+
     /// <summary>
-    /// 添加运动员：已导入名单时弹出名单挑选窗（与「选择项目」同构，可多选）；
-    /// 没有名单时维持旧行为，直接加一行空白。
+    /// 添加运动员：已导入名单时弹出名单挑选窗（与「选择项目」同构，可多选），
+    /// 加入后直接把第一位带进「选择项目」；没有名单时先问要不要导入名单。
     /// </summary>
     private async void OnAddAthlete(object? sender, RoutedEventArgs e)
     {
@@ -366,16 +372,41 @@ public partial class MeetRosterWindow : Window
 
         if (!ViewModel.HasRoster)
         {
-            ViewModel.AddAthlete();
-            return;
+            var import = await ConfirmDialog.ShowAsync(
+                this, "还没有导入学生名单",
+                "从花名册挑人需要先导入名单（Excel：含“姓名”列，或像“学号 + 姓名”这样两列直接排数据）。\n"
+                + "也可以直接添加一行空白，手填姓名与项目。",
+                "导入名单", "直接添加一行");
+            if (import)
+            {
+                if (!await PickAndImportRosterAsync() || ViewModel.SelectedClass is null) return;
+            }
+            else
+            {
+                ViewModel.AddAthlete();
+                return;
+            }
         }
 
         var dialog = new RosterPickWindow(new RosterPickViewModel(
-            ViewModel.BuildRosterCandidates(), ViewModel.SelectedClass.Name));
+            ViewModel.BuildRosterCandidates(), ViewModel.SelectedClass!.Name));
         await dialog.ShowDialog(this);
 
         if (dialog.Picked.Count == 0) return;
-        ViewModel.AddAthletesFromRoster(dialog.Picked);
+        var added = ViewModel.AddAthletesFromRoster(dialog.Picked);
+        if (added.Count == 0) return;
+
+        // 加入后直接进入项目选择（比赛项目1），省掉“先关闭、再点格子”的一步。
+        var first = ViewModel.SelectedClass?.Athletes
+            .FirstOrDefault(a => string.Equals(a.Name, added[0], StringComparison.Ordinal));
+        if (first is not null)
+            await EditEventAsync(first, AthleteRowViewModel.SlotIndividual1);
+
+        if (added.Count > 1)
+        {
+            ViewModel.SetStatus(
+                $"已加入 {added.Count} 人；已为 {added[0]} 选项目，其余 {added.Count - 1} 人可点各自的项目格选择");
+        }
     }
 
     private async void OnRemoveAthlete(object? sender, RoutedEventArgs e)
@@ -456,8 +487,16 @@ public partial class MeetRosterWindow : Window
 
         var row = button.Tag as AthleteRowViewModel
                   ?? button.DataContext as AthleteRowViewModel;
+        if (row is null) return;
+
+        await EditEventAsync(row, slotKey);
+    }
+
+    /// <summary>为某一行打开「选择项目」并写回结果（表格点格子与名单加入后自动进入共用）。</summary>
+    private async Task EditEventAsync(AthleteRowViewModel row, string slotKey)
+    {
         var meetClass = ViewModel.SelectedClass?.Source;
-        if (row is null || meetClass is null) return;
+        if (meetClass is null) return;
 
         var dialog = new EventEditorWindow(meetClass, row, slotKey);
         await dialog.ShowDialog(this);

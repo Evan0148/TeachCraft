@@ -73,7 +73,7 @@ public sealed partial class RosterPickViewModel : ObservableObject
     public string SelectedCountText => $"已选 {_all.Count(c => c.IsSelected)} 人";
     public bool IsEmpty => Candidates.Count == 0;
     public string EmptyText => _all.Count == 0 ? "名单里没有学生。" : "没有匹配的学生。";
-    public string ActionHint => "点击学生即可勾选 / 取消；点“完成”写入报名表。";
+    public string ActionHint => "点击学生即可勾选 / 取消；点“完成”写入报名表后，会接着为第一位选项目。";
 
     partial void OnSearchTextChanged(string value) => RefreshFilter();
 

@@ -126,7 +126,7 @@
 
         <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                <TextBlock Text="名单只在本机读取；加入后姓名与项目仍可在表格里继续修改。"
+                <TextBlock Text="名单只在本机读取；点“完成”写入后，会接着为第一位选项目，其余可点各自的项目格修改。"
                            FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}"
                            VerticalAlignment="Center" TextWrapping="Wrap" />
                 <Button Grid.Column="1" Classes="primary" Content="完成" Click="OnDone" IsDefault="True"

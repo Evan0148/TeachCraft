@@ -656,6 +656,23 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
     public int RosterCount => _roster.Count;
 
+    /// <summary>顶栏「导入名单」的悬停提示：明确当前是否已导入、多少人。</summary>
+    public string RosterStatusHint => HasRoster
+        ? $"已导入名单 {_roster.Count} 人（{DistinctRosterClasses()}）\n重新导入同一班级会替换该班名单"
+        : "导入学生名单：含「姓名」表头，或像“学号 + 姓名”这样两列直接排数据";
+
+    /// <summary>名单覆盖的班级摘要（“八年级3班”或“5 个班”）；没有班级标记时给“未标班级”。</summary>
+    private string DistinctRosterClasses()
+    {
+        var classes = _roster
+            .Select(e => e.ClassName)
+            .Where(c => c.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (classes.Count == 0) return "未标班级";
+        return classes.Count == 1 ? classes[0] : $"{classes.Count} 个班";
+    }
+
     /// <summary>当前班级可挑选的名单候选（名单里带其他班标记的会按班级过滤）。</summary>
     public IReadOnlyList<RosterCandidateViewModel> BuildRosterCandidates()
     {
@@ -677,17 +694,17 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             .ToList();
     }
 
-    /// <summary>把名单里选中的学生加入当前班级；已在表内的同名跳过。返回实际加入人数。</summary>
-    public int AddAthletesFromRoster(IReadOnlyList<RosterEntry> picks)
+    /// <summary>把名单里选中的学生加入当前班级；已在表内的同名跳过。返回实际加入的姓名（按名单顺序）。</summary>
+    public IReadOnlyList<string> AddAthletesFromRoster(IReadOnlyList<RosterEntry> picks)
     {
-        if (SelectedClass is null || picks.Count == 0) return 0;
+        if (SelectedClass is null || picks.Count == 0) return [];
 
         var existing = SelectedClass.Athletes
             .Select(a => a.Name)
             .Where(n => !string.IsNullOrWhiteSpace(n))
             .ToHashSet(StringComparer.Ordinal);
 
-        var added = 0;
+        var added = new List<string>();
         var missingGender = 0;
         foreach (var entry in picks)
         {
@@ -695,15 +712,15 @@ public sealed partial class MeetRosterViewModel : ObservableObject
             var gender = string.IsNullOrEmpty(entry.Gender) ? "男子" : entry.Gender;
             if (string.IsNullOrEmpty(entry.Gender)) missingGender++;
             SelectedClass.AddAthlete(entry.Name, gender);
-            added++;
+            added.Add(entry.Name);
         }
 
         OnPropertyChanged(nameof(SelectedClassFooter));
-        if (added == 0)
+        if (added.Count == 0)
             SetStatus("选中的学生都已在当前班级的报名表里");
         else
         {
-            var message = $"已从名单加入 {added} 名运动员到 {SelectedClass.Name}";
+            var message = $"已从名单加入 {added.Count} 名运动员到 {SelectedClass.Name}";
             if (missingGender > 0) message += $" · {missingGender} 人名单没有性别，已按男子录入";
             SetStatus(message, success: true);
         }
@@ -757,6 +774,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
         OnPropertyChanged(nameof(HasRoster));
         OnPropertyChanged(nameof(RosterCount));
+        OnPropertyChanged(nameof(RosterStatusHint));
 
         var message = $"已导入名单 · {entries.Count} 人";
         var labeled = entries.Select(e => e.ClassName).Where(c => c.Length > 0).Distinct(StringComparer.Ordinal).ToList();
