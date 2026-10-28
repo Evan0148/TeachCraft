@@ -211,18 +211,10 @@
                     <Button Classes="ghost top" Content="生成课表" Click="OnGenerate"
                             IsEnabled="{Binding CanGenerate}" AutomationProperties.Name="生成课表" Padding="10,6" FontSize="11.5"
                             ToolTip.Tip="作息时间表确认后才能生成课表" />
-                    <Button Classes="ghost top" Content="导出 ▾" IsEnabled="{Binding CanOperate}"
-                            AutomationProperties.Name="导出课表" Padding="10,6" FontSize="11.5"
-                            ToolTip.Tip="导出 Excel / PNG / 打印 PDF / 冲突报告">
-                        <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                                <MenuItem Header="导出 Excel" Click="OnExportExcel" />
-                                <MenuItem Header="导出 PNG" Click="OnExportPng" />
-                                <MenuItem Header="打印 PDF" Click="OnPrintPdf" />
-                                <MenuItem Header="导出冲突报告" Click="OnExportReport" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                    <Button Classes="ghost top" Content="导出…" Click="OnExport"
+                            IsEnabled="{Binding CanOperate}" AutomationProperties.Name="导出课表"
+                            Padding="10,6" FontSize="11.5"
+                            ToolTip.Tip="选择导出格式、样式与要包含的分页" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -1010,6 +1002,7 @@
                                     <TextBlock Text="编排对象" Classes="section-title" />
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                                         <Button Classes="link" Content="教师分工" Click="OnEditAssignments"
+                                                IsEnabled="{Binding IsIdle}"
                                                 FontSize="10.5" VerticalAlignment="Center"
                                                 AutomationProperties.Name="教师分工" />
                                         <Border Classes="small-badge" VerticalAlignment="Center">

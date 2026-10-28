@@ -22,7 +22,7 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style Selector="TextBox.cell">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
@@ -31,7 +31,7 @@
             <Setter Property="MinHeight" Value="26" />
         </Style>
         <Style Selector="ComboBox.cell">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
@@ -61,12 +61,18 @@
         </Style>
         <Style Selector="Button.seg:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{StaticResource PaperBrush}" />
-            <Setter Property="BorderBrush" Value="#CFC8B6" />
+            <Setter Property="BorderBrush" Value="{StaticResource LineStrongBrush}" />
             <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
         </Style>
         <Style Selector="Button.seg.active /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#FBF3EC" />
+            <Setter Property="Background" Value="{StaticResource WashHoverBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+        </Style>
+        <!-- 悬停在已选中的分段按钮上时保留陶土色，否则看起来像被取消选中。 -->
+        <Style Selector="Button.seg.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F8EDE4" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDeepBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
         </Style>
         <Style Selector="Border.panel-card">
@@ -116,7 +122,7 @@
             <Setter Property="Height" Value="36" />
         </Style>
         <Style Selector="Border.list-row">
-            <Setter Property="Background" Value="#FCFBF7" />
+            <Setter Property="Background" Value="{StaticResource WashBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
@@ -151,7 +157,7 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12"
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="12"
               Margin="18,10,18,0">
             <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="4" Width="560">
                 <Button Classes="seg" Classes.active="{Binding IsRosterView}"
@@ -178,7 +184,7 @@
         <!-- 教师名单：先建名单，再分工。 -->
         <Grid Grid.Row="2" IsVisible="{Binding IsRosterView}" RowDefinitions="Auto,Auto,*"
               RowSpacing="10" Margin="18,10,18,8">
-            <Border Grid.Row="0" Background="#FBF3EC" BorderBrush="#E3B7A4" BorderThickness="1"
+            <Border Grid.Row="0" Background="{StaticResource WashHoverBrush}" BorderBrush="#E3B7A4" BorderThickness="1"
                     CornerRadius="9" Padding="12,10">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                     <StackPanel Spacing="2">
@@ -234,7 +240,11 @@
                         </StackPanel>
                     </Expander>
 
-                    <TextBlock Text="{Binding RosterMessage}" IsVisible="{Binding HasRosterMessage}"
+                    <!-- 名单操作反馈：成功用 Moss（成功状态色），需注意的用 AccentDeep（错误色）。 -->
+                    <TextBlock Text="{Binding RosterMessage}" IsVisible="{Binding IsRosterMessagePositive}"
+                               FontSize="10" Foreground="{StaticResource MossBrush}"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding RosterMessage}" IsVisible="{Binding IsRosterMessageAlert}"
                                FontSize="10" Foreground="{StaticResource AccentDeepBrush}"
                                TextWrapping="Wrap" />
                 </StackPanel>
@@ -242,7 +252,8 @@
 
             <Border Grid.Row="2" Classes="panel-card">
                 <Grid RowDefinitions="Auto,*">
-                    <Grid ColumnDefinitions="*,150,180,68,60" ColumnSpacing="8" Margin="2,0,2,6">
+                    <!-- 与行内容的左缘（list-row 边框 1px + 内边距 8）对齐，列标题不偏移。 -->
+                    <Grid ColumnDefinitions="*,150,180,68,60" ColumnSpacing="8" Margin="9,0,9,6">
                         <TextBlock Text="姓名" Classes="field-label" />
                         <TextBlock Grid.Column="1" Text="学科" Classes="field-label" />
                         <TextBlock Grid.Column="2" Text="任课与周课时" Classes="field-label" />
@@ -250,7 +261,7 @@
                     <Grid Grid.Row="1">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding TeacherRoster}">
+                            <ItemsControl ItemsSource="{Binding TeacherRoster}" Margin="0,0,14,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="app:AssignmentTeacherDraftViewModel">
                                         <Border Classes="list-row">
@@ -264,11 +275,11 @@
                                                                 BorderThickness="1" CornerRadius="3" Padding="4,1"
                                                                 IsVisible="{Binding IsHeadTeacher}"
                                                                 VerticalAlignment="Center">
-                                                            <TextBlock Text="班主任" FontSize="8"
+                                                            <TextBlock Text="班主任" FontSize="9"
                                                                        Foreground="{StaticResource AccentDeepBrush}" />
                                                         </Border>
                                                     </StackPanel>
-                                                    <TextBlock Text="{Binding TeachingSubjectsText}" FontSize="8.5"
+                                                    <TextBlock Text="{Binding TeachingSubjectsText}" FontSize="9"
                                                                Foreground="{StaticResource MutedBrush}"
                                                                TextTrimming="CharacterEllipsis" />
                                                 </StackPanel>
@@ -320,6 +331,10 @@
                 <TextBlock Text="教师名单为空：先到「教师名单」添加教师，再分配任课。"
                            IsVisible="{Binding !HasTeachers}" FontSize="10"
                            Foreground="{StaticResource AccentDeepBrush}" VerticalAlignment="Center" />
+                <Button Classes="ghost" Content="去添加教师" Command="{Binding ShowRosterViewCommand}"
+                        IsVisible="{Binding !HasTeachers}" FontSize="10" Padding="10,4"
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="去教师名单添加教师" />
             </StackPanel>
 
             <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,8,0,0">
@@ -365,7 +380,7 @@
 
                 <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto"
                               VerticalScrollBarVisibility="Auto" ScrollChanged="OnRowsScrollChanged">
-                    <ItemsControl ItemsSource="{Binding Rows}" Margin="0,4,0,8">
+                    <ItemsControl ItemsSource="{Binding Rows}" Margin="0,4,14,8">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="app:AssignmentRowViewModel">
                                 <StackPanel Orientation="Horizontal" Margin="0,1">
@@ -401,6 +416,17 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+
+                <!-- 班级全删光时的空态，避免表格区一片空白。 -->
+                <StackPanel Grid.Row="1" IsVisible="{Binding IsClassRowsEmpty}" Spacing="4"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="还没有班级" FontFamily="{StaticResource SerifFont}"
+                               FontSize="15" Foreground="{StaticResource MutedBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="点上方「+ 添加班级」创建班级，或重新导入含分工表的工作簿。"
+                               FontSize="9.5" Foreground="{StaticResource MutedBrush}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
             </Grid>
         </Grid>
 
@@ -426,7 +452,7 @@
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="app:AssignmentTeacherDraftViewModel">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6"
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,14,0"
                                           AutomationProperties.Name="{Binding AutomationName}">
                                         <StackPanel Spacing="1">
                                             <StackPanel Orientation="Horizontal" Spacing="5">
@@ -435,7 +461,7 @@
                                                 <Border Background="#FBF1EA" BorderBrush="#E3B7A4"
                                                         BorderThickness="1" CornerRadius="3" Padding="4,1"
                                                         IsVisible="{Binding IsHeadTeacher}" VerticalAlignment="Center">
-                                                    <TextBlock Text="班主任" FontSize="8"
+                                                    <TextBlock Text="班主任" FontSize="9"
                                                                Foreground="{StaticResource AccentDeepBrush}" />
                                                 </Border>
                                             </StackPanel>
@@ -443,18 +469,32 @@
                                                        Foreground="{StaticResource MutedBrush}"
                                                        TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding Meta}"
-                                                   FontFamily="{StaticResource MonoFont}" FontSize="8.5"
-                                                   Foreground="{StaticResource MutedBrush}"
-                                                   VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Meta}"
+                                                       FontFamily="{StaticResource MonoFont}" FontSize="9"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       VerticalAlignment="Center" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <TextBlock Text="教师名单为空。先到「教师名单」添加教师，再回来分工。"
-                                   IsVisible="{Binding IsTeacherListEmpty}" Classes="helper"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Margin="12" TextAlignment="Center" />
+                        <StackPanel IsVisible="{Binding IsTeacherRosterEmpty}" Spacing="4"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="教师名单还是空的" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="15" Foreground="{StaticResource MutedBrush}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="先到「教师名单」添加教师，再回来分工。" Classes="helper"
+                                       HorizontalAlignment="Center" TextAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel IsVisible="{Binding IsTeacherSearchEmpty}" Spacing="4"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TeacherSearchEmptyText}" Classes="helper"
+                                       HorizontalAlignment="Center" TextAlignment="Center" />
+                            <Button Classes="ghost" Content="清除搜索"
+                                    Command="{Binding ClearTeacherSearchCommand}"
+                                    FontSize="10" Padding="10,4"
+                                    HorizontalAlignment="Center"
+                                    AutomationProperties.Name="清除教师搜索关键词" />
+                        </StackPanel>
                     </Grid>
                 </Grid>
             </Border>
@@ -479,7 +519,7 @@
                                     <StackPanel VerticalAlignment="Center" Spacing="0">
                                         <TextBlock Text="班级" FontSize="9.5"
                                                    Foreground="{StaticResource InkSoftBrush}" />
-                                        <TextBlock Text="勾选任教" FontSize="7.5"
+                                        <TextBlock Text="勾选任教" FontSize="9"
                                                    Foreground="{StaticResource MutedBrush}" />
                                     </StackPanel>
                                 </Border>
@@ -497,7 +537,7 @@
                                                                Foreground="{StaticResource InkSoftBrush}"
                                                                TextTrimming="CharacterEllipsis"
                                                                AutomationProperties.Name="{Binding Name, StringFormat=学科 {0}}" />
-                                                    <TextBlock FontSize="7.5" Foreground="{StaticResource MutedBrush}">
+                                                    <TextBlock FontSize="9" Foreground="{StaticResource MutedBrush}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}{0} 节">
                                                                 <Binding Path="WeeklyHours" />
@@ -516,7 +556,7 @@
                             <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Auto"
                                           ScrollChanged="OnTeacherRowsScrollChanged">
-                                <ItemsControl ItemsSource="{Binding TeacherClassRows}">
+                                <ItemsControl ItemsSource="{Binding TeacherClassRows}" Margin="0,0,14,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="app:AssignmentTeacherClassRowViewModel">
                                             <StackPanel Orientation="Horizontal">
@@ -525,7 +565,7 @@
                                                         <TextBlock Text="{Binding Row.RowName}" FontSize="10.5"
                                                                    Foreground="{StaticResource InkBrush}"
                                                                    TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock Text="班主任" FontSize="8"
+                                                        <TextBlock Text="班主任" FontSize="9"
                                                                    Foreground="{StaticResource AccentDeepBrush}"
                                                                    IsVisible="{Binding IsHeadTeacher}" />
                                                     </StackPanel>
@@ -549,15 +589,15 @@
                                                                               ToolTip.Tip="{Binding Tooltip}"
                                                                               AutomationProperties.Name="{Binding AutomationName}" />
                                                                     <Grid MaxWidth="48" VerticalAlignment="Center">
-                                                                        <TextBlock Text="已指派" FontSize="8.5"
+                                                                        <TextBlock Text="已指派" FontSize="9"
                                                                                    Foreground="{StaticResource AccentDeepBrush}"
                                                                                    TextTrimming="CharacterEllipsis"
                                                                                    IsVisible="{Binding IsAssigned}" />
-                                                                        <TextBlock Text="{Binding OtherTeacher}" FontSize="8.5"
+                                                                        <TextBlock Text="{Binding OtherTeacher}" FontSize="9"
                                                                                    Foreground="{StaticResource MutedBrush}"
                                                                                    TextTrimming="CharacterEllipsis"
                                                                                    IsVisible="{Binding HasOtherTeacher}" />
-                                                                        <TextBlock Text="未填" FontSize="8.5"
+                                                                        <TextBlock Text="未填" FontSize="9"
                                                                                    Foreground="{StaticResource MutedBrush}"
                                                                                    TextTrimming="CharacterEllipsis"
                                                                                    IsVisible="{Binding IsEmpty}" />
@@ -572,6 +612,17 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </ScrollViewer>
+
+                            <!-- 一个班都没有时，矩阵区给出行内提示。 -->
+                            <StackPanel IsVisible="{Binding IsClassRowsEmpty}" Spacing="4"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="还没有班级" FontFamily="{StaticResource SerifFont}"
+                                           FontSize="15" Foreground="{StaticResource MutedBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="先到「班级视角」添加班级，再回来勾选任教。"
+                                           FontSize="9.5" Foreground="{StaticResource MutedBrush}"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
                         </Grid>
                     </Grid>
                 </Grid>
@@ -591,7 +642,7 @@
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="app:AssignmentSubjectItemViewModel">
-                                <Grid ColumnDefinitions="4,*" ColumnSpacing="8"
+                                <Grid ColumnDefinitions="4,*" ColumnSpacing="8" Margin="0,0,14,0"
                                       AutomationProperties.Name="{Binding AutomationName}">
                                     <Border Width="4" CornerRadius="2"
                                             Background="{StaticResource AccentBrush}"
@@ -606,7 +657,7 @@
                                             <Border Background="#FBF1EA" BorderBrush="#E3B7A4"
                                                     BorderThickness="1" CornerRadius="3" Padding="4,1"
                                                     IsVisible="{Binding HasMissing}" VerticalAlignment="Center">
-                                                <TextBlock Text="待补" FontSize="8"
+                                                <TextBlock Text="待补" FontSize="9"
                                                            Foreground="{StaticResource AccentDeepBrush}" />
                                             </Border>
                                         </StackPanel>
@@ -630,31 +681,42 @@
                         <TextBlock Text="教师名单为空：先到「教师名单」添加教师，再分配任课。"
                                    IsVisible="{Binding !HasTeachers}" FontSize="10"
                                    Foreground="{StaticResource AccentDeepBrush}" TextWrapping="Wrap" />
+                        <Button Classes="ghost" Content="去添加教师" Command="{Binding ShowRosterViewCommand}"
+                                IsVisible="{Binding !HasTeachers}" FontSize="10" Padding="10,4"
+                                HorizontalAlignment="Left" Margin="0,4,0,0"
+                                AutomationProperties.Name="去教师名单添加教师" />
                     </StackPanel>
 
-                    <Border Grid.Row="1" Background="#FCFBF7" BorderBrush="{StaticResource LineBrush}"
+                    <Border Grid.Row="1" Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
                             BorderThickness="1" CornerRadius="7" Padding="8,7" Margin="0,6,0,8">
-                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-                            <ComboBox Classes="cell" MinHeight="28"
-                                      ItemsSource="{Binding BulkTeacherOptions}"
-                                      SelectedItem="{Binding SelectedBulkTeacher, Mode=TwoWay}"
-                                      PlaceholderText="选择本学科教师"
-                                      AutomationProperties.Name="批量指定教师" />
-                            <Button Grid.Column="1" Classes="ghost" Content="填入空班"
-                                    Command="{Binding FillEmptySubjectClassesCommand}"
-                                    FontSize="10.5" Padding="10,4"
-                                    AutomationProperties.Name="把教师填入本学科所有空班" />
-                            <Button Grid.Column="2" Classes="ghost" Content="全部替换"
-                                    Command="{Binding FillAllSubjectClassesCommand}"
-                                    FontSize="10.5" Padding="10,4"
-                                    AutomationProperties.Name="把教师填入本学科全部班级" />
-                        </Grid>
+                        <StackPanel Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                                <ComboBox Classes="cell" MinHeight="28"
+                                          ItemsSource="{Binding BulkTeacherOptions}"
+                                          SelectedItem="{Binding SelectedBulkTeacher, Mode=TwoWay}"
+                                          PlaceholderText="选择本学科教师"
+                                          AutomationProperties.Name="批量指定教师" />
+                                <Button Grid.Column="1" Classes="ghost" Content="填入空班"
+                                        Command="{Binding FillEmptySubjectClassesCommand}"
+                                        FontSize="10.5" Padding="10,4"
+                                        AutomationProperties.Name="把教师填入本学科所有空班" />
+                                <Button Grid.Column="2" Classes="ghost" Content="全部替换"
+                                        Command="{Binding FillAllSubjectClassesCommand}"
+                                        FontSize="10.5" Padding="10,4"
+                                        AutomationProperties.Name="把教师填入本学科全部班级" />
+                            </Grid>
+                            <!-- 本学科在名单里没有教师时给一句提醒，避免下拉点开是空的。 -->
+                            <TextBlock Text="本学科还没有名单里的教师：先到「教师名单」补一位本学科教师。"
+                                       Classes="helper" IsVisible="{Binding ShowBulkEmptyHint}"
+                                       Margin="0,6,0,0" />
+                        </StackPanel>
                     </Border>
 
                     <Grid Grid.Row="2" ColumnDefinitions="*,232" ColumnSpacing="10">
                         <ScrollViewer VerticalScrollBarVisibility="Auto"
                                       HorizontalScrollBarVisibility="Disabled">
-                            <ItemsControl ItemsSource="{Binding SubjectClassRows}">
+                            <ItemsControl x:Name="SubjectRowsList" ItemsSource="{Binding SubjectClassRows}"
+                                          Margin="0,0,14,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="app:AssignmentSubjectClassRowViewModel">
                                         <Border Classes="list-row">
@@ -667,7 +729,7 @@
                                                         <Border Background="#FDF1EC" BorderBrush="#E9C4B6"
                                                                 BorderThickness="1" CornerRadius="3" Padding="4,1"
                                                                 IsVisible="{Binding Cell.IsEmpty}" VerticalAlignment="Center">
-                                                            <TextBlock Text="待填" FontSize="8"
+                                                            <TextBlock Text="待填" FontSize="9"
                                                                        Foreground="{StaticResource AccentDeepBrush}" />
                                                         </Border>
                                                     </StackPanel>
@@ -685,13 +747,24 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <Border Grid.Column="1" Background="#FCFBF7" BorderBrush="{StaticResource LineBrush}"
+                        <!-- 一个班都没有时的空态。 -->
+                        <StackPanel IsVisible="{Binding IsClassRowsEmpty}" Spacing="4"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="还没有班级" FontFamily="{StaticResource SerifFont}"
+                                       FontSize="15" Foreground="{StaticResource MutedBrush}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="先到「班级视角」添加班级，再回来填任课教师。"
+                                       FontSize="9.5" Foreground="{StaticResource MutedBrush}"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+
+                        <Border Grid.Column="1" Background="{StaticResource WashBrush}" BorderBrush="{StaticResource LineBrush}"
                                 BorderThickness="1" CornerRadius="7" Padding="8,7">
                             <Grid RowDefinitions="Auto,*">
                                 <TextBlock Text="本学科教师" Classes="field-label" />
                                 <Grid Grid.Row="1" Margin="0,4,0,0">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                        <ItemsControl ItemsSource="{Binding SubjectTeacherLoads}">
+                                        <ItemsControl ItemsSource="{Binding SubjectTeacherLoads}" Margin="0,0,14,0">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="app:AssignmentTeacherLoadItemViewModel">
                                                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6"
@@ -700,7 +773,7 @@
                                                         <StackPanel Spacing="0">
                                                             <TextBlock Text="{Binding Name}" FontSize="10.5"
                                                                        Foreground="{StaticResource InkBrush}" />
-                                                            <TextBlock Text="{Binding Detail}" FontSize="8.5"
+                                                            <TextBlock Text="{Binding Detail}" FontSize="9"
                                                                        Foreground="{StaticResource MutedBrush}" />
                                                         </StackPanel>
                                                         <Button Grid.Column="1" Classes="link" Content="查看"
@@ -774,7 +847,7 @@
                         </Grid>
                         <Grid Grid.Row="1">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding MissingAssignments}">
+                                <ItemsControl ItemsSource="{Binding MissingAssignments}" Margin="0,0,14,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="app:AssignmentGapItemViewModel">
                                             <Border Classes="list-row">
@@ -817,7 +890,7 @@
                         </Grid>
                         <Grid Grid.Row="1">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding TeacherLoads}">
+                                <ItemsControl ItemsSource="{Binding TeacherLoads}" Margin="0,0,14,0">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="app:AssignmentTeacherLoadItemViewModel">
                                             <Border Classes="list-row">
@@ -826,7 +899,7 @@
                                                         <StackPanel Orientation="Horizontal" Spacing="5">
                                                             <TextBlock Text="{Binding Name}" FontSize="10.5"
                                                                        Foreground="{StaticResource InkBrush}" />
-                                                            <TextBlock Text="{Binding Flags}" FontSize="8.5"
+                                                            <TextBlock Text="{Binding Flags}" FontSize="9"
                                                                        Foreground="{StaticResource AccentDeepBrush}"
                                                                        IsVisible="{Binding HasFlags}"
                                                                        VerticalAlignment="Center" />
@@ -837,7 +910,7 @@
                                                     </StackPanel>
                                                     <TextBlock Grid.Column="1" Text="{Binding Detail}"
                                                                FontFamily="{StaticResource MonoFont}"
-                                                               FontSize="8.5" Foreground="{StaticResource MutedBrush}"
+                                                               FontSize="9" Foreground="{StaticResource MutedBrush}"
                                                                VerticalAlignment="Center" />
                                                     <Button Grid.Column="2" Classes="link" Content="查看"
                                                             FontSize="9" Padding="4,2"

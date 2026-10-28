@@ -198,6 +198,130 @@ public sealed class ExportTests : IDisposable
             () => new WeaveConflictReportExporter().Export(project, [], pdfPath));
     }
 
+    [Fact]
+    public void ExcelExport_WritesTeacherPositionSheet()
+    {
+        var project = CreateProject();
+        var path = Path.Combine(_directory, "positions.xlsx");
+
+        new WeaveExcelExporter().Export(project, [], path);
+
+        using var workbook = new XLWorkbook(path);
+        Assert.Contains("教师职位表", workbook.Worksheets.Select(w => w.Name));
+
+        var text = SheetText(workbook.Worksheet("教师职位表"));
+        Assert.Contains("兼职岗位", text);
+        Assert.Contains("任教班级", text);
+        Assert.Contains("学科周课时", text);
+        Assert.Contains("班主任", text);
+        Assert.Contains("班", text);
+    }
+
+    [Fact]
+    public void ExcelExport_HonoursSheetToggles()
+    {
+        var project = CreateProject();
+        var path = Path.Combine(_directory, "conflict-only.xlsx");
+
+        new WeaveExcelExporter().Export(project, [], path, new ExportOptions
+        {
+            IncludeMasterSheet = false,
+            IncludeAssignmentSheet = false,
+            IncludeTeacherPositionSheet = false,
+            IncludeClassSheets = false,
+            IncludeTeacherSheets = false,
+            IncludeConflictSheet = true,
+        });
+
+        using var workbook = new XLWorkbook(path);
+        var sheetNames = workbook.Worksheets.Select(w => w.Name).ToList();
+        Assert.Single(sheetNames);
+        Assert.Equal("冲突", sheetNames[0]);
+    }
+
+    [Fact]
+    public void ExcelExport_ReferenceStyle_WritesReferenceLayout()
+    {
+        var project = CreateProject();
+        var path = Path.Combine(_directory, "shenhe.xlsx");
+
+        new WeaveExcelExporter().Export(project, [], path, new ExportOptions
+        {
+            Style = WeaveExportStyle.Reference,
+        });
+
+        using var workbook = new XLWorkbook(path);
+        var sheetNames = workbook.Worksheets.Select(w => w.Name).ToList();
+        Assert.Contains("1-分工表", sheetNames);
+        Assert.Contains("2-课程表", sheetNames);
+        Assert.Contains("3-教师职位表", sheetNames);
+        Assert.Contains("班级课表", sheetNames);
+        Assert.Contains("教师课表", sheetNames);
+        Assert.Contains("冲突", sheetNames);
+
+        var master = workbook.Worksheet("2-课程表");
+        var masterText = SheetText(master);
+        Assert.Contains("表二", masterText);
+        Assert.Contains("星期一", masterText);
+        Assert.Contains("上午", masterText);
+        Assert.Contains("下午", masterText);
+        Assert.Contains("晚修", masterText);
+        Assert.Contains("课后服务", masterText);
+        Assert.Contains("语文", masterText);
+        Assert.Contains("青禾", masterText);
+        Assert.Contains("班主任会议", masterText);
+        Assert.Equal("楷体", master.Cell("A1").Style.Font.FontName);
+        Assert.Equal("宋体", master.Cell("A5").Style.Font.FontName);
+        Assert.True(master.MergedRanges.Count > 20);
+
+        var assignmentText = SheetText(workbook.Worksheet("1-分工表"));
+        Assert.Contains("表一", assignmentText);
+        Assert.Contains("课时-", assignmentText);
+        Assert.Contains("人数-", assignmentText);
+        Assert.Contains("备课组长", assignmentText);
+
+        var positionText = SheetText(workbook.Worksheet("3-教师职位表"));
+        Assert.Contains("表三", positionText);
+        Assert.Contains("兼职岗位", positionText);
+        Assert.Contains("科组长", positionText);
+    }
+
+    [Fact]
+    public void ExcelExport_ReferenceStyle_HonoursTeacherPositionToggle()
+    {
+        var project = CreateProject();
+        var path = Path.Combine(_directory, "shenhe-no-position.xlsx");
+
+        new WeaveExcelExporter().Export(project, [], path, new ExportOptions
+        {
+            Style = WeaveExportStyle.Reference,
+            IncludeTeacherPositionSheet = false,
+            IncludeClassSheets = false,
+            IncludeTeacherSheets = false,
+            IncludeConflictSheet = false,
+        });
+
+        using var workbook = new XLWorkbook(path);
+        var sheetNames = workbook.Worksheets.Select(w => w.Name).ToList();
+        Assert.Contains("1-分工表", sheetNames);
+        Assert.Contains("2-课程表", sheetNames);
+        Assert.DoesNotContain("3-教师职位表", sheetNames);
+    }
+
+    [Fact]
+    public void ExcelExport_WritesMeetingNotesRow()
+    {
+        var project = CreateProject();
+        var path = Path.Combine(_directory, "notes.xlsx");
+
+        new WeaveExcelExporter().Export(project, [], path);
+
+        using var workbook = new XLWorkbook(path);
+        var masterText = SheetText(workbook.Worksheet("总表"));
+        Assert.Contains("会议活动备注", masterText);
+        Assert.Contains("班主任会议", masterText);
+    }
+
     private static string SheetText(IXLWorksheet worksheet) =>
         string.Join("\n", worksheet.CellsUsed().Select(cell => cell.GetString()));
 

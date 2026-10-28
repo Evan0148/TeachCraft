@@ -39,6 +39,8 @@ public partial class AssignmentEditorViewModel : ObservableObject
             OnPropertyChanged(nameof(IsTeacherRosterEmpty));
             OnPropertyChanged(nameof(CanStartAssignment));
         };
+        Rows.CollectionChanged += (_, _) =>
+            OnPropertyChanged(nameof(IsClassRowsEmpty));
 
         RefreshDraftViews();
         _initialSnapshot = Snapshot();
@@ -52,6 +54,8 @@ public partial class AssignmentEditorViewModel : ObservableObject
     public bool HasSubjects => Subjects.Count > 0;
 
     public ObservableCollection<AssignmentRowViewModel> Rows { get; } = new();
+
+    public bool IsClassRowsEmpty => Rows.Count == 0;
 
     /// <summary>草稿与打开时的分工有差异时为真，关闭窗口前用于询问是否放弃。</summary>
     public bool IsDirty => Snapshot() != _initialSnapshot;
@@ -108,6 +112,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
         }
 
         ViewMode = 2;
+        TeacherSearchText = string.Empty; // 清掉旧关键词，避免把目标教师筛出左侧列表。
         ApplyTeacherFilter(TeacherRoster[0].Name);
     }
 
@@ -140,8 +145,21 @@ public partial class AssignmentEditorViewModel : ObservableObject
 
     public bool HasRosterMessage => RosterMessage.Length > 0;
 
+    /// <summary>名单反馈的颜色通道：true = 需注意（错误色），false = 成功 / 提示（Moss 色）。</summary>
+    public bool IsRosterMessageAlert { get; private set; }
+
+    public bool IsRosterMessagePositive => HasRosterMessage && !IsRosterMessageAlert;
+
     partial void OnRosterMessageChanged(string value) =>
         OnPropertyChanged(nameof(HasRosterMessage));
+
+    private void SetRosterMessage(string message, bool alert = false)
+    {
+        RosterMessage = message;
+        IsRosterMessageAlert = alert;
+        OnPropertyChanged(nameof(IsRosterMessageAlert));
+        OnPropertyChanged(nameof(IsRosterMessagePositive));
+    }
 
     [ObservableProperty] private string _newTeacherName = string.Empty;
     [ObservableProperty] private string _newTeacherSubject = UnspecifiedSubject;
@@ -168,7 +186,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
         TeacherRoster.Add(item);
         NewTeacherName = string.Empty;
         Error = string.Empty;
-        RosterMessage = $"已添加 {name}（{DescribeSubject(subject)}）。名单共 {TeacherRoster.Count} 位教师。";
+        SetRosterMessage($"已添加 {name}（{DescribeSubject(subject)}）。名单共 {TeacherRoster.Count} 位教师。");
         RefreshDraftViews();
     }
 
@@ -186,15 +204,27 @@ public partial class AssignmentEditorViewModel : ObservableObject
         var added = 0;
         var duplicates = 0;
         var unknownSubjects = 0;
+        var invalid = 0;
+        var subjectNames = Subjects.Select(subject => subject.Name).ToHashSet(StringComparer.Ordinal);
 
         foreach (var line in lines)
         {
             var parts = line
                 .Split([',', '，', '\t', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (parts.Length == 0) continue;
+            if (parts.Length == 0)
+            {
+                invalid++;
+                continue;
+            }
 
             var name = WeaveDefaults.NormalizeTeacherName(parts[0]);
-            if (name.Length == 0) continue;
+
+            // 只有学科名的行（如只粘了「语文」）不是教师，按无效行跳过并反馈。
+            if (name.Length == 0 || (parts.Length == 1 && subjectNames.Contains(name)))
+            {
+                invalid++;
+                continue;
+            }
 
             if (FindRosterTeacher(name) is not null)
             {
@@ -216,10 +246,20 @@ public partial class AssignmentEditorViewModel : ObservableObject
 
         BulkTeacherInput = string.Empty;
         Error = string.Empty;
-        RosterMessage = added == 0
-            ? "没有新增教师：这些姓名都已经在名单里了。"
-            : $"批量添加完成：新增 {added} 位，跳过重复 {duplicates} 位" +
-              (unknownSubjects > 0 ? $"，{unknownSubjects} 位学科未识别、已记为未指定" : string.Empty) + "。";
+        var invalidNote = invalid > 0 ? $"，跳过无效 {invalid} 行" : string.Empty;
+        if (added == 0)
+        {
+            SetRosterMessage(duplicates > 0
+                ? "没有新增教师：这些姓名都已经在名单里了。" + invalidNote
+                : "没有新增教师：粘贴的内容里没有找到有效的教师行。");
+        }
+        else
+        {
+            SetRosterMessage($"批量添加完成：新增 {added} 位，跳过重复 {duplicates} 位" +
+                (unknownSubjects > 0 ? $"，{unknownSubjects} 位学科未识别、已记为未指定" : string.Empty) +
+                invalidNote + "。");
+        }
+
         RefreshDraftViews();
     }
 
@@ -249,7 +289,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
         }
 
         TeacherRoster.Remove(item);
-        RosterMessage = $"已从名单移除 {name}。";
+        SetRosterMessage($"已从名单移除 {name}。");
         RefreshDraftViews();
     }
 
@@ -290,7 +330,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
 
     private void OnRosterSubjectChanged()
     {
-        RosterMessage = "学科已更新，分工下拉会按新学科重新筛选。";
+        SetRosterMessage("学科已更新，分工下拉会按新学科重新筛选。");
         RefreshDraftViews();
     }
 
@@ -382,6 +422,13 @@ public partial class AssignmentEditorViewModel : ObservableObject
 
     partial void OnTeacherSearchTextChanged(string value) => ApplyTeacherFilter();
 
+    public bool IsTeacherSearchEmpty => !IsTeacherRosterEmpty && IsTeacherListEmpty && TeacherSearchText.Trim().Length > 0;
+
+    [ObservableProperty] private string _teacherSearchEmptyText = string.Empty;
+
+    [RelayCommand]
+    private void ClearTeacherSearch() => TeacherSearchText = string.Empty;
+
     partial void OnSelectedTeacherItemChanged(AssignmentTeacherDraftViewModel? value)
     {
         if (_refreshing) return;
@@ -425,7 +472,11 @@ public partial class AssignmentEditorViewModel : ObservableObject
         SelectedTeacherItem = matches.FirstOrDefault(item => NamesEqual(item.Name, targetName))
                               ?? matches.FirstOrDefault();
 
+        TeacherSearchEmptyText = keyword.Length == 0
+            ? string.Empty
+            : $"没有匹配「{keyword}」的教师，换个关键词试试。";
         OnPropertyChanged(nameof(IsTeacherListEmpty));
+        OnPropertyChanged(nameof(IsTeacherSearchEmpty));
     }
 
     private void RefreshTeacherItems()
@@ -494,6 +545,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
 
     public bool HasSubjectTeacherLoads => SubjectTeacherLoads.Count > 0;
     public bool HasBulkTeacherOptions => BulkTeacherOptions.Count > 0;
+    public bool ShowBulkEmptyHint => SelectedSubjectItem is not null && !HasBulkTeacherOptions;
 
     [RelayCommand]
     private void FillEmptySubjectClasses() => FillSubjectClasses(onlyEmpty: true);
@@ -704,6 +756,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
             SubjectSummary = Subjects.Count == 0 ? "工程里还没有学科。" : "从左侧选择一门学科。";
             OnPropertyChanged(nameof(HasSubjectTeacherLoads));
             OnPropertyChanged(nameof(HasBulkTeacherOptions));
+            OnPropertyChanged(nameof(ShowBulkEmptyHint));
             return;
         }
 
@@ -737,6 +790,7 @@ public partial class AssignmentEditorViewModel : ObservableObject
         SelectedBulkTeacher = BulkTeacherOptions.FirstOrDefault(option =>
             NamesEqual(option.Name, selectedName));
         OnPropertyChanged(nameof(HasBulkTeacherOptions));
+        OnPropertyChanged(nameof(ShowBulkEmptyHint));
     }
 
     private void RefreshSubjectTeacherLoads(int subjectIndex, AssignmentSubjectItemViewModel subjectItem)
@@ -1126,9 +1180,7 @@ public partial class AssignmentTeacherDraftViewModel : ObservableObject
         _subject = string.IsNullOrWhiteSpace(subjectName) ||
                    string.Equals(subjectName, "未指定", StringComparison.Ordinal)
             ? "未指定"
-            : subjectChoices.Contains(subjectName, StringComparer.Ordinal)
-                ? subjectName
-                : subjectName;
+            : subjectName;
         _subjectChanged = subjectChanged;
     }
 

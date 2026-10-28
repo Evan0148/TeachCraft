@@ -78,7 +78,23 @@ public sealed class ExportOptions
     public bool IncludeClassSheets { get; set; } = true;
     public bool IncludeTeacherSheets { get; set; } = true;
     public bool IncludeAssignmentSheet { get; set; } = true;
+
+    /// <summary>教师职位安排表：姓名、学科、兼职岗位、任教班级与学科周课时。</summary>
+    public bool IncludeTeacherPositionSheet { get; set; } = true;
+
     public bool IncludeConflictSheet { get; set; } = true;
     public string? OnlyClassId { get; set; }
     public string? OnlyTeacherId { get; set; }
+
+    /// <summary>工作簿版式：软件自带纸墨样式，或按参考工作簿复刻的「参考校样式」。</summary>
+    public WeaveExportStyle Style { get; set; } = WeaveExportStyle.Software;
+}
+
+public enum WeaveExportStyle
+{
+    /// <summary>知微纸墨色板、雅黑字体、浅色细边。</summary>
+    Software,
+
+    /// <summary>参考校参考工作簿：宋体 / 楷体、黑色细框、横向课程总表与教师职位表。</summary>
+    Reference,
 }

@@ -3,8 +3,8 @@ using GradeWeave.Core.Models;
 
 namespace GradeWeave.Core.Export;
 
-/// <summary>导出工作簿：总表、分工表、班级课表、教师课表与冲突页。</summary>
-public sealed class WeaveExcelExporter
+/// <summary>导出工作簿：总表、分工表、教师职位表、班级课表、教师课表与冲突页。</summary>
+public sealed partial class WeaveExcelExporter
 {
     private static readonly XLColor Paper = XLColor.FromHtml("#FAF9F5");
     private static readonly XLColor Ink = XLColor.FromHtml("#141413");
@@ -22,6 +22,7 @@ public sealed class WeaveExcelExporter
             var periods = WeaveExportSupport.PeriodsOf(project);
             var conflictItems = conflicts ?? Array.Empty<WeaveConflict>();
             var names = new SheetNameAllocator();
+            var style = opts.Style;
 
             var allClasses = project.Classes.ToList();
             var allTeachers = project.Teachers.ToList();
@@ -30,30 +31,43 @@ public sealed class WeaveExcelExporter
 
             using var workbook = new XLWorkbook();
 
-            if (opts.IncludeMasterSheet)
-                AddMasterSheet(workbook, project, allClasses, periods, names);
+            if (style == WeaveExportStyle.Reference)
+            {
+                // 表一 → 表二 的页签顺序与参考工作簿一致。
+                if (opts.IncludeAssignmentSheet)
+                    AddReferenceAssignmentSheet(workbook, project, allClasses, names);
+                if (opts.IncludeMasterSheet)
+                    AddReferenceMasterSheet(workbook, project, allClasses, periods, names);
+            }
+            else
+            {
+                if (opts.IncludeMasterSheet)
+                    AddMasterSheet(workbook, project, allClasses, periods, names);
+                if (opts.IncludeAssignmentSheet)
+                    AddAssignmentSheet(workbook, project, allClasses, names);
+            }
 
-            if (opts.IncludeAssignmentSheet)
-                AddAssignmentSheet(workbook, project, allClasses, names);
+            if (opts.IncludeTeacherPositionSheet)
+                AddTeacherPositionSheet(workbook, project, teacherPageScope, names, style);
 
             if (opts.IncludeClassSheets)
             {
                 var sheets = classPageScope.ToDictionary(c => c.Id, c => names.Allocate(c.Name, "班级课表"));
-                AddClassIndexSheet(workbook, project, classPageScope, sheets, names);
+                AddClassIndexSheet(workbook, project, classPageScope, sheets, names, style);
                 foreach (var cls in classPageScope)
-                    AddClassSheet(workbook, project, cls, sheets[cls.Id], periods);
+                    AddClassSheet(workbook, project, cls, sheets[cls.Id], periods, style);
             }
 
             if (opts.IncludeTeacherSheets)
             {
                 var sheets = teacherPageScope.ToDictionary(t => t.Id, t => names.Allocate(t.Name, "教师课表"));
-                AddTeacherIndexSheet(workbook, project, teacherPageScope, sheets, names);
+                AddTeacherIndexSheet(workbook, project, teacherPageScope, sheets, names, style);
                 foreach (var teacher in teacherPageScope)
-                    AddTeacherSheet(workbook, project, teacher, sheets[teacher.Id], periods);
+                    AddTeacherSheet(workbook, project, teacher, sheets[teacher.Id], periods, style);
             }
 
             if (opts.IncludeConflictSheet)
-                AddConflictSheet(workbook, project, conflictItems, names);
+                AddConflictSheet(workbook, project, conflictItems, names, style);
 
             workbook.SaveAs(path);
         }
@@ -149,7 +163,26 @@ public sealed class WeaveExcelExporter
             row++;
         }
 
-        StyleGrid(ws.Range(3, 1, Math.Max(4, row - 1), columnCount));
+        var dataLastRow = Math.Max(4, row - 1);
+        StyleGrid(ws.Range(3, 1, dataLastRow, columnCount));
+
+        var notes = BuildMeetingNotes(project);
+        if (notes.Length > 0)
+        {
+            var notesRange = ws.Range(row, 1, row, columnCount);
+            if (columnCount > 1) notesRange.Merge();
+            notesRange.Cell(1, 1).Value = notes;
+            notesRange.Style.Font.FontSize = 9;
+            notesRange.Style.Font.FontColor = Muted;
+            notesRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            notesRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            notesRange.Style.Alignment.WrapText = true;
+            notesRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            notesRange.Style.Border.OutsideBorderColor = Line;
+            ws.Row(row).Height = 64;
+            row++;
+        }
+
         ws.Column(1).Width = 14;
         for (var column = 2; column <= columnCount; column++) ws.Column(column).Width = 10.5;
 
@@ -180,7 +213,6 @@ public sealed class WeaveExcelExporter
         for (var i = 0; i < subjects.Count; i++)
             ws.Cell(3, 3 + i).Value = subjects[i].Name;
         StyleHeader(ws.Range(3, 1, 3, columnCount));
-
         var row = 4;
         foreach (var cls in classes)
         {
@@ -248,17 +280,18 @@ public sealed class WeaveExcelExporter
         WeaveProject project,
         List<SchoolClass> classes,
         IReadOnlyDictionary<string, string> sheetNames,
-        SheetNameAllocator names)
+        SheetNameAllocator names,
+        WeaveExportStyle style)
     {
-        var ws = AddSheet(workbook, names.Allocate("班级课表", "班级课表"));
+        var ws = AddSheet(workbook, names.Allocate("班级课表", "班级课表"), style);
 
-        WriteTitle(ws, 4, "班级课表", $"共 {classes.Count} 个班级 · 点击下方页签查看各班课表");
+        WriteTitle(ws, 4, "班级课表", $"共 {classes.Count} 个班级 · 点击下方页签查看各班课表", style);
 
         ws.Cell(3, 1).Value = "班级";
         ws.Cell(3, 2).Value = "班主任";
         ws.Cell(3, 3).Value = "已排 / 应排";
         ws.Cell(3, 4).Value = "页签";
-        StyleHeader(ws.Range(3, 1, 3, 4));
+        StyleHeader(ws.Range(3, 1, 3, 4), style);
 
         var row = 4;
         foreach (var cls in classes)
@@ -275,7 +308,7 @@ public sealed class WeaveExcelExporter
             row++;
         }
 
-        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), 4));
+        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), 4), style);
         ws.Column(1).Width = 16;
         ws.Column(2).Width = 12;
         ws.Column(3).Width = 14;
@@ -288,9 +321,10 @@ public sealed class WeaveExcelExporter
         WeaveProject project,
         SchoolClass cls,
         string sheetName,
-        List<PeriodSlot> periods)
+        List<PeriodSlot> periods,
+        WeaveExportStyle style)
     {
-        var ws = AddSheet(workbook, sheetName);
+        var ws = AddSheet(workbook, sheetName, style);
         var days = WeaveDefaults.Days.Length;
         var columnCount = 1 + days;
 
@@ -299,12 +333,12 @@ public sealed class WeaveExcelExporter
         if (!string.IsNullOrWhiteSpace(project.TermName)) subtitleParts.Add(project.TermName);
         if (!string.IsNullOrWhiteSpace(cls.HeadTeacher)) subtitleParts.Add($"班主任：{cls.HeadTeacher}");
 
-        WriteTitle(ws, columnCount, $"{cls.Name} 课程表", string.Join(" · ", subtitleParts));
+        WriteTitle(ws, columnCount, $"{cls.Name} 课程表", string.Join(" · ", subtitleParts), style);
 
         ws.Cell(3, 1).Value = "节次 / 星期";
         for (var day = 1; day <= days; day++)
             ws.Cell(3, 1 + day).Value = WeaveDefaults.DayName(day);
-        StyleHeader(ws.Range(3, 1, 3, columnCount));
+        StyleHeader(ws.Range(3, 1, 3, columnCount), style);
 
         var row = 4;
         foreach (var slot in periods)
@@ -323,14 +357,14 @@ public sealed class WeaveExcelExporter
                 var cell = ws.Cell(row, 1 + day);
                 cell.Value = text;
                 if (lesson?.IsActivity == true || lesson is null || WeaveExportSupport.IsLayered(lesson))
-                    cell.Style.Font.FontColor = Clay;
+                    cell.Style.Font.FontColor = AccentColor(style);
             }
 
             ws.Row(row).Height = 52;
             row++;
         }
 
-        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), columnCount));
+        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), columnCount), style);
         ws.Column(1).Width = 15;
         for (var column = 2; column <= columnCount; column++) ws.Column(column).Width = 22;
 
@@ -346,18 +380,19 @@ public sealed class WeaveExcelExporter
         WeaveProject project,
         List<Teacher> teachers,
         IReadOnlyDictionary<string, string> sheetNames,
-        SheetNameAllocator names)
+        SheetNameAllocator names,
+        WeaveExportStyle style)
     {
-        var ws = AddSheet(workbook, names.Allocate("教师课表", "教师课表"));
+        var ws = AddSheet(workbook, names.Allocate("教师课表", "教师课表"), style);
 
-        WriteTitle(ws, 5, "教师课表", $"共 {teachers.Count} 位教师 · 点击下方页签查看个人课表");
+        WriteTitle(ws, 5, "教师课表", $"共 {teachers.Count} 位教师 · 点击下方页签查看个人课表", style);
 
         ws.Cell(3, 1).Value = "教师";
         ws.Cell(3, 2).Value = "学科";
         ws.Cell(3, 3).Value = "已排";
         ws.Cell(3, 4).Value = "应排";
         ws.Cell(3, 5).Value = "页签";
-        StyleHeader(ws.Range(3, 1, 3, 5));
+        StyleHeader(ws.Range(3, 1, 3, 5), style);
 
         var row = 4;
         foreach (var teacher in teachers)
@@ -374,7 +409,7 @@ public sealed class WeaveExcelExporter
             row++;
         }
 
-        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), 5));
+        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), 5), style);
         ws.Column(1).Width = 14;
         ws.Column(2).Width = 18;
         ws.Column(3).Width = 9;
@@ -388,21 +423,22 @@ public sealed class WeaveExcelExporter
         WeaveProject project,
         Teacher teacher,
         string sheetName,
-        List<PeriodSlot> periods)
+        List<PeriodSlot> periods,
+        WeaveExportStyle style)
     {
-        var ws = AddSheet(workbook, sheetName);
+        var ws = AddSheet(workbook, sheetName, style);
         var days = WeaveDefaults.Days.Length;
         var columnCount = 1 + days;
         var (placed, required) = WeaveExportSupport.TeacherLoad(project, teacher);
 
         WriteTitle(ws, columnCount,
             $"{teacher.Name} 老师 课表",
-            $"{WeaveExportSupport.SubjectText(project, teacher)} · 周课时 已排 {placed} / 应排 {required}");
+            $"{WeaveExportSupport.SubjectText(project, teacher)} · 周课时 已排 {placed} / 应排 {required}", style);
 
         ws.Cell(3, 1).Value = "节次 / 星期";
         for (var day = 1; day <= days; day++)
             ws.Cell(3, 1 + day).Value = WeaveDefaults.DayName(day);
-        StyleHeader(ws.Range(3, 1, 3, columnCount));
+        StyleHeader(ws.Range(3, 1, 3, columnCount), style);
 
         var row = 4;
         foreach (var slot in periods)
@@ -425,14 +461,14 @@ public sealed class WeaveExcelExporter
                 var cell = ws.Cell(row, 1 + day);
                 cell.Value = text;
                 if (lessons.Any(WeaveExportSupport.IsLayered))
-                    cell.Style.Font.FontColor = Clay;
+                    cell.Style.Font.FontColor = AccentColor(style);
             }
 
             ws.Row(row).Height = 40;
             row++;
         }
 
-        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), columnCount));
+        StyleGrid(ws.Range(3, 1, Math.Max(3, row - 1), columnCount), style);
         ws.Column(1).Width = 15;
         for (var column = 2; column <= columnCount; column++) ws.Column(column).Width = 18;
 
@@ -447,21 +483,23 @@ public sealed class WeaveExcelExporter
         XLWorkbook workbook,
         WeaveProject project,
         IReadOnlyList<WeaveConflict> conflicts,
-        SheetNameAllocator names)
+        SheetNameAllocator names,
+        WeaveExportStyle style)
     {
-        var ws = AddSheet(workbook, names.Allocate("冲突", "冲突"));
+        var ws = AddSheet(workbook, names.Allocate("冲突", "冲突"), style);
         const int columnCount = 5;
 
         WriteTitle(ws, columnCount,
             "冲突",
-            $"生成时间：{DateTime.Now:yyyy-MM-dd HH:mm} · 冲突 {conflicts.Count} 条 · 未排课 {conflicts.Count(c => c.Kind == ConflictKind.Unplaced)} 条");
+            $"生成时间：{DateTime.Now:yyyy-MM-dd HH:mm} · 冲突 {conflicts.Count} 条 · 未排课 {conflicts.Count(c => c.Kind == ConflictKind.Unplaced)} 条",
+            style);
 
         ws.Cell(3, 1).Value = "类型";
         ws.Cell(3, 2).Value = "位置";
         ws.Cell(3, 3).Value = "班级";
         ws.Cell(3, 4).Value = "教师";
         ws.Cell(3, 5).Value = "说明";
-        StyleHeader(ws.Range(3, 1, 3, columnCount));
+        StyleHeader(ws.Range(3, 1, 3, columnCount), style);
 
         if (conflicts.Count == 0)
         {
@@ -469,7 +507,7 @@ public sealed class WeaveExcelExporter
             message.Merge();
             message.Cell(1, 1).Value = "未发现冲突";
             message.Cell(1, 1).Style.Font.Bold = true;
-            message.Cell(1, 1).Style.Font.FontColor = Clay;
+            message.Cell(1, 1).Style.Font.FontColor = AccentColor(style);
             message.Cell(1, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Row(4).Height = 28;
         }
@@ -487,7 +525,7 @@ public sealed class WeaveExcelExporter
                 row++;
             }
 
-            StyleGrid(ws.Range(3, 1, row - 1, columnCount));
+            StyleGrid(ws.Range(3, 1, row - 1, columnCount), style);
         }
 
         ws.Column(1).Width = 16;
@@ -506,58 +544,98 @@ public sealed class WeaveExcelExporter
 
     // ----------------------------- 样式 -----------------------------
 
-    private static IXLWorksheet AddSheet(XLWorkbook workbook, string name)
+    private static XLColor AccentColor(WeaveExportStyle style) =>
+        style == WeaveExportStyle.Reference ? XLColor.Black : Clay;
+
+    private static IXLWorksheet AddSheet(
+        XLWorkbook workbook, string name, WeaveExportStyle style = WeaveExportStyle.Software)
     {
         var ws = workbook.Worksheets.Add(name);
-        ws.Style.Font.FontName = "Microsoft YaHei";
-        ws.Style.Font.FontSize = 10;
-        ws.Style.Font.FontColor = Ink;
+        if (style == WeaveExportStyle.Reference)
+        {
+            ws.Style.Font.FontName = "宋体";
+            ws.Style.Font.FontSize = 10;
+            ws.Style.Font.FontColor = XLColor.Black;
+            ws.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            ws.Style.Alignment.WrapText = true;
+        }
+        else
+        {
+            ws.Style.Font.FontName = "Microsoft YaHei";
+            ws.Style.Font.FontSize = 10;
+            ws.Style.Font.FontColor = Ink;
+        }
+
         return ws;
     }
 
-    private static void WriteTitle(IXLWorksheet ws, int columnCount, string title, string subtitle)
+    private static void WriteTitle(
+        IXLWorksheet ws, int columnCount, string title, string subtitle,
+        WeaveExportStyle style = WeaveExportStyle.Software)
     {
         var titleRange = ws.Range(1, 1, 1, columnCount);
         if (columnCount > 1) titleRange.Merge();
         titleRange.Cell(1, 1).Value = title;
         titleRange.Style.Font.Bold = true;
         titleRange.Style.Font.FontSize = 16;
-        titleRange.Style.Font.FontColor = Ink;
+        titleRange.Style.Font.FontName = style == WeaveExportStyle.Reference ? "宋体" : "Microsoft YaHei";
+        titleRange.Style.Font.FontColor = style == WeaveExportStyle.Reference ? XLColor.Black : Ink;
         titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         titleRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        titleRange.Style.Alignment.WrapText = true;
+        if (style == WeaveExportStyle.Reference)
+        {
+            titleRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            titleRange.Style.Border.OutsideBorderColor = XLColor.Black;
+        }
+
         ws.Row(1).Height = 32;
 
         var subtitleRange = ws.Range(2, 1, 2, columnCount);
         if (columnCount > 1) subtitleRange.Merge();
         subtitleRange.Cell(1, 1).Value = subtitle;
-        subtitleRange.Style.Font.FontSize = 9.5;
-        subtitleRange.Style.Font.FontColor = Muted;
+        subtitleRange.Style.Font.FontSize = style == WeaveExportStyle.Reference ? 9 : 9.5;
+        subtitleRange.Style.Font.FontName = style == WeaveExportStyle.Reference ? "宋体" : "Microsoft YaHei";
+        subtitleRange.Style.Font.FontColor = style == WeaveExportStyle.Reference ? XLColor.Black : Muted;
         subtitleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         subtitleRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        subtitleRange.Style.Alignment.WrapText = true;
+        if (style == WeaveExportStyle.Reference)
+        {
+            subtitleRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            subtitleRange.Style.Border.OutsideBorderColor = XLColor.Black;
+        }
+
         ws.Row(2).Height = 20;
     }
 
-    private static void StyleHeader(IXLRange range)
+    private static void StyleHeader(IXLRange range, WeaveExportStyle style = WeaveExportStyle.Software)
     {
-        range.Style.Font.Bold = true;
-        range.Style.Fill.BackgroundColor = Paper;
+        range.Style.Font.Bold = style == WeaveExportStyle.Software;
+        range.Style.Font.FontName = style == WeaveExportStyle.Reference ? "宋体" : "Microsoft YaHei";
+        range.Style.Font.FontColor = style == WeaveExportStyle.Reference ? XLColor.Black : Ink;
+        if (style == WeaveExportStyle.Software)
+            range.Style.Fill.BackgroundColor = Paper;
         range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         range.Style.Alignment.WrapText = true;
         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-        range.Style.Border.OutsideBorderColor = Line;
-        range.Style.Border.InsideBorderColor = Line;
+        range.Style.Border.OutsideBorderColor = style == WeaveExportStyle.Reference ? XLColor.Black : Line;
+        range.Style.Border.InsideBorderColor = style == WeaveExportStyle.Reference ? XLColor.Black : Line;
     }
 
-    private static void StyleGrid(IXLRange range)
+    private static void StyleGrid(IXLRange range, WeaveExportStyle style = WeaveExportStyle.Software)
     {
+        range.Style.Font.FontName = style == WeaveExportStyle.Reference ? "宋体" : "Microsoft YaHei";
+        range.Style.Font.FontColor = style == WeaveExportStyle.Reference ? XLColor.Black : Ink;
         range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
         range.Style.Alignment.WrapText = true;
         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-        range.Style.Border.OutsideBorderColor = Line;
-        range.Style.Border.InsideBorderColor = Line;
+        range.Style.Border.OutsideBorderColor = style == WeaveExportStyle.Reference ? XLColor.Black : Line;
+        range.Style.Border.InsideBorderColor = style == WeaveExportStyle.Reference ? XLColor.Black : Line;
     }
 }

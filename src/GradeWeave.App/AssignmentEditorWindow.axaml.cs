@@ -82,8 +82,31 @@ public partial class AssignmentEditorWindow : Window
 
     private void OnGoToSubject(object? sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: AssignmentGapItemViewModel gap })
-            Dispatcher.UIThread.Post(() => _viewModel.ShowSubject(gap.SubjectId));
+        if (sender is not Button { Tag: AssignmentGapItemViewModel gap }) return;
+
+        var className = gap.ClassName;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _viewModel.ShowSubject(gap.SubjectId);
+            // 切换视角后再等一拍布局，才能拿到新视角的容器并把目标行滚进视野。
+            Dispatcher.UIThread.Post(() => BringSubjectRowIntoView(className),
+                DispatcherPriority.Background);
+        });
+    }
+
+    private void BringSubjectRowIntoView(string className)
+    {
+        // Avalonia 12 把“索引 → 容器”的查找从 ItemContainerGenerator 挪到了 ItemsControl 本身。
+        for (var index = 0; index < _viewModel.SubjectClassRows.Count; index++)
+        {
+            if (!string.Equals(_viewModel.SubjectClassRows[index].Row.RowName, className,
+                    StringComparison.Ordinal))
+                continue;
+
+            if (SubjectRowsList.ContainerFromIndex(index) is Control row)
+                row.BringIntoView();
+            return;
+        }
     }
 
     private void OnGoToTeacher(object? sender, RoutedEventArgs e)

@@ -2238,10 +2238,34 @@ public partial class GradeWeaveWindow : Window
         return false;
     }
 
-    private async void OnExportExcel(object? sender, RoutedEventArgs e)
+    private async void OnExport(object? sender, RoutedEventArgs e)
     {
-        if (!ViewModel.HasProject) return;
+        if (!ViewModel.HasProject || ViewModel.IsBusy) return;
 
+        var dialog = new ExportOptionsWindow(
+            ViewModel.Project,
+            ViewModel.SelectedClass?.Class,
+            ViewModel.SelectedTeacher?.Teacher,
+            ViewModel.IsTeacherView);
+        var request = await dialog.ShowDialog<WeaveExportRequest?>(this);
+        if (request is null) return;
+
+        switch (request.Format)
+        {
+            case WeaveExportFormat.Excel:
+                await ExportExcelAsync(request);
+                break;
+            case WeaveExportFormat.Png:
+                await ExportPngAsync(request);
+                break;
+            case WeaveExportFormat.Pdf:
+                await ExportPdfAsync(request);
+                break;
+        }
+    }
+
+    private async Task ExportExcelAsync(WeaveExportRequest request)
+    {
         var path = await PickSaveAsync("导出课表 Excel", SafeFileName(".xlsx"), "xlsx",
             new FilePickerFileType("Excel 工作簿") { Patterns = new[] { "*.xlsx" } });
         if (path is null) return;
@@ -2257,8 +2281,10 @@ public partial class GradeWeaveWindow : Window
         {
             var project = ViewModel.Project;
             var conflicts = ViewModel.ConflictModels;
-            await Task.Run(() => new WeaveExcelExporter().Export(project, conflicts, path, new ExportOptions()));
-            ViewModel.SetStatus("已导出 Excel 课表。");
+            var options = request.Options;
+            await Task.Run(() => new WeaveExcelExporter().Export(project, conflicts, path, options));
+            var style = options.Style == WeaveExportStyle.Reference ? "参考校样式" : "软件自带样式";
+            ViewModel.SetStatus($"已导出 Excel 课表（{style}）。");
         }
         catch (Exception ex)
         {
@@ -2270,18 +2296,15 @@ public partial class GradeWeaveWindow : Window
         }
     }
 
-    private async void OnExportPng(object? sender, RoutedEventArgs e)
+    private async Task ExportPngAsync(WeaveExportRequest request)
     {
-        if (!ViewModel.HasProject) return;
-
-        var target = CurrentExportTarget();
-        if (target.ClassId is null && target.TeacherId is null)
+        if (request.ClassId is null && request.TeacherId is null)
         {
             ViewModel.SetStatus("请先选择一个班级或教师，再导出图片。", true);
             return;
         }
 
-        var path = await PickSaveAsync("导出课表图片", SafeFileName($"-{target.Label}.png"), "png",
+        var path = await PickSaveAsync("导出课表图片", SafeFileName($"-{request.TargetLabel}.png"), "png",
             new FilePickerFileType("PNG 图片") { Patterns = new[] { "*.png" } });
         if (path is null) return;
 
@@ -2295,8 +2318,8 @@ public partial class GradeWeaveWindow : Window
         try
         {
             var project = ViewModel.Project;
-            var classId = target.ClassId;
-            var teacherId = target.TeacherId;
+            var classId = request.ClassId;
+            var teacherId = request.TeacherId;
             var bytes = await Task.Run(() => teacherId is not null
                 ? new WeaveImageRenderer().RenderTeacherPng(project, teacherId, 2)
                 : new WeaveImageRenderer().RenderClassPng(project, classId!, 2));
@@ -2313,18 +2336,15 @@ public partial class GradeWeaveWindow : Window
         }
     }
 
-    private async void OnPrintPdf(object? sender, RoutedEventArgs e)
+    private async Task ExportPdfAsync(WeaveExportRequest request)
     {
-        if (!ViewModel.HasProject) return;
-
-        var target = CurrentExportTarget();
-        if (target.ClassId is null && target.TeacherId is null)
+        if (request.ClassId is null && request.TeacherId is null)
         {
             ViewModel.SetStatus("请先选择一个班级或教师，再打印 PDF。", true);
             return;
         }
 
-        var path = await PickSaveAsync("打印课表 PDF", SafeFileName($"-{target.Label}.pdf"), "pdf",
+        var path = await PickSaveAsync("打印课表 PDF", SafeFileName($"-{request.TargetLabel}.pdf"), "pdf",
             new FilePickerFileType("PDF 文件") { Patterns = new[] { "*.pdf" } });
         if (path is null) return;
 
@@ -2338,8 +2358,8 @@ public partial class GradeWeaveWindow : Window
         try
         {
             var project = ViewModel.Project;
-            var classId = target.ClassId;
-            var teacherId = target.TeacherId;
+            var classId = request.ClassId;
+            var teacherId = request.TeacherId;
             await Task.Run(() =>
             {
                 var exporter = new WeavePdfExporter();
@@ -2351,38 +2371,6 @@ public partial class GradeWeaveWindow : Window
         catch (Exception ex)
         {
             Report(ex, "生成打印文件失败");
-        }
-        finally
-        {
-            ViewModel.IsBusy = false;
-        }
-    }
-
-    private async void OnExportReport(object? sender, RoutedEventArgs e)
-    {
-        if (!ViewModel.HasProject) return;
-
-        var path = await PickSaveAsync("导出冲突报告", SafeFileName("-冲突报告.xlsx"), "xlsx",
-            new FilePickerFileType("Excel 工作簿") { Patterns = new[] { "*.xlsx" } });
-        if (path is null) return;
-
-        if (IsSamePath(path, ViewModel.Project.SourceFile))
-        {
-            ViewModel.SetStatus("报告路径不能覆盖已导入的课表文件。", true);
-            return;
-        }
-
-        ViewModel.IsBusy = true;
-        try
-        {
-            var project = ViewModel.Project;
-            var conflicts = ViewModel.ConflictModels;
-            await Task.Run(() => new WeaveConflictReportExporter().Export(project, conflicts, path));
-            ViewModel.SetStatus("已导出冲突报告。");
-        }
-        catch (Exception ex)
-        {
-            Report(ex, "导出冲突报告失败");
         }
         finally
         {
@@ -2444,17 +2432,6 @@ public partial class GradeWeaveWindow : Window
     {
         if ((sender as Control)?.DataContext is LayerEditViewModel layer)
             ViewModel.RemoveLayer(layer);
-    }
-
-    private (string? ClassId, string? TeacherId, string Label) CurrentExportTarget()
-    {
-        if (ViewModel.IsTeacherView && ViewModel.SelectedTeacher is { } teacher)
-            return (null, teacher.Teacher.Id, teacher.Name);
-
-        var classItem = ViewModel.SelectedClass ?? ViewModel.FilteredClasses.FirstOrDefault();
-        return classItem is null
-            ? (null, null, string.Empty)
-            : (classItem.Class.Id, null, classItem.Name);
     }
 
     private static Border HeaderCell(string text, bool mono)
