@@ -17,6 +17,9 @@ public sealed partial class MeetRosterViewModel : ObservableObject
 
     private MeetProject _project = new();
     private readonly Dictionary<string, List<RegistrationIssue>> _importIssues = new(StringComparer.Ordinal);
+
+    /// <summary>名单导入的状况/失败原因存这个键：与班级无关，任何选中班级下都显示。</summary>
+    private const string RosterIssueKey = "__roster__";
     private readonly List<RosterEntry> _roster = [];
     private bool _isDemo = true;
     private bool _scheduleImported;
@@ -72,7 +75,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
                                           c.AthleteCount > 0);
     public bool ShowValidationPanel => HasSelectedClass && HasRegistrationData;
     public bool HasImportNotices => ImportNotices.Count > 0;
-    public string ImportNoticeSummary => $"导入时的 {ImportNotices.Count} 条提示";
+    public string ImportNoticeSummary => $"导入提示（{ImportNotices.Count} 条）";
     public bool HasValidationIssues => ValidationIssues.Count > 0;
     public string ValidationOkText => "没有发现超限、重复或性别不符的项目。";
     public bool CanExport => !IsBusy && AllClasses.Any(c =>
@@ -728,7 +731,8 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         return added;
     }
 
-    /// <summary>读取学生名单（花名册），供「添加运动员」时挑选。</summary>
+    /// <summary>读取学生名单（花名册），供「添加运动员」时挑选。
+    /// 成功与否都会写进「导入时的提示」面板：状况摘要、失败原因一目了然。</summary>
     public async Task ImportRosterFileAsync(string path)
     {
         IsBusy = true;
@@ -742,20 +746,20 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         catch (InvalidDataException ex)
         {
             IsBusy = false;
-            SetStatus(ex.Message, true);
+            FailRosterImport(ex.Message);
             return;
         }
         catch (Exception ex)
         {
             IsBusy = false;
-            SetStatus(ErrorText.Describe(ex, "读取名单"), true);
+            FailRosterImport(ErrorText.Describe(ex, "读取名单"));
             return;
         }
 
         IsBusy = false;
         if (result.Entries.Count == 0)
         {
-            SetStatus("名单里没有读到学生：请确认「姓名」列下方有数据", true);
+            FailRosterImport("名单里没有读到学生：请确认「姓名」列下方有数据");
             return;
         }
 
@@ -785,6 +789,23 @@ public sealed partial class MeetRosterViewModel : ObservableObject
         if (_roster.Count > entries.Count) message += $" · 名单累计 {_roster.Count} 人";
         if (result.Issues.Count > 0) message += $" · {result.Issues.Count} 条提示";
         SetStatus(message + "；点「添加运动员」即可从名单挑选", success: true);
+
+        // 导入状况进「导入时的提示」面板：摘要 + 全部问题（可点“知道了”收起）。
+        var notices = new List<RegistrationIssue>
+        {
+            new($"已导入名单 {entries.Count} 人（{DistinctRosterClasses()}）", false),
+        };
+        notices.AddRange(result.Issues);
+        _importIssues[RosterIssueKey] = notices;
+        RebuildImportNotices();
+    }
+
+    /// <summary>名单导入失败：原因写进提示面板（持久可见），状态栏同步提示。</summary>
+    private void FailRosterImport(string reason)
+    {
+        _importIssues[RosterIssueKey] = [new RegistrationIssue($"名单导入失败：{reason}", true)];
+        RebuildImportNotices();
+        SetStatus($"名单导入失败：{reason}", true);
     }
 
     public void SetStatus(string text, bool error = false, string? detail = null, bool success = false)
@@ -1100,6 +1121,13 @@ public sealed partial class MeetRosterViewModel : ObservableObject
     {
         ImportNotices.Clear();
 
+        // 名单导入的状况/失败原因：与选中班级无关，始终显示（直到“知道了”）。
+        if (_importIssues.TryGetValue(RosterIssueKey, out var rosterIssues))
+        {
+            foreach (var issue in rosterIssues)
+                ImportNotices.Add(new ValidationIssueItem(issue.Message, issue.IsError));
+        }
+
         // 与当前体检重复的条目不再重复展示：体检是实时算的，导入时那条只是历史快照。
         var live = ValidationIssues
             .Select(i => i.Message)
@@ -1127,6 +1155,7 @@ public sealed partial class MeetRosterViewModel : ObservableObject
     public void DismissImportNotices()
     {
         if (SelectedClass is not null) _importIssues.Remove(SelectedClass.Name);
+        _importIssues.Remove(RosterIssueKey);
         RebuildImportNotices();
         SetStatus("已收起导入时的提示");
     }

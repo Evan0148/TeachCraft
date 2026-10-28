@@ -96,6 +96,9 @@ public sealed class MeetRosterRosterTests : IDisposable
             ["新同学乙", "男", "七年级1班"]);
         await vm.ImportRosterFileAsync(rosterPath);
         Assert.True(vm.HasRoster);
+        // 导入状况写进「导入提示」面板：摘要 + 性别列缺失的汇总提示，持久可见。
+        Assert.True(vm.HasImportNotices);
+        Assert.Contains(vm.ImportNotices, n => n.Message.Contains("已导入名单 3 人", StringComparison.Ordinal));
 
         var candidates = vm.BuildRosterCandidates();
         Assert.Equal(3, candidates.Count);

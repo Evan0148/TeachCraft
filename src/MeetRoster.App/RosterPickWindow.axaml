@@ -20,10 +20,11 @@
             <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="7" />
-            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Padding" Value="12,9" />
             <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.choice:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -91,7 +92,7 @@
                                     <Border Width="4" Height="30" CornerRadius="2"
                                             Background="{StaticResource AccentBrush}"
                                             VerticalAlignment="Center" IsVisible="{Binding IsSelected}" />
-                                    <StackPanel Grid.Column="1" Spacing="2">
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
                                                    Foreground="{StaticResource InkBrush}" />
                                         <StackPanel Orientation="Horizontal" Spacing="6">
@@ -126,7 +127,7 @@
 
         <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="20,12">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                <TextBlock Text="名单只在本机读取；点“完成”写入后，会接着为第一位选项目，其余可点各自的项目格修改。"
+                <TextBlock Text="名单只在本机读取；完成后为第一位选项目，其余点各自的项目格修改。"
                            FontSize="10" LineHeight="15" Foreground="{StaticResource MutedBrush}"
                            VerticalAlignment="Center" TextWrapping="Wrap" />
                 <Button Grid.Column="1" Classes="primary" Content="完成" Click="OnDone" IsDefault="True"
