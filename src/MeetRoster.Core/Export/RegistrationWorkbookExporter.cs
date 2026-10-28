@@ -22,7 +22,8 @@ public static class RegistrationWorkbookExporter
         return target;
     }
 
-    /// <summary>直接保存回原始报名表：先写临时文件，成功后备份为 .bak 再替换，避免写坏原件。</summary>
+    /// <summary>直接保存回原始报名表：先写临时文件，成功后备份为 .bak 再替换，避免写坏原件。
+    /// 备份与替换走文件重试（实时扫描会短暂锁定刚写完的文件）；失败时报告具体步骤。</summary>
     public static string Save(MeetClass meetClass)
     {
         if (string.IsNullOrWhiteSpace(meetClass.SourcePath) || !File.Exists(meetClass.SourcePath))
@@ -30,18 +31,57 @@ public static class RegistrationWorkbookExporter
 
         var target = Path.GetFullPath(meetClass.SourcePath);
         var temp = target + ".saving.xlsx";
+        var step = "生成临时文件";
         try
         {
             Write(meetClass, target, temp);
-            File.Copy(target, target + ".bak", overwrite: true);
-            File.Move(temp, target, overwrite: true);
+            step = "备份原件（.bak）";
+            FileRetry.Run(() => File.Copy(target, target + ".bak", overwrite: true));
+            step = "替换原文件";
+            ReplaceFile(temp, target);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"{meetClass.Name} 在{step}时失败：{ex.Message}", ex);
         }
         finally
         {
-            if (File.Exists(temp)) File.Delete(temp);
+            try
+            {
+                FileRetry.Run(() =>
+                {
+                    if (File.Exists(temp)) File.Delete(temp);
+                });
+            }
+            catch
+            {
+                // 清理失败不影响保存结果，残留的临时文件会被下次保存覆盖。
+            }
         }
 
         return target;
+    }
+
+    /// <summary>
+    /// 用临时文件替换原文件。File.Move 覆盖需要目标的 DELETE 权限——Windows 索引 /
+    /// 实时扫描服务会以“允许写、不允许删”的方式短暂打开新文件，此时降级为直接
+    /// 覆盖写入（Copy 只需要写权限），仍失败再重试。
+    /// </summary>
+    private static void ReplaceFile(string temp, string target)
+    {
+        FileRetry.Run(() =>
+        {
+            try
+            {
+                File.Move(temp, target, overwrite: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                File.Copy(temp, target, overwrite: true);
+                try { File.Delete(temp); } catch (IOException) { }
+            }
+        });
     }
 
     private static void Write(MeetClass meetClass, string source, string target)
